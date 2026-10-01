@@ -1,0 +1,40 @@
+/* توکن‌های پنل ادمین — همان الگوی Nexin (primary برای DatePicker و accentها) */
+/* --primary از :root در app.css می‌آید؛ در صورت نیاز اینجا override کنید */
+.admin-dashboard {
+    --primary: var(--color-primary-rgb);
+    --primary-foreground: 255 255 255;
+}
+
+.admin-dashboard.thin-scrollbar,
+.admin-dashboard .thin-scrollbar {
+    scrollbar-width: thin;
+}
+
+.admin-dashboard .thin-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.admin-dashboard .thin-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.35);
+    border-radius: 999px;
+}
+
+.admin-dashboard .thin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.admin-dashboard .kpi-glow {
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-dashboard .kpi-glow::before {
+    content: '';
+    position: absolute;
+    inset: auto -20% 68% auto;
+    width: 160px;
+    height: 160px;
+    border-radius: 999px;
+    background: rgba(0, 72, 158, 0.12);
+    filter: blur(20px);
+}

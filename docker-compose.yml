@@ -1,0 +1,15 @@
+services:
+  mysql:
+    image: mysql:8
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_DATABASE: sharifi_academy
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_USER: sharifi
+      MYSQL_PASSWORD: secret
+    volumes:
+      - sharifi_mysql:/var/lib/mysql
+
+volumes:
+  sharifi_mysql:

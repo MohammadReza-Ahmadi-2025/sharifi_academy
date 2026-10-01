@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Providers;
+
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
+use Inertia\Inertia;
+
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        //
+    }
+
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        Gate::before(function (?User $user, string $ability): ?bool {
+            if ($user !== null && $user->hasRole('super-admin')) {
+                return true;
+            }
+
+            return null;
+        });
+
+        Inertia::handleExceptionsUsing(function ($exceptionResponse) {
+            $status = $exceptionResponse->statusCode();
+
+            if (! in_array($status, [400, 401, 403, 404, 419, 429, 500, 503], true)) {
+                return null;
+            }
+
+            return $exceptionResponse
+                ->render('Errors/Show', ['status' => $status])
+                ->withSharedData()
+                ->usingMiddleware(HandleInertiaRequests::class);
+        });
+    }
+}
