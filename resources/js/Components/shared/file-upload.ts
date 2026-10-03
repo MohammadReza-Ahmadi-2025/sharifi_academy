@@ -1,9 +1,22 @@
+export type ExistingFilePayload = {
+    id: number;
+    url: string;
+    name?: string | null;
+    size?: number | null;
+    title?: string | null;
+    alt?: string | null;
+};
+
 export type FileUploadItem = {
     /** شناسه یکتا برای رندر لیست (کلاینت) */
     id: string;
-    file: File;
+    /** فایل جدید؛ برای رکوردهای ذخیره‌شده خالی است */
+    file?: File;
+    existingFileId?: number;
     /** برای پیش‌نمایش تصویر؛ با `revokeFileUploadPreviews` آزاد شود */
     previewUrl?: string;
+    existingName?: string;
+    existingSize?: number;
     title?: string;
     alt?: string;
 };
@@ -26,7 +39,7 @@ export const defaultFileUploaderLabels: FileUploaderLabels = {
     remove: 'حذف',
     title: 'عنوان',
     alt: 'متن جایگزین (alt)',
-    titlePlaceholder: 'عنوان فایل',
+    titlePlaceholder: 'عنوان تصویر',
     altPlaceholder: 'توضیح تصویر برای دسترس‌پذیری',
 };
 
@@ -40,6 +53,22 @@ export function createFileUploadId(): string {
 
 export function isImageFile(file: File): boolean {
     return file.type.startsWith('image/');
+}
+
+export function createExistingFileUploadItem(payload: ExistingFilePayload): FileUploadItem {
+    return {
+        id: `existing-${payload.id}`,
+        existingFileId: payload.id,
+        previewUrl: payload.url,
+        existingName: payload.name ?? 'تصویر',
+        existingSize: payload.size ?? 0,
+        title: payload.title ?? '',
+        alt: payload.alt ?? '',
+    };
+}
+
+export function createExistingFileUploadItems(payloads: ExistingFilePayload[]): FileUploadItem[] {
+    return payloads.map((payload) => createExistingFileUploadItem(payload));
 }
 
 export function createFileUploadItem(file: File): FileUploadItem {

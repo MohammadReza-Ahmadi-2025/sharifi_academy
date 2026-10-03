@@ -3,9 +3,15 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasMediaFiles;
+use App\Modules\Cart\Models\Cart;
+use App\Modules\Catalog\Models\InventoryLog;
+use App\Modules\Catalog\Models\Product;
 use App\Modules\Courses\Models\ClassInstructor;
+use App\Modules\Courses\Models\ClassSession;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
+use App\Modules\Courses\Models\Enrollment;
+use App\Modules\Courses\Models\SessionAttendance;
 use App\Modules\Profile\Models\Resume;
 use App\Modules\Profile\Models\Skill;
 use App\Modules\Profile\Models\UserProfile;
@@ -73,6 +79,14 @@ class User extends Authenticatable implements HasMedia
     }
 
     /**
+     * @return HasOne<Cart, $this>
+     */
+    public function cart(): HasOne
+    {
+        return $this->hasOne(Cart::class);
+    }
+
+    /**
      * @return HasMany<Resume, $this>
      */
     public function resumes(): HasMany
@@ -109,6 +123,14 @@ class User extends Authenticatable implements HasMedia
     }
 
     /**
+     * @return HasMany<ClassSession, $this>
+     */
+    public function createdClassSessions(): HasMany
+    {
+        return $this->hasMany(ClassSession::class, 'created_by');
+    }
+
+    /**
      * @return HasMany<ClassInstructor, $this>
      */
     public function classInstructorAssignments(): HasMany
@@ -124,5 +146,78 @@ class User extends Authenticatable implements HasMedia
         return $this->belongsToMany(CourseClass::class, 'class_instructors')
             ->withPivot(['role', 'is_primary', 'share_percentage'])
             ->withTimestamps();
+    }
+
+    /**
+     * @return HasMany<Enrollment, $this>
+     */
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    /**
+     * @return HasMany<SessionAttendance, $this>
+     */
+    public function sessionAttendances(): HasMany
+    {
+        return $this->hasMany(SessionAttendance::class);
+    }
+
+    /**
+     * @return BelongsToMany<CourseClass, $this>
+     */
+    public function enrolledCourseClasses(): BelongsToMany
+    {
+        return $this->belongsToMany(CourseClass::class, 'enrollments')
+            ->withPivot([
+                'status',
+                'confirmed_at',
+                'cancelled_at',
+                'reserved_until',
+                'price_amount',
+                'admin_note',
+            ])
+            ->withTimestamps();
+    }
+
+    /**
+     * @return BelongsToMany<Course, $this>
+     */
+    public function enrolledCourses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'enrollments', 'user_id', 'id')
+            ->join('course_classes', 'enrollments.course_class_id', '=', 'course_classes.id')
+            ->whereColumn('courses.id', 'course_classes.course_id')
+            ->select('courses.*')
+            ->distinct();
+    }
+
+    /**
+     * @return BelongsToMany<Course, $this>
+     */
+    public function taughtCourses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'class_instructors', 'user_id', 'id')
+            ->join('course_classes', 'class_instructors.course_class_id', '=', 'course_classes.id')
+            ->whereColumn('courses.id', 'course_classes.course_id')
+            ->select('courses.*')
+            ->distinct();
+    }
+
+    /**
+     * @return HasMany<Product, $this>
+     */
+    public function vendorProducts(): HasMany
+    {
+        return $this->hasMany(Product::class, 'vendor_id');
+    }
+
+    /**
+     * @return HasMany<InventoryLog, $this>
+     */
+    public function inventoryLogs(): HasMany
+    {
+        return $this->hasMany(InventoryLog::class);
     }
 }

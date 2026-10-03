@@ -1,4 +1,3 @@
-import { FlashMessages } from '@/Components/FlashMessages';
 import { PageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren } from 'react';
@@ -37,10 +36,7 @@ export default function PanelLayout({ title, homeHref, links, children }: Props)
                         ))}
                     </nav>
                 </aside>
-                <section className="rounded-xl border border-zinc-200 bg-white p-6">
-                    <FlashMessages />
-                    {children}
-                </section>
+                <section className="rounded-xl border border-zinc-200 bg-white p-6">{children}</section>
             </div>
         </div>
     );

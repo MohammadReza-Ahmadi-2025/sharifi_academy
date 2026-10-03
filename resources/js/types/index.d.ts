@@ -49,6 +49,7 @@ export type AdminPanelNavItem = {
     id: string;
     label: string;
     href: string;
+    icon?: string;
 };
 
 export type PageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
@@ -66,8 +67,34 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
         items: NavItem[];
         cta: { label: string; url: string } | null;
     };
+    menuCategories: Array<{
+        id: number;
+        title: string;
+        slug: string;
+        url: string;
+        image_url?: string | null;
+        children: Array<{
+            id: number;
+            title: string;
+            slug: string;
+            url: string;
+            children?: Array<{ id: number; title: string; slug: string; url: string }>;
+        }>;
+        brands: Array<{ id: number; title: string; slug: string; url: string }>;
+    }>;
     adminPanel: {
         navigation: AdminPanelNavItem[];
     } | null;
+    siteSettings: Record<string, unknown>;
+    siteMenus: Record<
+        string,
+        Array<{
+            id: number;
+            title: string;
+            url?: string | null;
+            icon?: string | null;
+            items: Array<{ id: number; title: string; url: string; target_blank: boolean }>;
+        }>
+    >;
     url: string;
 };

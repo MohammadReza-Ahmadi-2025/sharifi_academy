@@ -1,8 +1,9 @@
 import { formatPersianDateTime } from '@/Components/Admin/shared/lib/format-persian-datetime';
+import { AdminFilterSelect } from '@/Components/Admin/shared/ui/admin-filter-select';
+import { AdminListFilters } from '@/Components/Admin/shared/ui/admin-list-filters';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { Badge } from '@/Components/Admin/shared/ui/badge';
 import { Card } from '@/Components/Admin/shared/ui/card';
-import { AdminInput } from '@/Components/Admin/shared/ui/input';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import {
     Table,
@@ -16,7 +17,7 @@ import {
 import { SimpleTablePagination } from '@/Components/Admin/shared/ui/simple-table-pagination';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { Pencil, Plus, Search, Trash2, UserRound } from 'lucide-react';
+import { Pencil, Plus, Trash2, UserRound } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 export type AdminUserListItem = {
@@ -91,6 +92,13 @@ export default function UsersIndex({ users, filters, roleFilters, abilities }: P
         applyFilters({ page: 1 });
     };
 
+    const clearFilters = () => {
+        setSearch('');
+        setRole('');
+        setStatus('');
+        router.get('/admin/users', { per_page: filters.per_page }, { replace: true });
+    };
+
     const handleDelete = (user: AdminUserListItem) => {
         if (!window.confirm(`کاربر «${user.fullName}» حذف شود؟`)) {
             return;
@@ -116,53 +124,31 @@ export default function UsersIndex({ users, filters, roleFilters, abilities }: P
                 }
             />
 
-            <Card className="mt-6 space-y-4 p-4">
-                <form onSubmit={submitSearch} className="grid gap-3 lg:grid-cols-4">
-                    <div className="relative lg:col-span-2">
-                        <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <AdminInput
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="جستجو: نام، موبایل، ایمیل..."
-                            className="pr-9"
-                        />
-                    </div>
-                    <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
-                        className="flex h-10 rounded-md border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
-                    >
-                        <option value="">همه نقش‌ها</option>
-                        {roleFilters.map((item) => (
-                            <option key={item.value} value={item.value}>{item.label}</option>
-                        ))}
-                    </select>
-                    <select
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                        className="flex h-10 rounded-md border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
-                    >
-                        <option value="">همه وضعیت‌ها</option>
-                        <option value="1">فعال</option>
-                        <option value="0">غیرفعال</option>
-                    </select>
-                    <div className="flex gap-2 lg:col-span-4">
-                        <AdminButton type="submit">اعمال فیلتر</AdminButton>
-                        <AdminButton
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                                setSearch('');
-                                setRole('');
-                                setStatus('');
-                                router.get('/admin/users', {}, { replace: true });
-                            }}
-                        >
-                            پاک کردن
-                        </AdminButton>
-                    </div>
-                </form>
-            </Card>
+            <AdminListFilters
+                search={search}
+                onSearchChange={setSearch}
+                onSubmit={submitSearch}
+                onClear={clearFilters}
+                searchPlaceholder="جستجو: نام، موبایل، ایمیل…"
+            >
+                <AdminFilterSelect
+                    className="lg:col-span-2"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    placeholder="همه نقش‌ها"
+                    options={roleFilters}
+                />
+                <AdminFilterSelect
+                    className="lg:col-span-2"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    placeholder="همه وضعیت‌ها"
+                    options={[
+                        { value: '1', label: 'فعال' },
+                        { value: '0', label: 'غیرفعال' },
+                    ]}
+                />
+            </AdminListFilters>
 
             <Card className="mt-4 overflow-hidden p-0">
                 <Table>

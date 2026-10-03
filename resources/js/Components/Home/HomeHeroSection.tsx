@@ -8,7 +8,15 @@ const highlights = [
     { icon: ShieldCheck, label: 'پرداخت امن زرین‌پال' },
 ];
 
-export function HomeHeroSection() {
+export type HomeHero = {
+    badge: string;
+    title: string;
+    subtitle: string;
+    cta_primary: string;
+    cta_secondary: string;
+};
+
+export function HomeHeroSection({ hero }: { hero: HomeHero }) {
     return (
         <section className="relative overflow-hidden border-b border-secondary bg-neutral-white">
             <div
@@ -29,21 +37,15 @@ export function HomeHeroSection() {
                 <div className="order-2 lg:order-1">
                     <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
                         <Sparkles className="size-3.5" />
-                        آکادمی تخصصی مهندسی
+                        {hero.badge}
                     </span>
 
                     <h1 className="mt-5 text-3xl font-extrabold leading-[1.15] tracking-tight text-neutral-black md:text-4xl lg:text-[2.75rem]">
-                        مهارت مهندسی را
-                        <span className="relative mx-1 inline-block text-primary">
-                            عملی
-                            <span className="absolute -bottom-1 right-0 left-0 h-1 rounded-full bg-secondary" aria-hidden />
-                        </span>
-                        یاد بگیرید
+                        {hero.title}
                     </h1>
 
                     <p className="mt-5 max-w-md text-base leading-relaxed text-neutral-black/70 md:text-lg">
-                        دوره‌های کلاس‌محور با استاد، منابع کتابی مکمل، و پنل دانشجو برای ورود سریع به هر جلسه — همه در یک
-                        مسیر آموزشی منسجم.
+                        {hero.subtitle}
                     </p>
 
                     <ul className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -65,14 +67,14 @@ export function HomeHeroSection() {
                             href="#courses"
                             className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-on-primary shadow-md shadow-primary/25 transition hover:bg-primary-hover"
                         >
-                            مشاهده دوره‌ها
+                            {hero.cta_primary}
                             <ArrowLeft className="size-4" />
                         </a>
                             <Link
                                 href="/login"
                                 className="inline-flex items-center rounded-xl border-2 border-primary/15 bg-neutral-white px-6 py-3 text-sm font-semibold text-primary transition hover:border-primary/30 hover:bg-primary/5"
                             >
-                                ورود / ثبت‌نام
+                                {hero.cta_secondary}
                             </Link>
                     </div>
                 </div>

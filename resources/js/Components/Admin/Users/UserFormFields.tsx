@@ -2,6 +2,9 @@ import { UserRolesPicker, type RoleOption } from '@/Components/Admin/Users/UserR
 import { Card } from '@/Components/Admin/shared/ui/card';
 import { FormField } from '@/Components/Admin/shared/ui/form-field';
 import { AdminInput } from '@/Components/Admin/shared/ui/input';
+import { findSelectOption, mapToSelectOptions } from '@/Components/Admin/shared/lib/select-options';
+import { PasswordInput } from '@/Components/Admin/shared/ui/password-input';
+import { Select } from '@/Components/Admin/shared/ui/select';
 
 export type UserFormData = {
     name: string;
@@ -33,6 +36,15 @@ export function UserFormFields({
     showPassword = true,
     passwordRequired = false,
 }: Props) {
+    const genderOptions = mapToSelectOptions([
+        { value: 'male', label: 'مرد' },
+        { value: 'female', label: 'زن' },
+    ]);
+    const statusOptions = mapToSelectOptions([
+        { value: '1', label: 'فعال' },
+        { value: '0', label: 'غیرفعال' },
+    ]);
+
     return (
         <div className="space-y-6">
             <Card className="space-y-4">
@@ -82,30 +94,23 @@ export function UserFormFields({
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <FormField label="جنسیت" htmlFor="gender" error={errors.gender}>
-                        <select
-                            id="gender"
-                            value={data.gender}
-                            onChange={(e) => onChange('gender', e.target.value)}
-                            disabled={processing}
-                            className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                        >
-                            <option value="">انتخاب کنید</option>
-                            <option value="male">مرد</option>
-                            <option value="female">زن</option>
-                        </select>
+                    <FormField label="جنسیت" error={errors.gender}>
+                        <Select
+                            isDisabled={processing}
+                            isClearable
+                            placeholder="انتخاب کنید..."
+                            options={genderOptions}
+                            value={findSelectOption(genderOptions, data.gender)}
+                            onChange={(option) => onChange('gender', option?.value ?? '')}
+                        />
                     </FormField>
-                    <FormField label="وضعیت" htmlFor="status" required error={errors.status as string}>
-                        <select
-                            id="status"
-                            value={String(data.status)}
-                            onChange={(e) => onChange('status', Number(e.target.value))}
-                            disabled={processing}
-                            className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                        >
-                            <option value="1">فعال</option>
-                            <option value="0">غیرفعال</option>
-                        </select>
+                    <FormField label="وضعیت" required error={errors.status as string}>
+                        <Select
+                            isDisabled={processing}
+                            options={statusOptions}
+                            value={findSelectOption(statusOptions, data.status)}
+                            onChange={(option) => onChange('status', Number(option?.value ?? 1))}
+                        />
                     </FormField>
                 </div>
             </Card>
@@ -129,9 +134,8 @@ export function UserFormFields({
                         error={errors.password}
                         hint={passwordRequired ? undefined : 'در صورت خالی بودن تغییر نمی‌کند.'}
                     >
-                        <AdminInput
+                        <PasswordInput
                             id="password"
-                            type="password"
                             autoComplete="new-password"
                             value={data.password}
                             onChange={(e) => onChange('password', e.target.value)}

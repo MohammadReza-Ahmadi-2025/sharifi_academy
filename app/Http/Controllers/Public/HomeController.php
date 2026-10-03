@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Services\Home\HomePageService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class HomeController extends Controller
 {
-    public function __invoke(): Response
+    public function __invoke(HomePageService $homePage): Response
     {
-        return Inertia::render('Public/Home', [
-            'courses' => [],
-            'books' => [],
-        ]);
+        $payload = $homePage->data();
+
+        return Inertia::render('Public/Home', $payload);
     }
 }

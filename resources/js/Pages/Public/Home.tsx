@@ -1,19 +1,35 @@
-import { HomeHeroSection } from '@/Components/Home/HomeHeroSection';
+import { HomeDynamicSections } from '@/Components/Home/HomeDynamicSections';
+import { HomeHeroSection, type HomeHero } from '@/Components/Home/HomeHeroSection';
+import type { HomeSection } from '@/Components/Home/types';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { BookMarked, MonitorPlay, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-type Item = { id: number; title: string; slug: string; price: number; description?: string | null };
+type Item = {
+    id: number;
+    title: string;
+    slug: string;
+    price: number;
+    description?: string | null;
+    image_url?: string | null;
+};
 
-type Props = { courses: Item[]; books: Item[] };
+type Props = {
+    hero: HomeHero;
+    sections: HomeSection[];
+    courses: Item[];
+    books: Item[];
+};
 
-export default function Home({ courses, books }: Props) {
+export default function Home({ hero, sections, courses, books }: Props) {
+    const useDynamicSections = Array.isArray(sections) && sections.length > 0;
+
     return (
         <AppLayout fullWidth>
             <Head title="خانه" />
 
-            <HomeHeroSection />
+            <HomeHeroSection hero={hero} />
 
             <section className="mx-auto max-w-6xl px-4 py-12">
                 <div className="grid gap-4 md:grid-cols-3">
@@ -35,23 +51,29 @@ export default function Home({ courses, books }: Props) {
                 </div>
             </section>
 
-            <Catalog
-                id="courses"
-                title="دوره‌های آموزشی"
-                subtitle="کلاس‌های تخصصی مهندسی برای ثبت‌نام آنلاین"
-                items={courses}
-                hrefPrefix="/courses/"
-                empty="هنوز دوره‌ای منتشر نشده است."
-            />
+            {useDynamicSections ? (
+                <HomeDynamicSections sections={sections} />
+            ) : (
+                <>
+                    <Catalog
+                        id="courses"
+                        title="دوره‌های آموزشی"
+                        subtitle="کلاس‌های تخصصی مهندسی برای ثبت‌نام آنلاین"
+                        items={courses}
+                        hrefPrefix="/courses/"
+                        empty="هنوز دوره‌ای منتشر نشده است."
+                    />
 
-            <Catalog
-                id="books"
-                title="کتاب‌های آکادمی"
-                subtitle="منابع مکتوب برای تکمیل مسیر یادگیری"
-                items={books}
-                hrefPrefix="/books/"
-                empty="هنوز کتابی منتشر نشده است."
-            />
+                    <Catalog
+                        id="books"
+                        title="کتاب‌های آکادمی"
+                        subtitle="منابع مکتوب برای تکمیل مسیر یادگیری"
+                        items={books}
+                        hrefPrefix="/books/"
+                        empty="هنوز کتابی منتشر نشده است."
+                    />
+                </>
+            )}
         </AppLayout>
     );
 }
@@ -101,7 +123,7 @@ function Catalog({
                         >
                             <div className="aspect-4/3 overflow-hidden bg-primary">
                                 <img
-                                    src="/coursetest.png"
+                                    src={item.image_url ?? (id === 'courses' ? '/coursetest.png' : '/banner.png')}
                                     alt={item.title}
                                     className="size-full object-cover transition duration-300 group-hover:scale-105"
                                 />

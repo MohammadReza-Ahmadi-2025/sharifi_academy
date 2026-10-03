@@ -1,11 +1,11 @@
 import { RoleCard, type AdminRoleListItem } from '@/Components/Admin/Roles/RoleCard';
+import { AdminListFilters } from '@/Components/Admin/shared/ui/admin-list-filters';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { Card } from '@/Components/Admin/shared/ui/card';
-import { AdminInput } from '@/Components/Admin/shared/ui/input';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 type Props = {
@@ -47,17 +47,16 @@ export default function RolesIndex({ roles, filters, abilities }: Props) {
                 }
             />
 
-            <form onSubmit={submitSearch} className="mt-6">
-                <div className="relative max-w-md">
-                    <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <AdminInput
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="جستجو بر اساس نام نقش..."
-                        className="pr-9"
-                    />
-                </div>
-            </form>
+            <AdminListFilters
+                search={search}
+                onSearchChange={setSearch}
+                onSubmit={submitSearch}
+                onClear={() => {
+                    setSearch('');
+                    router.get('/admin/roles', {}, { replace: true });
+                }}
+                searchPlaceholder="جستجو بر اساس نام نقش…"
+            />
 
             <div className="mt-6">
                 {roles.length === 0 ? (

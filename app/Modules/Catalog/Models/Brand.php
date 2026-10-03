@@ -5,6 +5,7 @@ namespace App\Modules\Catalog\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Modules\Visits\Concerns\HasVisits;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class Brand extends Model
 {
+    use HasVisits;
     use SoftDeletes;
 
     protected function casts(): array

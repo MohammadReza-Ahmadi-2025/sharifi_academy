@@ -20,4 +20,8 @@ const AdminInput = React.forwardRef<HTMLInputElement, AdminInputProps>(({ classN
 
 AdminInput.displayName = 'AdminInput';
 
-export { AdminInput };
+/** همان نام export در Nexin */
+const Input = AdminInput;
+
+export { AdminInput, Input };
+export type InputProps = AdminInputProps;

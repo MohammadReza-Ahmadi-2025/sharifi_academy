@@ -10,8 +10,9 @@ import {
     type FileUploadItem,
     type FileUploaderLabels,
 } from '@/Components/shared/file-upload';
+import { reorderById } from '@/Components/shared/reorder-list';
 import { cn } from '@/lib/utils';
-import { FileUp, ImageIcon, Trash2, Upload } from 'lucide-react';
+import { FileUp, GripVertical, ImageIcon, Trash2, Upload } from 'lucide-react';
 import { useCallback, useEffect, useId, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 
 export function useFileUploadState(
@@ -45,6 +46,10 @@ export type FileUploaderProps = {
     labels?: Partial<FileUploaderLabels>;
     error?: string;
     hint?: string;
+    /** جابه‌جایی با دستگیره (ترتیب = همان ترتیب آرایه) */
+    sortable?: boolean;
+    /** حداقل تعداد فایل (حذف آخرین مورد مجاز نیست) */
+    minItems?: number;
 };
 
 function mergeIncomingFiles(
@@ -106,12 +111,18 @@ export function FileUploader({
     labels: labelsOverride,
     error,
     hint,
+    sortable = false,
+    minItems = 0,
 }: FileUploaderProps) {
     const labels = { ...defaultFileUploaderLabels, ...labelsOverride };
     const inputId = useId();
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [localMessage, setLocalMessage] = useState<string | null>(null);
+    const [draggingId, setDraggingId] = useState<string | null>(null);
+    const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+    const canReorder = sortable && multiple && value.length > 1 && !disabled;
+    const showDragHandle = sortable && multiple && value.length > 0 && !disabled;
 
     const valueRef = useRef(value);
     valueRef.current = value;
@@ -156,11 +167,18 @@ export function FileUploader({
     };
 
     const removeItem = (id: string) => {
+        if (value.length <= minItems) {
+            setLocalMessage('حداقل یک تصویر باید باقی بماند. برای عوض کردن، تصویر جدید آپلود کنید.');
+
+            return;
+        }
+
         const removed = value.find((item) => item.id === id);
         if (removed) {
             revokeFileUploadPreviews([removed]);
         }
         onChange(value.filter((item) => item.id !== id));
+        setLocalMessage(null);
     };
 
     const updateMeta = (id: string, patch: Partial<Pick<FileUploadItem, 'title' | 'alt'>>) => {
@@ -174,6 +192,152 @@ export function FileUploader({
     };
 
     const showMetaFields = showTitle || showAlt;
+
+    const handleListDrop = (targetId: string) => {
+        if (!draggingId || draggingId === targetId) {
+            setDraggingId(null);
+            setDropTargetId(null);
+
+            return;
+        }
+
+        onChange(reorderById(value, draggingId, targetId));
+        setDraggingId(null);
+        setDropTargetId(null);
+    };
+
+    const fileList = value.length > 0 ? (
+        <ul className="space-y-3">
+            {value.map((item, index) => (
+                <li
+                    key={item.id}
+                    onDragOver={(e) => {
+                        if (!canReorder || !draggingId) {
+                            return;
+                        }
+                        e.preventDefault();
+                        setDropTargetId(item.id);
+                    }}
+                    onDragLeave={() => {
+                        if (dropTargetId === item.id) {
+                            setDropTargetId(null);
+                        }
+                    }}
+                    onDrop={(e) => {
+                        e.preventDefault();
+                        if (canReorder) {
+                            handleListDrop(item.id);
+                        }
+                    }}
+                    className={cn(
+                        'rounded-lg border bg-white p-3 dark:bg-slate-950',
+                        dropTargetId === item.id && draggingId !== item.id
+                            ? 'border-slate-900 ring-2 ring-slate-400 dark:border-slate-200'
+                            : 'border-slate-200 dark:border-slate-800',
+                        draggingId === item.id && 'opacity-50',
+                    )}
+                >
+                    <div className="flex gap-3">
+                        {showDragHandle ? (
+                            <div
+                                draggable={canReorder}
+                                onDragStart={(e) => {
+                                    if (!canReorder) {
+                                        e.preventDefault();
+
+                                        return;
+                                    }
+                                    e.stopPropagation();
+                                    e.dataTransfer.effectAllowed = 'move';
+                                    e.dataTransfer.setData('text/plain', item.id);
+                                    setDraggingId(item.id);
+                                }}
+                                onDragEnd={() => {
+                                    setDraggingId(null);
+                                    setDropTargetId(null);
+                                }}
+                                className={cn(
+                                    'inline-flex h-14 w-8 shrink-0 items-center justify-center text-slate-400',
+                                    canReorder ? 'cursor-grab active:cursor-grabbing' : 'cursor-not-allowed opacity-40',
+                                )}
+                                aria-label={
+                                    canReorder
+                                        ? `جابه‌جایی تصویر ${index + 1}`
+                                        : 'برای جابه‌جایی حداقل دو تصویر لازم است'
+                                }
+                                title={canReorder ? 'بکشید و رها کنید' : undefined}
+                            >
+                                <GripVertical className="h-5 w-5" />
+                            </div>
+                        ) : null}
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-slate-100 dark:bg-slate-900">
+                            {item.previewUrl ? (
+                                <img src={item.previewUrl} alt="" className="h-full w-full object-cover" />
+                            ) : item.file && isImageFile(item.file) ? (
+                                <ImageIcon className="h-6 w-6 text-slate-400" />
+                            ) : (
+                                <FileUp className="h-6 w-6 text-slate-400" />
+                            )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p
+                                className="truncate text-sm font-medium text-slate-900 dark:text-slate-100"
+                                title={item.file?.name ?? item.existingName ?? ''}
+                            >
+                                {item.file?.name ?? item.existingName ?? 'فایل'}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                {formatFileSize(item.file?.size ?? item.existingSize ?? 0)}
+                                {item.file?.type ? ` · ${item.file.type}` : item.existingFileId ? ' · ذخیره‌شده' : ''}
+                                {showDragHandle && canReorder ? ` · ردیف ${index + 1}` : ''}
+                            </p>
+                        </div>
+                        {value.length > minItems ? (
+                            <button
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => removeItem(item.id)}
+                                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:hover:bg-rose-500/10"
+                                title={labels.remove}
+                                aria-label={`${labels.remove} ${item.file?.name ?? item.existingName ?? ''}`}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </button>
+                        ) : null}
+                    </div>
+
+                    {showMetaFields ? (
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                            {showTitle ? (
+                                <FormField label={labels.title!} htmlFor={`${item.id}-title`}>
+                                    <AdminInput
+                                        id={`${item.id}-title`}
+                                        value={item.title ?? ''}
+                                        onChange={(e) => updateMeta(item.id, { title: e.target.value })}
+                                        placeholder={labels.titlePlaceholder}
+                                        disabled={disabled}
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
+                                </FormField>
+                            ) : null}
+                            {showAlt ? (
+                                <FormField label={labels.alt!} htmlFor={`${item.id}-alt`}>
+                                    <AdminInput
+                                        id={`${item.id}-alt`}
+                                        value={item.alt ?? ''}
+                                        onChange={(e) => updateMeta(item.id, { alt: e.target.value })}
+                                        placeholder={labels.altPlaceholder}
+                                        disabled={disabled}
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
+                                </FormField>
+                            ) : null}
+                        </div>
+                    ) : null}
+                </li>
+            ))}
+        </ul>
+    ) : null;
 
     return (
         <div className={cn('space-y-3', className)}>
@@ -224,7 +388,7 @@ export function FileUploader({
                     disabled && 'cursor-not-allowed opacity-60',
                     isDragging
                         ? 'border-slate-900 bg-slate-100 dark:border-slate-200 dark:bg-slate-900'
-                        : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-white dark:border-slate-700 dark:bg-slate-900/50 dark:hover:border-slate-500',
+                        : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-white dark:border-slate-700 dark:bg-slate-900/50 dark:hover:dark:bg-slate-700 dark:hover:border-slate-500',
                     error && 'border-rose-400 dark:border-rose-500',
                 )}
                 aria-disabled={disabled}
@@ -255,76 +419,7 @@ export function FileUploader({
             ) : null}
             {error ? <p className="text-xs text-rose-500 dark:text-rose-400">{error}</p> : null}
 
-            {value.length > 0 ? (
-                <ul className="space-y-3">
-                    {value.map((item) => (
-                        <li
-                            key={item.id}
-                            className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950"
-                        >
-                            <div className="flex gap-3">
-                                <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-slate-100 dark:bg-slate-900">
-                                    {item.previewUrl ? (
-                                        <img src={item.previewUrl} alt="" className="h-full w-full object-cover" />
-                                    ) : isImageFile(item.file) ? (
-                                        <ImageIcon className="h-6 w-6 text-slate-400" />
-                                    ) : (
-                                        <FileUp className="h-6 w-6 text-slate-400" />
-                                    )}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100" title={item.file.name}>
-                                        {item.file.name}
-                                    </p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                                        {formatFileSize(item.file.size)}
-                                        {item.file.type ? ` · ${item.file.type}` : ''}
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    disabled={disabled}
-                                    onClick={() => removeItem(item.id)}
-                                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:hover:bg-rose-500/10"
-                                    title={labels.remove}
-                                    aria-label={`${labels.remove} ${item.file.name}`}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </button>
-                            </div>
-
-                            {showMetaFields ? (
-                                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                                    {showTitle ? (
-                                        <FormField label={labels.title!} htmlFor={`${item.id}-title`}>
-                                            <AdminInput
-                                                id={`${item.id}-title`}
-                                                value={item.title ?? ''}
-                                                onChange={(e) => updateMeta(item.id, { title: e.target.value })}
-                                                placeholder={labels.titlePlaceholder}
-                                                disabled={disabled}
-                                                onClick={(e) => e.stopPropagation()}
-                                            />
-                                        </FormField>
-                                    ) : null}
-                                    {showAlt ? (
-                                        <FormField label={labels.alt!} htmlFor={`${item.id}-alt`}>
-                                            <AdminInput
-                                                id={`${item.id}-alt`}
-                                                value={item.alt ?? ''}
-                                                onChange={(e) => updateMeta(item.id, { alt: e.target.value })}
-                                                placeholder={labels.altPlaceholder}
-                                                disabled={disabled}
-                                                onClick={(e) => e.stopPropagation()}
-                                            />
-                                        </FormField>
-                                    ) : null}
-                                </div>
-                            ) : null}
-                        </li>
-                    ))}
-                </ul>
-            ) : null}
+            {fileList}
         </div>
     );
 }

@@ -114,23 +114,31 @@ interface TableEmptyStateProps {
   colSpan: number;
   title?: string;
   description?: string;
+  icon?: React.ReactNode;
+  action?: React.ReactNode;
 }
 
 function TableEmptyState({
   colSpan,
   title = "داده‌ای برای نمایش وجود ندارد",
   description = "با تغییر فیلترها یا افزودن داده جدید دوباره تلاش کنید.",
+  icon,
+  action,
 }: TableEmptyStateProps) {
   return (
     <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
       <TableCell colSpan={colSpan} className="px-6 py-14 text-center">
-        <div className="space-y-1">
+        <div className="mx-auto flex max-w-md flex-col items-center gap-2">
+          {icon ? (
+            <div className="mb-1 text-slate-300 dark:text-slate-600">{icon}</div>
+          ) : null}
           <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
             {title}
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {description}
           </p>
+          {action}
         </div>
       </TableCell>
     </TableRow>

@@ -1,4 +1,5 @@
 import { MegaMenuPanel } from '@/Components/MegaMenuPanel';
+import { SiteProductCategoryBar } from '@/Components/SiteProductCategoryBar';
 import { NavMenuLink } from '@/Components/NavMenuLink';
 import { NavItem, PageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
@@ -220,6 +221,8 @@ export function SiteHeader() {
                     </div>
                 </div>
             )}
+
+            <SiteProductCategoryBar />
 
             {mobileMounted && (
                 <>

@@ -3,14 +3,19 @@
 namespace App\Modules\Catalog\Models;
 
 use App\Models\User;
-
 use App\Modules\Catalog\Enums\VariantDisplayMode;
+use App\Modules\Comments\Models\Comment;
+use App\Modules\Files\Models\File;
+use App\Modules\Files\Services\MorphFileSyncService;
+use App\Modules\Visits\Concerns\HasVisits;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
@@ -41,6 +46,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class Product extends Model
 {
+    use HasVisits;
     use SoftDeletes;
 
     protected function casts(): array
@@ -116,6 +122,42 @@ class Product extends Model
     }
 
     /**
+     * @return MorphMany<File, $this>
+     */
+    public function files(): MorphMany
+    {
+        return $this->morphMany(File::class, 'fileable')->orderBy('sort');
+    }
+
+    /**
+     * @return MorphOne<File, $this>
+     */
+    public function mainImage(): MorphOne
+    {
+        return $this->morphOne(File::class, 'fileable')
+            ->where('type', MorphFileSyncService::TYPE_GALLERY)
+            ->ofMany('sort', 'min');
+    }
+
+    /**
+     * @return MorphMany<File, $this>
+     */
+    public function gallery(): MorphMany
+    {
+        return $this->morphMany(File::class, 'fileable')
+            ->where('type', MorphFileSyncService::TYPE_GALLERY)
+            ->orderBy('sort');
+    }
+
+    /**
+     * @return MorphMany<Comment, $this>
+     */
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+
+    /**
      * @return BelongsToMany<Product, $this>
      */
     public function manualRelatedProducts(): BelongsToMany
@@ -127,6 +169,31 @@ class Product extends Model
             'related_product_id',
         )->withPivot('position')
             ->orderBy('pivot_position');
+    }
+
+    /**
+     * @return BelongsToMany<Product, $this>
+     */
+    public function relatedByProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            self::class,
+            'related_products',
+            'related_product_id',
+            'product_id',
+        )->withPivot('position')
+            ->orderBy('pivot_position');
+    }
+
+    /**
+     * @return BelongsToMany<Attribute, $this>
+     */
+    public function attributes(): BelongsToMany
+    {
+        return $this->belongsToMany(Attribute::class, 'product_attribute_values')
+            ->withPivot(['attribute_value_id', 'value', 'is_highlight', 'sort'])
+            ->withTimestamps()
+            ->distinct();
     }
 
     /**

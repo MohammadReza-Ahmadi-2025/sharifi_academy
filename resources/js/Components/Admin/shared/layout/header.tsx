@@ -13,7 +13,7 @@ import { getAdminNavIcon } from '@/Components/Admin/shared/config/admin-nav-icon
 
 export function Header() {
     const { adminPanel, url } = usePage<PageProps>().props;
-    const pathname = url.replace(/^https?:\/\/[^/]+/, '');
+    const pathname = url.replace(/^https?:\/\/[^/]+/i, '');
     const navigation = adminPanel?.navigation ?? [];
 
     const [shortcutText, setShortcutText] = useState('Ctrl + K');
@@ -25,7 +25,7 @@ export function Header() {
 
     const { toggleSidebar } = useSidebar();
 
-    const breadcrumbs = useMemo(() => getAdminBreadcrumbs(pathname), [pathname]);
+    const breadcrumbs = useMemo(() => getAdminBreadcrumbs(url), [url]);
 
     useEffect(() => {
         const isMac = typeof window !== 'undefined' && navigator.userAgent.toLowerCase().includes('mac');

@@ -2,15 +2,20 @@
 
 namespace App\Modules\Catalog\Models;
 
+use App\Modules\Blog\Models\Post;
 use App\Modules\Courses\Models\Course;
+use App\Modules\Files\Models\File;
+use App\Modules\Files\Services\MorphFileSyncService;
+use App\Modules\Visits\Concerns\HasVisits;
 use App\Modules\Profile\Models\Skill;
-
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
@@ -30,6 +35,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class Category extends Model
 {
+    use HasVisits;
     use SoftDeletes;
 
     public const TYPE_PRODUCT = 'product';
@@ -178,5 +184,31 @@ class Category extends Model
     {
         return $this->belongsToMany(Course::class, 'course_categories')
             ->withTimestamps();
+    }
+
+    /**
+     * @return BelongsToMany<Post, $this>
+     */
+    public function posts(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class, 'post_categories')
+            ->withTimestamps();
+    }
+
+    /**
+     * @return MorphMany<File, $this>
+     */
+    public function files(): MorphMany
+    {
+        return $this->morphMany(File::class, 'fileable')->orderBy('sort');
+    }
+
+    /**
+     * @return MorphOne<File, $this>
+     */
+    public function image(): MorphOne
+    {
+        return $this->morphOne(File::class, 'fileable')
+            ->where('type', MorphFileSyncService::TYPE_IMAGE);
     }
 }

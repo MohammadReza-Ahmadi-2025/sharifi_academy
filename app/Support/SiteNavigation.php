@@ -51,11 +51,34 @@ class SiteNavigation
             'type' => $type,
         ];
 
-        if ($type === 'mega' && isset($item['mega']) && is_array($item['mega'])) {
-            $mapped['mega'] = self::mapMega($item['mega'], $user);
+        if ($type === 'mega') {
+            $mapped['mega'] = self::resolveMega($item, $user);
         }
 
         return $mapped;
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @return array<string, mixed>
+     */
+    protected static function resolveMega(array $item, ?User $user): array
+    {
+        $source = $item['mega_source'] ?? null;
+
+        if ($source === 'course_categories') {
+            return app(SiteMenuCategoryService::class)->megaForCourseCategories();
+        }
+
+        if ($source === 'product_categories') {
+            return app(SiteMenuCategoryService::class)->megaForProductCategories();
+        }
+
+        if (isset($item['mega']) && is_array($item['mega'])) {
+            return self::mapMega($item['mega'], $user);
+        }
+
+        return ['columns' => []];
     }
 
     /**

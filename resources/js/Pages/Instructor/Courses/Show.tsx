@@ -1,3 +1,4 @@
+import { PersianDatePicker } from '@/Components/Admin/shared/ui/persian-date-picker';
 import { Button } from '@/Components/ui/Button';
 import { Input } from '@/Components/ui/Input';
 import PanelLayout from '@/Layouts/PanelLayout';
@@ -43,10 +44,11 @@ export default function Show({ course }: Props) {
             <Head title={course.title} />
             <form onSubmit={submit} className="mb-6 grid gap-3 rounded-lg border p-4 md:grid-cols-2">
                 <Input placeholder="عنوان جلسه" value={form.data.title} onChange={(e) => form.setData('title', e.target.value)} />
-                <Input
-                    type="datetime-local"
+                <PersianDatePicker
+                    includeTime
                     value={form.data.starts_at}
-                    onChange={(e) => form.setData('starts_at', e.target.value)}
+                    placeholder="زمان شروع جلسه"
+                    onChange={(value) => form.setData('starts_at', value)}
                 />
                 <Input
                     className="md:col-span-2"

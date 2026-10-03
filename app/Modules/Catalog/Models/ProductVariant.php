@@ -2,6 +2,7 @@
 
 namespace App\Modules\Catalog\Models;
 
+use App\Modules\Cart\Models\CartItem;
 use App\Modules\Catalog\Enums\VariantDisplayMode;
 use App\Modules\Catalog\Services\InventoryService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 
 #[Fillable([
     'product_id',
@@ -46,6 +48,11 @@ class ProductVariant extends Model
                 ->values()
                 ->implode('-'),
         );
+    }
+
+    public static function manualCombinationHash(int $productId, string $seed): string
+    {
+        return sha1('manual:'.$productId.':'.$seed);
     }
 
     /**
@@ -144,6 +151,14 @@ class ProductVariant extends Model
     }
 
     /**
+     * @return HasMany<CartItem, $this>
+     */
+    public function cartItems(): HasMany
+    {
+        return $this->hasMany(CartItem::class, 'variant_id');
+    }
+
+    /**
      * @return BelongsToMany<AttributeValue, $this>
      */
     public function attributeValues(): BelongsToMany
@@ -157,9 +172,9 @@ class ProductVariant extends Model
     }
 
     /**
-     * @return \Illuminate\Support\Collection<string, string>
+     * @return Collection<string, string>
      */
-    public function getAttributesMapAttribute(): \Illuminate\Support\Collection
+    public function getAttributesMapAttribute(): Collection
     {
         return $this->attributeValues
             ->loadMissing('attribute')

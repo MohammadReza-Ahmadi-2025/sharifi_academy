@@ -26,6 +26,7 @@ class AdminNavigation
                 'id' => $item['id'],
                 'label' => $item['label'],
                 'href' => $item['href'],
+                'icon' => $item['icon'] ?? $item['id'],
             ];
         }
 
@@ -37,6 +38,22 @@ class AdminNavigation
      */
     public static function canSee(User $user, array $item): bool
     {
+        if (isset($item['callback']) && is_string($item['callback']) && is_callable($item['callback'])) {
+            return (bool) call_user_func($item['callback'], $user);
+        }
+
+        $permissionsAny = $item['permissions_any'] ?? null;
+
+        if (is_array($permissionsAny) && $permissionsAny !== []) {
+            foreach ($permissionsAny as $permission) {
+                if ($user->can($permission)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         $permission = $item['permission'] ?? null;
 
         if ($permission !== null && $user->can($permission)) {

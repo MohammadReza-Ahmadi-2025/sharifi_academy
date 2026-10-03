@@ -41,7 +41,7 @@ class AdminDashboardTest extends TestCase
                 ->has('stats', 4)
                 ->has('charts.usersMonthly', 6)
                 ->has('charts.rolesBreakdown', 3)
-                ->has('adminPanel.navigation', 3)
+                ->has('adminPanel.navigation', 23)
                 ->where('adminPanel.navigation.0.id', 'dashboard')
             );
     }

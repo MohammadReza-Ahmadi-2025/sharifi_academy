@@ -4,6 +4,7 @@ namespace App\Modules\Catalog\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
@@ -35,5 +36,24 @@ class Attribute extends Model
     public function values(): HasMany
     {
         return $this->hasMany(AttributeValue::class);
+    }
+
+    /**
+     * @return HasMany<ProductAttributeValue, $this>
+     */
+    public function productAttributeValues(): HasMany
+    {
+        return $this->hasMany(ProductAttributeValue::class);
+    }
+
+    /**
+     * @return BelongsToMany<Product, $this>
+     */
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'product_attribute_values')
+            ->withPivot(['attribute_value_id', 'value', 'is_highlight', 'sort'])
+            ->withTimestamps()
+            ->distinct();
     }
 }

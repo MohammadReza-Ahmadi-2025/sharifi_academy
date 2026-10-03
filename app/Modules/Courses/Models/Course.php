@@ -3,17 +3,19 @@
 namespace App\Modules\Courses\Models;
 
 use App\Models\User;
+use App\Modules\AdobeConnect\Models\AdobeRoom;
 use App\Modules\Catalog\Models\Category;
-use App\Modules\Files\Models\File;
-
 use App\Modules\Courses\Enums\CourseLevel;
 use App\Modules\Courses\Enums\CourseStatus;
+use App\Modules\Files\Models\File;
+use App\Modules\Visits\Concerns\HasVisits;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -34,6 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class Course extends Model
 {
+    use HasVisits;
     use SoftDeletes;
 
     /**
@@ -116,6 +119,45 @@ class Course extends Model
     public function courseClasses(): HasMany
     {
         return $this->hasMany(CourseClass::class);
+    }
+
+    /**
+     * @return HasManyThrough<Enrollment, $this>
+     */
+    public function enrollments(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Enrollment::class,
+            CourseClass::class,
+            'course_id',
+            'course_class_id',
+        );
+    }
+
+    /**
+     * @return HasManyThrough<ClassSession, $this>
+     */
+    public function classSessions(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            ClassSession::class,
+            CourseClass::class,
+            'course_id',
+            'course_class_id',
+        );
+    }
+
+    /**
+     * @return HasManyThrough<AdobeRoom, $this>
+     */
+    public function adobeRooms(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            AdobeRoom::class,
+            CourseClass::class,
+            'course_id',
+            'course_class_id',
+        );
     }
 
     /**

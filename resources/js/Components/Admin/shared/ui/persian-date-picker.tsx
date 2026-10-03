@@ -19,12 +19,23 @@ import {
   isIsoBefore,
   toPersianDigits,
 } from "@/Components/Admin/shared/lib/jalali-calendar";
+import {
+  joinIsoDateTime,
+  splitIsoDateTime,
+  toGregorianDateOnly,
+} from "@/Components/Admin/shared/lib/datetime-local-value";
 
 export type PersianDatePickerProps = {
-  /** Gregorian ISO date (`YYYY-MM-DD`) — used for API/storage. */
+  /**
+   * بدون `includeTime`: `YYYY-MM-DD`
+   * با `includeTime`: `YYYY-MM-DDTHH:mm`
+   */
   value?: string;
-  /** Returns Gregorian ISO date (`YYYY-MM-DD`). */
   onChange?: (value: string) => void;
+  /** انتخاب ساعت داخل همان پاپ‌اور (بدون فیلد جدا). */
+  includeTime?: boolean;
+  /** ساعت پیش‌فرض هنگام انتخاب روز جدید (پیش‌فرض ۰۹:۰۰). */
+  defaultTime?: string;
   placeholder?: string;
   label?: string;
   disabled?: boolean;
@@ -57,19 +68,24 @@ export function PersianDatePicker({
   placement = "bottom",
   size = "default",
   fullScreenOnMobile = true,
+  includeTime = false,
+  defaultTime = "09:00",
 }: PersianDatePickerProps) {
   const isCompact = size === "compact";
   const now = JalaliDateTime.now();
   const todayIso = now.toIsoDate();
+  const dateValue = toGregorianDateOnly(value);
 
   const selectedJalali = React.useMemo(
-    () => (value ? isoToJalali(value) : null),
-    [value],
+    () => (dateValue ? isoToJalali(dateValue) : null),
+    [dateValue],
   );
 
   const [isOpen, setIsOpen] = React.useState(false);
   const [viewYear, setViewYear] = React.useState(now.year);
   const [viewMonth, setViewMonth] = React.useState(now.month);
+  const [pendingDate, setPendingDate] = React.useState("");
+  const [pendingTime, setPendingTime] = React.useState(defaultTime);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -84,6 +100,16 @@ export function PersianDatePicker({
     setViewMonth(anchor.month);
   }, [isOpen, selectedJalali, now.year, now.month, now.day]);
 
+  React.useEffect(() => {
+    if (!isOpen || !includeTime) {
+      return;
+    }
+
+    const { date, time } = splitIsoDateTime(value);
+    setPendingDate(date);
+    setPendingTime(time || defaultTime);
+  }, [isOpen, includeTime, value, defaultTime]);
+
   const monthCells = React.useMemo(
     () => buildJalaliMonthGrid(viewYear, viewMonth),
     [viewYear, viewMonth],
@@ -94,10 +120,41 @@ export function PersianDatePicker({
     return Array.from({ length: 21 }, (_, index) => center - 10 + index);
   }, [viewYear]);
 
-  const displayValue = value ? formatIsoToJalali(value, "long") : "";
+  const { time: valueTime } = splitIsoDateTime(value);
+  const displayValue = React.useMemo(() => {
+    if (!dateValue) {
+      return "";
+    }
+
+    const jalali = formatIsoToJalali(dateValue, "long");
+    if (!includeTime || !valueTime) {
+      return jalali;
+    }
+
+    return `${jalali} — ${toPersianDigits(valueTime)}`;
+  }, [dateValue, includeTime, valueTime]);
 
   const handleSelect = (iso: string) => {
-    onChange?.(JalaliDateTime.fromIsoDate(iso)?.toIsoDate() ?? iso);
+    const normalized = JalaliDateTime.fromIsoDate(iso)?.toIsoDate() ?? iso;
+
+    if (includeTime) {
+      setPendingDate(normalized);
+      if (!pendingTime) {
+        setPendingTime(defaultTime);
+      }
+      return;
+    }
+
+    onChange?.(normalized);
+    setIsOpen(false);
+  };
+
+  const handleConfirmDateTime = () => {
+    if (!pendingDate) {
+      return;
+    }
+
+    onChange?.(joinIsoDateTime(pendingDate, pendingTime || defaultTime));
     setIsOpen(false);
   };
 
@@ -124,11 +181,16 @@ export function PersianDatePicker({
     setViewMonth(current.month);
   };
 
+  const minDate = min ? toGregorianDateOnly(min) : undefined;
+  const maxDate = max ? toGregorianDateOnly(max) : undefined;
+
   const isDayDisabled = (iso: string) => {
-    if (min && isIsoBefore(iso, min)) return true;
-    if (max && isIsoAfter(iso, max)) return true;
+    if (minDate && isIsoBefore(iso, minDate)) return true;
+    if (maxDate && isIsoAfter(iso, maxDate)) return true;
     return false;
   };
+
+  const selectedDateIso = includeTime && isOpen ? pendingDate || dateValue : dateValue;
 
   const canSelectToday = !isDayDisabled(todayIso);
 
@@ -148,7 +210,7 @@ export function PersianDatePicker({
         onOpenChange={setIsOpen}
         align={align}
         placement={placement}
-        title={isCompact ? undefined : "انتخاب تاریخ"}
+        title={isCompact ? undefined : includeTime ? "انتخاب تاریخ و ساعت" : "انتخاب تاریخ"}
         fullScreenOnMobile={fullScreenOnMobile}
         panelClassName={cn(
           "overflow-hidden border border-[rgb(var(--primary)/0.18)] shadow-lg shadow-[rgb(var(--primary)/0.12)] ring-1 ring-[rgb(var(--primary)/0.08)]",
@@ -349,7 +411,7 @@ export function PersianDatePicker({
                   );
                 }
 
-                const isSelected = value ? cell.iso === value : false;
+                const isSelected = selectedDateIso ? cell.iso === selectedDateIso : false;
                 const isToday = cell.iso === todayIso;
                 const dayDisabled = isDayDisabled(cell.iso);
 
@@ -389,25 +451,79 @@ export function PersianDatePicker({
               })}
             </div>
 
+            {includeTime ? (
+              <div
+                className={cn(
+                  "border-t border-slate-100 dark:border-slate-800",
+                  isCompact ? "mt-3 pt-3" : "mt-4 pt-3",
+                )}
+              >
+                <p className="mb-2 text-center text-xs font-semibold text-slate-600 dark:text-slate-400">
+                  ساعت
+                </p>
+                <input
+                  type="time"
+                  dir="ltr"
+                  disabled={!pendingDate && !dateValue}
+                  value={pendingTime}
+                  onChange={(event) => setPendingTime(event.target.value)}
+                  className={cn(
+                    "mx-auto flex h-10 w-full max-w-[10rem] rounded-lg border border-slate-200 bg-white px-3 text-center text-sm text-slate-900 outline-none focus:border-[rgb(var(--primary)/0.5)] focus:ring-2 focus:ring-[rgb(var(--primary)/0.15)] dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100",
+                  )}
+                />
+              </div>
+            ) : null}
+
             <div
               className={cn(
                 "flex items-center justify-between border-t border-slate-100 dark:border-slate-800 max-md:mt-auto max-md:pt-4",
                 isCompact ? "mt-3 pt-2" : "mt-4 pt-3",
               )}
             >
-              <button
-                type="button"
-                disabled={!canSelectToday}
-                onClick={() => handleSelect(todayIso)}
-                className="rounded-lg bg-[rgb(var(--primary))] px-3 py-1.5 text-xs font-semibold text-[rgb(var(--primary-foreground))] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                انتخاب امروز
-              </button>
+              {includeTime ? (
+                <button
+                  type="button"
+                  disabled={!pendingDate}
+                  onClick={handleConfirmDateTime}
+                  className="rounded-lg bg-[rgb(var(--primary))] px-3 py-1.5 text-xs font-semibold text-[rgb(var(--primary-foreground))] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  تأیید
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={!canSelectToday}
+                  onClick={() => handleSelect(todayIso)}
+                  className="rounded-lg bg-[rgb(var(--primary))] px-3 py-1.5 text-xs font-semibold text-[rgb(var(--primary-foreground))] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  انتخاب امروز
+                </button>
+              )}
+
+              {includeTime ? (
+                <button
+                  type="button"
+                  disabled={!canSelectToday}
+                  onClick={() => {
+                    const d = new Date();
+                    const t = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+                    setPendingDate(todayIso);
+                    setPendingTime(t);
+                  }}
+                  className="rounded-lg border border-[rgb(var(--primary)/0.35)] px-3 py-1.5 text-xs font-medium text-[rgb(var(--primary))] transition-colors hover:bg-[rgb(var(--primary)/0.08)]"
+                >
+                  امروز
+                </button>
+              ) : null}
 
               {clearable && value ? (
                 <button
                   type="button"
-                  onClick={() => onChange?.("")}
+                  onClick={() => {
+                    onChange?.("");
+                    setPendingDate("");
+                    setPendingTime(defaultTime);
+                  }}
                   className="rounded-lg px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10"
                 >
                   پاک کردن

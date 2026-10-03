@@ -4,12 +4,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | منوی اصلی سایت (موقت — بعداً از پنل ادمین / دیتابیس)
+    | منوی اصلی سایت
     |--------------------------------------------------------------------------
     |
     | type: link | mega
+    | mega_source: course_categories | product_categories (از دیتابیس)
     | visibility: all | guest | auth
-    | roles: فقط وقتی کاربر لاگین است (اختیاری)
     |
     */
     'navigation' => [
@@ -27,60 +27,7 @@ return [
                 'url' => '/#courses',
                 'type' => 'mega',
                 'visibility' => 'all',
-                'mega' => [
-                    'view_all' => [
-                        'label' => 'مشاهده همه دوره‌ها',
-                        'url' => '/#courses',
-                    ],
-                    'featured' => [
-                        'title' => 'کلاس آنلاین زنده',
-                        'description' => 'با اساتید آکادمی در Adobe Connect شرکت کنید و مهارت‌های مهندسی را عملی یاد بگیرید.',
-                        'url' => '/#courses',
-                        'image' => '/coursetest.png',
-                    ],
-                    'columns' => [
-                        [
-                            'title' => 'رشته‌ها',
-                            'links' => [
-                                [
-                                    'label' => 'مهندسی مکانیک',
-                                    'url' => '/#courses',
-                                    'description' => 'طراحی، شبیه‌سازی و تولید',
-                                ],
-                                [
-                                    'label' => 'مهندسی صنایع',
-                                    'url' => '/#courses',
-                                    'description' => 'بهینه‌سازی و مدیریت تولید',
-                                ],
-                                [
-                                    'label' => 'نرم‌افزارهای CAD',
-                                    'url' => '/#courses',
-                                    'description' => 'CATIA، SolidWorks و …',
-                                ],
-                            ],
-                        ],
-                        [
-                            'title' => 'نوع دوره',
-                            'links' => [
-                                [
-                                    'label' => 'کلاس ترمیک',
-                                    'url' => '/#courses',
-                                    'description' => 'جلسات زمان‌بندی‌شده با استاد',
-                                ],
-                                [
-                                    'label' => 'کارگاه فشرده',
-                                    'url' => '/#courses',
-                                    'description' => 'پروژه‌محور در چند جلسه',
-                                ],
-                                [
-                                    'label' => 'ثبت‌نام گروهی',
-                                    'url' => '/login',
-                                    'description' => 'برای تیم‌ها و شرکت‌ها',
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
+                'mega_source' => 'course_categories',
             ],
             [
                 'id' => 'books',
@@ -88,56 +35,7 @@ return [
                 'url' => '/#books',
                 'type' => 'mega',
                 'visibility' => 'all',
-                'mega' => [
-                    'view_all' => [
-                        'label' => 'مشاهده همه کتاب‌ها',
-                        'url' => '/#books',
-                    ],
-                    'featured' => [
-                        'title' => 'کتاب‌های تخصصی آکادمی',
-                        'description' => 'منابع PDF برای مرور، تمرین و همراهی با دوره‌های آموزشی.',
-                        'url' => '/#books',
-                        'image' => '/banner.png',
-                    ],
-                    'columns' => [
-                        [
-                            'title' => 'دسته‌بندی',
-                            'links' => [
-                                [
-                                    'label' => 'آموزش نرم‌افزار',
-                                    'url' => '/#books',
-                                    'description' => 'راهنمای گام‌به‌گام',
-                                ],
-                                [
-                                    'label' => 'مرجع مهندسی',
-                                    'url' => '/#books',
-                                    'description' => 'فرمول‌ها و مثال‌های کاربردی',
-                                ],
-                                [
-                                    'label' => 'پکیج دوره + کتاب',
-                                    'url' => '/#books',
-                                    'description' => 'خرید هم‌زمان با ثبت‌نام',
-                                ],
-                            ],
-                        ],
-                        [
-                            'title' => 'دسترسی',
-                            'links' => [
-                                [
-                                    'label' => 'دانلود امن',
-                                    'url' => '/student/dashboard',
-                                    'description' => 'از پنل دانشجو',
-                                    'visibility' => 'auth',
-                                ],
-                                [
-                                    'label' => 'خرید و دانلود',
-                                    'url' => '/#books',
-                                    'description' => 'پرداخت آنلاین با زرین‌پال',
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
+                'mega_source' => 'product_categories',
             ],
             [
                 'id' => 'account',
@@ -159,12 +57,12 @@ return [
                                     'label' => 'پنل استاد',
                                     'url' => '/instructor',
                                     'description' => 'مدیریت دوره و جلسات',
-                                    'roles' => ['instructor', 'admin'],
+                                    'roles' => ['instructor', 'admin', 'super-admin'],
                                 ],
                                 [
                                     'label' => 'پنل ادمین',
                                     'url' => '/admin',
-                                    'description' => 'مدیریت محتوا و سفارش‌ها',
+                                    'description' => 'مدیریت محتوا',
                                     'roles' => ['admin', 'super-admin'],
                                 ],
                             ],

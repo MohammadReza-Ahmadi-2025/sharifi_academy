@@ -3,11 +3,11 @@
 namespace App\Modules\Courses\Models;
 
 use App\Models\User;
-
 use App\Modules\Courses\Enums\ClassInstructorRole;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 #[Fillable([
     'course_class_id',
@@ -68,6 +68,21 @@ class ClassInstructor extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return HasOneThrough<Course, $this>
+     */
+    public function course(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Course::class,
+            CourseClass::class,
+            'id',
+            'id',
+            'course_class_id',
+            'course_id',
+        );
     }
 
     public function getRoleLabelAttribute(): string

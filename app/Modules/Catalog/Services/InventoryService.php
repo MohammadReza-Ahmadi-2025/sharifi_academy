@@ -232,6 +232,32 @@ class InventoryService
         });
     }
 
+    public function setStock(int $variantId, int $stock, ?int $warehouseId = null, ?int $userId = null): Inventory
+    {
+        $warehouseId = $warehouseId ?: $this->defaultWarehouseId();
+        $stock = max(0, $stock);
+
+        return DB::transaction(function () use ($variantId, $stock, $warehouseId, $userId) {
+            $inventory = $this->getOrCreate($variantId, $warehouseId);
+            $inventory = Inventory::query()->whereKey($inventory->id)->lockForUpdate()->firstOrFail();
+
+            $hadLogs = InventoryLog::query()
+                ->where('variant_id', $variantId)
+                ->exists();
+
+            $change = $stock - (int) $inventory->stock;
+            $inventory->update(['stock' => $stock]);
+
+            if ($change !== 0) {
+                $this->logChange($inventory, $change, 'adjustment', 'تنظیم موجودی از پنل ادمین', null, $userId);
+            } elseif (! $hadLogs) {
+                $this->logChange($inventory, 0, 'initial', 'ثبت موجودی اولیه از پنل ادمین', null, $userId);
+            }
+
+            return $inventory->refresh();
+        });
+    }
+
     private function logChange(
         Inventory $inventory,
         int $change,

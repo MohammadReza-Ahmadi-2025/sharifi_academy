@@ -1,15 +1,58 @@
 import type { AdminPanelNavItem } from '@/types';
-import { BookOpen, GraduationCap, LayoutDashboard, ShieldCheck, ShoppingCart, Users, type LucideIcon } from 'lucide-react';
+import {
+    CircleDot,
+    ClipboardList,
+    FolderTree,
+    GraduationCap,
+    History,
+    Home,
+    LayoutDashboard,
+    MapPin,
+    MessageSquare,
+    Newspaper,
+    Package,
+    Settings,
+    Share2,
+    ShieldCheck,
+    Sparkles,
+    Tag,
+    UserCheck,
+    Users,
+    FileStack,
+    Warehouse,
+    Menu,
+    Eye,
+    type LucideIcon,
+} from 'lucide-react';
 
-const iconById: Record<string, LucideIcon> = {
+const iconByKey: Record<string, LucideIcon> = {
     dashboard: LayoutDashboard,
     users: Users,
     roles: ShieldCheck,
     courses: GraduationCap,
-    books: BookOpen,
-    orders: ShoppingCart,
+    categories: FolderTree,
+    'catalog-products': Package,
+    'catalog-brands': Tag,
+    'catalog-warehouses': Warehouse,
+    'catalog-inventory': ClipboardList,
+    skills: Sparkles,
+    locations: MapPin,
+    files: FileStack,
+    'session-attendances': UserCheck,
+    socials: Share2,
+    comments: MessageSquare,
+    'blog-posts': Newspaper,
+    stories: CircleDot,
+    'home-sections': Home,
+    'home-banners': Home,
+    menus: Menu,
+    visits: Eye,
+    'site-settings': Settings,
+    'activity-logs': History,
 };
 
 export function getAdminNavIcon(item: AdminPanelNavItem): LucideIcon {
-    return iconById[item.id] ?? LayoutDashboard;
+    const key = item.icon ?? item.id;
+
+    return iconByKey[key] ?? LayoutDashboard;
 }

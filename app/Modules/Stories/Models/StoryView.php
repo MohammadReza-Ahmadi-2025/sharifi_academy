@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Modules\Stories\Models;
+
+use App\Models\User;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+#[Fillable([
+    'story_id',
+    'user_id',
+    'first_viewed_at',
+    'last_viewed_at',
+    'view_count',
+])]
+class StoryView extends Model
+{
+    protected function casts(): array
+    {
+        return [
+            'first_viewed_at' => 'datetime',
+            'last_viewed_at' => 'datetime',
+            'view_count' => 'integer',
+        ];
+    }
+
+    /**
+     * @return BelongsTo<Story, $this>
+     */
+    public function story(): BelongsTo
+    {
+        return $this->belongsTo(Story::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+}

@@ -5,11 +5,17 @@ use App\Modules\Auth\Http\Controllers\OtpRequestController;
 use App\Modules\Auth\Http\Controllers\OtpVerifyController;
 use App\Modules\Auth\Http\Controllers\PasswordLoginController;
 use App\Modules\Profile\Http\Controllers\AccountProfileController;
+use App\Modules\Stories\Http\Controllers\Site\StoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 
+Route::get('/stories/feed', [StoryController::class, 'feed'])->name('stories.feed');
+
 Route::middleware('auth')->group(function () {
+    Route::post('/stories', [StoryController::class, 'store'])->name('stories.store');
+    Route::post('/stories/{story}/views', [StoryController::class, 'recordView'])->name('stories.views');
+    Route::delete('/stories/{story}', [StoryController::class, 'destroy'])->name('stories.destroy');
     Route::get('/profile', [AccountProfileController::class, 'edit'])->name('site.profile.edit');
     Route::put('/profile', [AccountProfileController::class, 'update'])->name('site.profile.update');
     Route::put('/profile/password', [AccountProfileController::class, 'updatePassword'])->name('site.profile.password');
