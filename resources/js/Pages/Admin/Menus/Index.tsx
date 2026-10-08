@@ -76,6 +76,7 @@ export default function MenusIndex({ menus, filters, locationOptions, abilities 
             <Head title="منوهای سایت" />
             <PageHeader
                 title="منوهای سایت"
+                description="منو با موقعیت «فوتر» ستون‌ها و لینک‌های متنی فوتر را می‌سازد. برای تلگرام و شبکه‌های اجتماعی از بخش شبکه‌های اجتماعی استفاده کنید."
                 actions={
                     abilities.create ? (
                         <AdminButton href="/admin/menus/create">

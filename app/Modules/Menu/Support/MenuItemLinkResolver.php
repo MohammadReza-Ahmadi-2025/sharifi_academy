@@ -13,8 +13,8 @@ class MenuItemLinkResolver
         $type = $item->type instanceof MenuItemType ? $item->type : MenuItemType::tryFrom((string) $item->type);
 
         return match ($type) {
-            MenuItemType::CategoryProduct => self::categoryLink($item, '/books?category='),
-            MenuItemType::CategoryCourse => self::categoryLink($item, '/courses?category='),
+            MenuItemType::CategoryProduct => self::categoryLink($item, '/categories/'),
+            MenuItemType::CategoryCourse => self::categoryLink($item, '/categories/'),
             MenuItemType::Internal => $item->url ?: '#',
             MenuItemType::External => $item->url ?: '#',
             default => $item->url ?: '#',

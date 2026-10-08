@@ -77,7 +77,7 @@ class ProductPresenter
 
     public static function variantForAdmin(ProductVariant $variant): array
     {
-        $variant->loadMissing(['currentPrice', 'inventory']);
+        $variant->loadMissing(['currentPrice', 'inventory', 'attributeValues.attribute']);
 
         $price = $variant->currentPrice;
 
@@ -92,8 +92,19 @@ class ProductPresenter
             'sort' => $variant->sort,
             'price' => $price?->price,
             'final_price' => $price?->final_price ?? $price?->price,
+            'discount_type' => $price?->discount_type,
+            'discount_value' => $price?->discount_value,
+            'sale_start' => null,
+            'sale_end' => null,
             'stock' => $variant->inventory?->stock ?? 0,
+            'min_stock' => (int) ($variant->inventory?->min_stock ?? 0),
             'label' => $variant->label,
+            'attributes_text' => $variant->attributes_text,
+            'attribute_value_ids' => $variant->attributeValues->pluck('id')->values()->all(),
+            'attributes' => $variant->attributeValues
+                ->mapWithKeys(fn ($value) => [(string) $value->attribute_id => (string) $value->id])
+                ->all(),
+            'is_default' => $variant->attributeValues->isEmpty(),
         ];
     }
 }

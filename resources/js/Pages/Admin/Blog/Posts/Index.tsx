@@ -64,7 +64,7 @@ export default function BlogPostsIndex({
 
     const applyFilters = (overrides: Record<string, string | number | undefined | null> = {}) => {
         router.get(
-            '/admin/blog/posts',
+            '/admin/posts',
             {
                 search: search || undefined,
                 status: status || undefined,
@@ -85,17 +85,17 @@ export default function BlogPostsIndex({
         setSearch('');
         setStatus('');
         setCategoryId('');
-        router.get('/admin/blog/posts', { per_page: filters.per_page }, { replace: true });
+        router.get('/admin/posts', { per_page: filters.per_page }, { replace: true });
     };
 
     return (
         <AdminLayout>
-            <Head title="پست‌های وبلاگ" />
+            <Head title="پست‌ها" />
             <PageHeader
-                title="پست‌های وبلاگ"
+                title="پست‌ها"
                 actions={
                     abilities.create ? (
-                        <AdminButton href="/admin/blog/posts/create">
+                        <AdminButton href="/admin/posts/create">
                             <Plus className="size-4" />
                             پست جدید
                         </AdminButton>
@@ -155,7 +155,7 @@ export default function BlogPostsIndex({
                                     <TableCell>
                                         <div className="flex gap-1">
                                             {abilities.update && (
-                                                <AdminButton variant="ghost" size="sm" href={`/admin/blog/posts/${row.id}/edit`}>
+                                                <AdminButton variant="ghost" size="sm" href={`/admin/posts/${row.id}/edit`}>
                                                     <Pencil className="size-4" />
                                                 </AdminButton>
                                             )}
@@ -165,7 +165,7 @@ export default function BlogPostsIndex({
                                                     size="sm"
                                                     onClick={() =>
                                                         window.confirm('حذف شود؟') &&
-                                                        router.delete(`/admin/blog/posts/${row.id}`)
+                                                        router.delete(`/admin/posts/${row.id}`)
                                                     }
                                                 >
                                                     <Trash2 className="size-4 text-red-600" />

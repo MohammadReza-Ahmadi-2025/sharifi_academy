@@ -3,6 +3,7 @@
 namespace App\Modules\Catalog\Http\Requests\Admin;
 
 use App\Modules\Catalog\Http\Requests\Admin\Concerns\NormalizesCatalogSeoInput;
+use App\Modules\Catalog\Http\Requests\Admin\Concerns\ValidatesProductVariants;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Files\Http\Requests\Concerns\ValidatesGalleryUploads;
 use Illuminate\Contracts\Validation\Validator;
@@ -13,6 +14,7 @@ class UpdateProductRequest extends FormRequest
 {
     use NormalizesCatalogSeoInput;
     use ValidatesGalleryUploads;
+    use ValidatesProductVariants;
 
     protected function prepareForValidation(): void
     {
@@ -60,6 +62,7 @@ class UpdateProductRequest extends FormRequest
             'features' => ['nullable', 'string'],
             ...$this->catalogSeoRules(),
             ...$this->galleryImageRules(),
+            ...$this->productVariantRules(),
         ];
     }
 

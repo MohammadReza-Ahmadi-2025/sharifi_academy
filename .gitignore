@@ -4,6 +4,7 @@
 
 # Build & Vite
 /public/build
+/public/ckeditor
 /public/hot
 /public/storage
 

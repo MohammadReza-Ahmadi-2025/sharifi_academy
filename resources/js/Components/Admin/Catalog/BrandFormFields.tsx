@@ -10,7 +10,6 @@ export type BrandFormData = CatalogSeoFormData & {
     description: string;
     website: string;
     status: boolean;
-    sort: number;
 };
 
 type Props = {
@@ -45,24 +44,14 @@ export function BrandFormFields({ data, errors, onChange }: Props) {
                     onChange={(e) => onChange('description', e.target.value)}
                 />
             </FormField>
-            <div className="grid gap-4 lg:grid-cols-2">
-                <FormField label="وب‌سایت" error={errors.website}>
-                    <Input
-                        value={data.website}
-                        dir="ltr"
-                        placeholder="https://"
-                        onChange={(e) => onChange('website', e.target.value)}
-                    />
-                </FormField>
-                <FormField label="ترتیب نمایش" error={errors.sort}>
-                    <Input
-                        type="number"
-                        min={0}
-                        value={data.sort}
-                        onChange={(e) => onChange('sort', Number(e.target.value) || 0)}
-                    />
-                </FormField>
-            </div>
+            <FormField label="وب‌سایت" error={errors.website}>
+                <Input
+                    value={data.website}
+                    dir="ltr"
+                    placeholder="https://"
+                    onChange={(e) => onChange('website', e.target.value)}
+                />
+            </FormField>
             <FormField label="فعال" error={errors.status}>
                 <Switch
                     checked={data.status}

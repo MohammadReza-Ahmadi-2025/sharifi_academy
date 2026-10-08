@@ -6,6 +6,7 @@ import { Card } from '@/Components/Admin/shared/ui/card';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     role: AdminRoleListItem;
@@ -54,8 +55,8 @@ export default function RolesEdit({ role, permissionGroups, selectedPermissions,
                 }
             />
 
-            <form onSubmit={submit} className="mt-6 space-y-6">
-                <Card className="max-w-2xl text-sm text-slate-600 dark:text-slate-300">
+            <AdminFormPage onSubmit={submit}>
+                <Card className="w-full p-6 text-sm text-slate-600 dark:text-slate-300">
                     <p>
                         کاربران این نقش: <strong>{role.usersCount.toLocaleString('fa-IR')}</strong>
                     </p>
@@ -75,12 +76,12 @@ export default function RolesEdit({ role, permissionGroups, selectedPermissions,
                 />
 
                 {abilities.update ? (
-                    <div className="flex gap-3">
+                    <AdminFormActions>
                         <AdminButton type="submit" disabled={form.processing}>ذخیره تغییرات</AdminButton>
                         <AdminButton type="button" variant="outline" href="/admin/roles">بازگشت</AdminButton>
-                    </div>
+                    </AdminFormActions>
                 ) : null}
-            </form>
+            </AdminFormPage>
         </AdminLayout>
     );
 }

@@ -17,7 +17,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'user_id',
+    'title',
     'file_id',
+    'thumbnail_file_id',
     'type',
     'content',
     'background_color',
@@ -58,6 +60,14 @@ class Story extends Model
     }
 
     /**
+     * @return BelongsTo<File, $this>
+     */
+    public function thumbnail(): BelongsTo
+    {
+        return $this->belongsTo(File::class, 'thumbnail_file_id');
+    }
+
+    /**
      * @return MorphMany<File, $this>
      */
     public function files(): MorphMany
@@ -82,6 +92,7 @@ class Story extends Model
         return $query
             ->where('status', StoryStatus::Published)
             ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
             ->where(function (Builder $builder): void {
                 $builder->whereNull('expires_at')
                     ->orWhere('expires_at', '>', now());

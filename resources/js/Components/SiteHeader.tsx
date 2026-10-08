@@ -1,6 +1,6 @@
 import { MegaMenuPanel } from '@/Components/MegaMenuPanel';
-import { SiteProductCategoryBar } from '@/Components/SiteProductCategoryBar';
 import { NavMenuLink } from '@/Components/NavMenuLink';
+import { siteSettingsFromPage } from '@/lib/site-settings';
 import { NavItem, PageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { ChevronDown, Menu, ShoppingCart, X } from 'lucide-react';
@@ -15,17 +15,10 @@ const MOBILE_DRAWER_MS = 650;
 const MOBILE_DRAWER_ENTER_DELAY_MS = 40;
 
 const NAV_LINK_CLASS = 'rounded-lg px-3 py-2 hover:bg-primary-hover/80';
-const AUTH_LINK_CLASS =
-    'rounded-full bg-neutral-white px-4 py-2 font-semibold text-primary shadow-sm transition hover:bg-secondary';
-const AUTH_LINK_MOBILE_CLASS =
-    'block rounded-full bg-neutral-white py-2.5 text-center font-semibold text-primary shadow-sm transition hover:bg-secondary';
-
-function isAuthNavItem(item: NavItem): boolean {
-    return item.id === 'auth';
-}
-
 export function SiteHeader() {
-    const { app, navigation } = usePage<PageProps>().props;
+    const pageProps = usePage<PageProps>().props;
+    const { app, navigation } = pageProps;
+    const settings = siteSettingsFromPage(pageProps);
     const [mobileMounted, setMobileMounted] = useState(false);
     const [mobileEntered, setMobileEntered] = useState(false);
     const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
@@ -127,7 +120,11 @@ export function SiteHeader() {
             onClick={closeMobile}
         >
             <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-neutral-white">
-                <img src="/favicon.ico" alt="" className="size-9" />
+                <img
+                    src={settings.site_logo ?? settings.site_icon ?? '/favicon.ico'}
+                    alt=""
+                    className="size-9 object-contain"
+                />
             </span>
             <span className="truncate">{app.name}</span>
         </Link>
@@ -191,12 +188,8 @@ export function SiteHeader() {
                         }
 
                         return (
-                            <div key={item.id} className={isAuthNavItem(item) ? 'ms-2 px-1' : 'px-1'}>
-                                <NavMenuLink
-                                    url={item.url}
-                                    label={item.label}
-                                    className={isAuthNavItem(item) ? AUTH_LINK_CLASS : NAV_LINK_CLASS}
-                                />
+                            <div key={item.id} className="px-1">
+                                <NavMenuLink url={item.url} label={item.label} className={NAV_LINK_CLASS} />
                             </div>
                         );
                     })}
@@ -221,8 +214,6 @@ export function SiteHeader() {
                     </div>
                 </div>
             )}
-
-            <SiteProductCategoryBar />
 
             {mobileMounted && (
                 <>
@@ -279,19 +270,6 @@ export function SiteHeader() {
                                                         <MegaMenuPanel mega={item.mega} compact onNavigate={closeMobile} />
                                                     </div>
                                                 )}
-                                            </li>
-                                        );
-                                    }
-
-                                    if (isAuthNavItem(item)) {
-                                        return (
-                                            <li key={item.id} className="mt-4 border-t border-white/15 pt-4">
-                                                <NavMenuLink
-                                                    url={item.url}
-                                                    label={item.label}
-                                                    className={AUTH_LINK_MOBILE_CLASS}
-                                                    onNavigate={closeMobile}
-                                                />
                                             </li>
                                         );
                                     }

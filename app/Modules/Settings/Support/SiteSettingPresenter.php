@@ -3,7 +3,7 @@
 namespace App\Modules\Settings\Support;
 
 use App\Modules\Settings\Models\SiteSetting;
-use Illuminate\Support\Facades\Storage;
+use App\Support\Storage\PublicStorageUrl;
 
 class SiteSettingPresenter
 {
@@ -43,7 +43,7 @@ class SiteSettingPresenter
             'autoload' => $setting->autoload,
             'value' => self::formValue($setting->type, $value),
             'image_url' => $setting->type === 'image' && is_string($value) && $value !== ''
-                ? Storage::disk('public')->url($value)
+                ? PublicStorageUrl::forPath($value)
                 : null,
         ];
     }

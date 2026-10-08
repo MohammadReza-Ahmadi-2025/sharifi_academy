@@ -3,6 +3,7 @@ import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     brand: {
@@ -27,7 +28,6 @@ export default function BrandEdit({ brand }: Props) {
         description: brand.description,
         website: brand.website,
         status: brand.status,
-        sort: brand.sort,
         meta_title: brand.meta_title,
         meta_description: brand.meta_description,
         meta_keywords: brand.meta_keywords,
@@ -38,21 +38,21 @@ export default function BrandEdit({ brand }: Props) {
         <AdminLayout>
             <Head title={`ویرایش ${brand.title}`} />
             <PageHeader title={`ویرایش برند: ${brand.title}`} backHref="/admin/catalog/brands" />
-            <form
-                onSubmit={(e) => {
+            <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
                     form.put(`/admin/catalog/brands/${brand.id}`);
-                }}
-                className="mt-6 space-y-6"
-            >
+                }}>
                 <BrandFormFields
                     data={form.data}
                     errors={form.errors}
                     processing={form.processing}
                     onChange={(k, v) => form.setData(k, v as never)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>ذخیره تغییرات</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>ذخیره تغییرات</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

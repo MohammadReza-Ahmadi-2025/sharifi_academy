@@ -7,6 +7,7 @@ use App\Modules\AdobeConnect\Models\AdobeRoom;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Courses\Enums\CourseLevel;
 use App\Modules\Courses\Enums\CourseStatus;
+use App\Modules\Comments\Models\Comment;
 use App\Modules\Files\Models\File;
 use App\Modules\Visits\Concerns\HasVisits;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -119,6 +120,14 @@ class Course extends Model
     public function courseClasses(): HasMany
     {
         return $this->hasMany(CourseClass::class);
+    }
+
+    /**
+     * @return MorphMany<Comment, $this>
+     */
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
     }
 
     /**

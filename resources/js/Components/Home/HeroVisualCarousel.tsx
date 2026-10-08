@@ -7,7 +7,7 @@ type Slide = {
     subtitle: string;
 };
 
-const slides: Slide[] = [
+const defaultSlides: Slide[] = [
     {
         src: '/coursetest.png',
         alt: 'آموزش جامع کتیا',
@@ -22,12 +22,30 @@ const slides: Slide[] = [
     },
 ];
 
+type Props = {
+    slides?: { src: string; alt: string; title?: string; subtitle?: string }[];
+};
+
+function normalizeSlides(input?: Props['slides']): Slide[] {
+    if (!input?.length) {
+        return defaultSlides;
+    }
+
+    return input.map((slide) => ({
+        src: slide.src,
+        alt: slide.alt,
+        title: slide.title ?? slide.alt,
+        subtitle: slide.subtitle ?? '',
+    }));
+}
+
 const AUTOPLAY_MS = 5500;
 const SHUFFLE_MS = 1000;
 const SHUFFLE_MID_MS = 480;
 const SWIPE_THRESHOLD = 48;
 
-export function HeroVisualCarousel() {
+export function HeroVisualCarousel({ slides: slideInput }: Props = {}) {
+    const slides = normalizeSlides(slideInput);
     const [frontIndex, setFrontIndex] = useState(0);
     const [shufflePhase, setShufflePhase] = useState<'idle' | 'active' | 'behind'>('idle');
     const [outgoingIndex, setOutgoingIndex] = useState<number | null>(null);
@@ -79,9 +97,12 @@ export function HeroVisualCarousel() {
     }, []);
 
     const advance = useCallback(() => {
-        const nextFront = frontIndexRef.current === 0 ? 1 : 0;
+        if (slides.length < 2) {
+            return;
+        }
+        const nextFront = (frontIndexRef.current + 1) % slides.length;
         runShuffle(nextFront);
-    }, [runShuffle]);
+    }, [runShuffle, slides.length]);
 
     const goTo = useCallback(
         (targetIndex: number) => {

@@ -5,22 +5,34 @@ import { useState } from 'react';
 type Props = {
     section: { title: string };
     tabs: { id: number; title: string; items: HomeCatalogItem[] }[];
+    sectionId?: string;
 };
 
-export function HomeBannerCarousel({ section, tabs }: Props) {
+export function HomeBannerCarousel({ section, tabs, sectionId }: Props) {
     const [activeTabId, setActiveTabId] = useState(tabs[0]?.id ?? 0);
     const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
     const banners = activeTab?.items ?? [];
     const [slide, setSlide] = useState(0);
 
-    if (!activeTab || banners.length === 0) {
+    if (!activeTab) {
         return null;
+    }
+
+    if (banners.length === 0) {
+        return (
+            <section id={sectionId} className="mx-auto max-w-6xl scroll-mt-24 px-4 py-8">
+                <h2 className="mb-4 text-2xl font-extrabold text-neutral-black">{section.title}</h2>
+                <p className="rounded-2xl border border-dashed border-secondary bg-neutral-white px-4 py-10 text-center text-sm text-neutral-black/70">
+                    بنری برای نمایش ثبت نشده است.
+                </p>
+            </section>
+        );
     }
 
     const current = banners[slide % banners.length];
 
     return (
-        <section className="mx-auto max-w-6xl px-4 py-8">
+        <section id={sectionId} className="mx-auto max-w-6xl scroll-mt-24 px-4 py-8">
             {tabs.length > 1 && (
                 <div className="mb-4 flex flex-wrap gap-2">
                     {tabs.map((tab) => (

@@ -80,7 +80,7 @@ class SiteMenuCategoryService
             roots: $this->courseRoots(),
             viewAllLabel: 'مشاهده همه دوره‌ها',
             viewAllUrl: '/#courses',
-            linkPrefix: '/courses?category=',
+            linkPrefix: '/categories/',
             featuredFallbackTitle: 'دوره‌های آکادمی',
             featuredFallbackDescription: 'کلاس‌های تخصصی با اساتید مجرب — ثبت‌نام آنلاین.',
             featuredUrl: '/#courses',
@@ -306,13 +306,13 @@ class SiteMenuCategoryService
                 'id' => $child->id,
                 'title' => $child->title,
                 'slug' => $child->slug,
-                'url' => '/books?category='.$child->slug,
+                'url' => '/categories/'.$child->slug,
                 'children' => collect($child->childrenRecursive ?? [])
                     ->map(fn (Category $grandchild) => [
                         'id' => $grandchild->id,
                         'title' => $grandchild->title,
                         'slug' => $grandchild->slug,
-                        'url' => '/books?category='.$grandchild->slug,
+                        'url' => '/categories/'.$grandchild->slug,
                     ])
                     ->values()
                     ->all(),
@@ -324,7 +324,7 @@ class SiteMenuCategoryService
             'id' => $category->id,
             'title' => $category->title,
             'slug' => $category->slug,
-            'url' => '/books?category='.$category->slug,
+            'url' => '/categories/'.$category->slug,
             'image_url' => $category->image?->publicUrl(),
             'children' => $children,
             'brands' => $this->brandsForMenu(collect([$category]))

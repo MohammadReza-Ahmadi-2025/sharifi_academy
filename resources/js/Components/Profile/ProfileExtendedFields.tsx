@@ -1,7 +1,9 @@
 import { SiteFormField } from '@/Components/Account/SiteFormField';
 import { SiteInput } from '@/Components/Account/SiteInput';
 import { FormField } from '@/Components/Admin/shared/ui/form-field';
+import { Switch } from '@/Components/Admin/shared/ui/switch';
 import { AdminInput } from '@/Components/Admin/shared/ui/input';
+import { Textarea } from '@/Components/Admin/shared/ui/textarea';
 import { PersianDatePicker } from '@/Components/Admin/shared/ui/persian-date-picker';
 import type { LocationOptions, ProfileExtendedFormData } from '@/types/profile-extended';
 import { useMemo, useState } from 'react';
@@ -88,12 +90,13 @@ export function ProfileExtendedFields({
             </Field>
 
             <Field label="بیوگرافی" htmlFor="bio" error={errors.bio}>
-                <textarea
+                <Textarea
                     id="bio"
-                    value={data.bio}
+                    rows={5}
+                    value={data.bio ?? ''}
                     onChange={(e) => onChange('bio', e.target.value)}
                     disabled={processing}
-                    className={textareaClass}
+                    className={variant === 'site' ? textareaClass : undefined}
                 />
             </Field>
 
@@ -157,16 +160,12 @@ export function ProfileExtendedFields({
                 </Field>
             </div>
 
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
-                <input
-                    type="checkbox"
-                    checked={data.is_public}
-                    onChange={(e) => onChange('is_public', e.target.checked)}
-                    disabled={processing}
-                    className="rounded border-slate-300"
-                />
-                نمایش عمومی پروفایل و رزومه
-            </label>
+            <Switch
+                label="نمایش عمومی پروفایل و رزومه"
+                checked={data.is_public}
+                disabled={processing}
+                onCheckedChange={(v) => onChange('is_public', v)}
+            />
 
             {isVerified ? (
                 <p className="text-xs text-emerald-600 dark:text-emerald-400">پروفایل شما توسط آموزشگاه تأیید شده است.</p>

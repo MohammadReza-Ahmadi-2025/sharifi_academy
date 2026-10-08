@@ -12,6 +12,7 @@ class AdminProductVariantService
     public function __construct(
         private readonly InventoryService $inventoryService,
         private readonly VariantPriceService $variantPriceService,
+        private readonly VariantAttributeSync $variantAttributeSync,
     ) {}
 
     public function createDefault(Product $product, ?int $userId = null): ProductVariant
@@ -70,8 +71,9 @@ class AdminProductVariantService
 
         $this->applyAdminPricing($variant, $data);
         $this->inventoryService->setStock($variant->id, (int) ($data['stock'] ?? 0), null, $userId);
+        $this->variantAttributeSync->sync($variant, $data['attribute_value_ids'] ?? []);
 
-        return $variant->fresh(['currentPrice', 'inventory']);
+        return $variant->fresh(['currentPrice', 'inventory', 'attributeValues.attribute']);
     }
 
     /**
@@ -89,8 +91,9 @@ class AdminProductVariantService
 
         $this->applyAdminPricing($variant, $data);
         $this->inventoryService->setStock($variant->id, (int) ($data['stock'] ?? 0), null, $userId);
+        $this->variantAttributeSync->sync($variant, $data['attribute_value_ids'] ?? []);
 
-        return $variant->fresh(['currentPrice', 'inventory']);
+        return $variant->fresh(['currentPrice', 'inventory', 'attributeValues.attribute']);
     }
 
     /**

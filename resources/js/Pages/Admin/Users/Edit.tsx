@@ -8,6 +8,7 @@ import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 import { useState } from 'react';
 
 type Props = {
@@ -35,9 +36,8 @@ export default function UsersEdit({ user, roleOptions, selectedRoles, abilities 
 
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
-        form
-            .transform((data) => withAvatarPayload(data, avatarFiles, { removeAvatar }))
-            .put(`/admin/users/${user.id}`, { preserveScroll: true, forceFormData: true });
+        form.transform((data) => withAvatarPayload(data, avatarFiles, { removeAvatar }));
+        form.put(`/admin/users/${user.id}`, { preserveScroll: true, forceFormData: true });
     };
 
     const handleDelete = () => {
@@ -64,7 +64,7 @@ export default function UsersEdit({ user, roleOptions, selectedRoles, abilities 
                 </p>
             ) : null}
 
-            <form onSubmit={submit} className="mt-6 space-y-6">
+            <AdminFormPage onSubmit={submit}>
                 <UserAvatarField
                     files={avatarFiles}
                     onFilesChange={setAvatarFiles}
@@ -85,7 +85,7 @@ export default function UsersEdit({ user, roleOptions, selectedRoles, abilities 
                     passwordRequired={false}
                 />
 
-                <div className="flex flex-wrap gap-3">
+                <AdminFormActions>
                     <AdminButton type="submit" disabled={form.processing}>ذخیره تغییرات</AdminButton>
                     <AdminButton type="button" variant="outline" href="/admin/users">بازگشت</AdminButton>
                     {abilities.delete ? (
@@ -93,8 +93,8 @@ export default function UsersEdit({ user, roleOptions, selectedRoles, abilities 
                             حذف کاربر
                         </AdminButton>
                     ) : null}
-                </div>
-            </form>
+                </AdminFormActions>
+            </AdminFormPage>
         </AdminLayout>
     );
 }

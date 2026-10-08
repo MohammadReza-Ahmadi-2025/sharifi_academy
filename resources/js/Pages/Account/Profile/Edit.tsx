@@ -75,9 +75,8 @@ export default function AccountProfileEdit({ profile, locations }: Props) {
 
     const submitInfo = (event: React.FormEvent) => {
         event.preventDefault();
-        infoForm
-            .transform((data) => withAvatarPayload(data, avatarFiles, { removeAvatar }))
-            .put('/profile', { preserveScroll: true, forceFormData: true });
+        infoForm.transform((data) => withAvatarPayload(data, avatarFiles, { removeAvatar }));
+        infoForm.put('/profile', { preserveScroll: true, forceFormData: true });
     };
 
     const submitPassword = (event: React.FormEvent) => {

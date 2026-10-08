@@ -5,6 +5,7 @@ namespace App\Modules\Comments\Models;
 use App\Models\User;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Catalog\Models\Product;
+use App\Modules\Courses\Models\Course;
 use App\Modules\Comments\Enums\CommenterType;
 use App\Modules\Comments\Enums\CommentStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -122,6 +123,7 @@ class Comment extends Model
         return match ($this->commentable_type) {
             Product::class => 'محصول',
             Post::class => 'مقاله',
+            Course::class => 'دوره',
             default => class_basename($this->commentable_type) ?: '—',
         };
     }

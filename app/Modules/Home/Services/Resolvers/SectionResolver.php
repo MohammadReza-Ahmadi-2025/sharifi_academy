@@ -11,8 +11,6 @@ use App\Modules\Home\Models\Banner;
 use App\Modules\Home\Models\HomeSection;
 use App\Modules\Home\Services\HomeCacheInvalidator;
 use App\Modules\Home\Support\HomeItemPresenter;
-use Illuminate\Support\Facades\Cache;
-
 class SectionResolver
 {
     public function __construct(private HomeCacheInvalidator $cache) {}
@@ -22,35 +20,34 @@ class SectionResolver
      */
     public function resolve(): array
     {
-        $sections = Cache::remember($this->cache->sectionsSkeletonKey(), 600, function () {
-            return HomeSection::query()
-                ->where('status', true)
-                ->orderBy('sort')
-                ->with([
-                    'tabs' => function ($query) {
-                        $query->where('is_active', true)
-                            ->orderBy('sort_order')
-                            ->with([
-                                'items' => function ($itemsQuery) {
-                                    $itemsQuery->orderBy('sort_order')
-                                        ->with([
-                                            'item' => function ($morph) {
-                                                $morph->morphWith([
-                                                    Banner::class => ['file'],
-                                                    Product::class => ['mainImage'],
-                                                    Course::class => HomeItemPresenter::courseEagerRelations(),
-                                                    Post::class => ['featuredImage'],
-                                                    Brand::class => [],
-                                                    Category::class => ['image'],
-                                                ]);
-                                            },
-                                        ]);
-                                },
-                            ]);
-                    },
-                ])
-                ->get();
-        });
+        // Do not cache Eloquent models in the application cache (unserialize breaks across deploys).
+        $sections = HomeSection::query()
+            ->where('status', true)
+            ->orderBy('sort')
+            ->with([
+                'tabs' => function ($query) {
+                    $query->where('is_active', true)
+                        ->orderBy('sort_order')
+                        ->with([
+                            'items' => function ($itemsQuery) {
+                                $itemsQuery->orderBy('sort_order')
+                                    ->with([
+                                        'item' => function ($morph) {
+                                            $morph->morphWith([
+                                                Banner::class => ['file'],
+                                                Product::class => ['mainImage'],
+                                                Course::class => HomeItemPresenter::courseEagerRelations(),
+                                                Post::class => ['featuredImage'],
+                                                Brand::class => [],
+                                                Category::class => ['image'],
+                                            ]);
+                                        },
+                                    ]);
+                            },
+                        ]);
+                },
+            ])
+            ->get();
 
         return $sections
             ->map(function (HomeSection $section) {
@@ -60,10 +57,6 @@ class SectionResolver
                     ->values()
                     ->all();
 
-                if ($tabs === []) {
-                    return null;
-                }
-
                 return [
                     'id' => $section->id,
                     'title' => $section->title,
@@ -71,7 +64,6 @@ class SectionResolver
                     'tabs' => $tabs,
                 ];
             })
-            ->filter()
             ->values()
             ->all();
     }

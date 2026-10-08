@@ -110,7 +110,7 @@ class PostController extends Controller
         $this->syncFeaturedImageFromRequest($post, $request);
 
         return redirect()
-            ->route('admin.blog.posts.edit', $post)
+            ->route('admin.posts.edit', $post)
             ->with('success', 'پست ایجاد شد.');
     }
 
@@ -158,7 +158,7 @@ class PostController extends Controller
         $this->syncFeaturedImageFromRequest($post, $request);
 
         return redirect()
-            ->route('admin.blog.posts.edit', $post)
+            ->route('admin.posts.edit', $post)
             ->with('success', 'پست به‌روزرسانی شد.');
     }
 
@@ -170,7 +170,7 @@ class PostController extends Controller
         $post->delete();
 
         return redirect()
-            ->route('admin.blog.posts.index')
+            ->route('admin.posts.index')
             ->with('success', 'پست حذف شد.');
     }
 

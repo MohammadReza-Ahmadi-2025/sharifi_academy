@@ -3,11 +3,13 @@
 namespace App\Modules\Catalog\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Catalog\Http\Requests\Admin\GenerateProductVariantsRequest;
 use App\Modules\Catalog\Http\Requests\Admin\StoreProductVariantRequest;
 use App\Modules\Catalog\Http\Requests\Admin\UpdateProductVariantRequest;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Models\ProductVariant;
 use App\Modules\Catalog\Services\AdminProductVariantService;
+use App\Modules\Catalog\Services\ProductVariantCombinationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -15,6 +17,7 @@ class ProductVariantController extends Controller
 {
     public function __construct(
         private readonly AdminProductVariantService $variantService,
+        private readonly ProductVariantCombinationService $combinationService,
     ) {}
 
     public function store(StoreProductVariantRequest $request, Product $product): RedirectResponse
@@ -35,6 +38,23 @@ class ProductVariantController extends Controller
         return redirect()
             ->route('admin.catalog.products.edit', $product)
             ->with('success', 'تنوع به‌روزرسانی شد.');
+    }
+
+    public function generate(GenerateProductVariantsRequest $request, Product $product): RedirectResponse
+    {
+        $created = $this->combinationService->generate(
+            $product,
+            $request->validated('selections'),
+            $request->user()?->id,
+        );
+
+        $message = $created > 0
+            ? "{$created} تنوع جدید ساخته شد."
+            : 'ترکیب جدیدی برای ساخت نبود (احتمالاً قبلاً ثبت شده‌اند).';
+
+        return redirect()
+            ->route('admin.catalog.products.edit', $product)
+            ->with('success', $message);
     }
 
     public function reorder(Request $request, Product $product): RedirectResponse

@@ -3,6 +3,7 @@ import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     menu: {
@@ -25,7 +26,6 @@ export default function MenusEdit({ menu, locationOptions, itemTypeOptions }: Pr
         url: menu.url,
         icon: menu.icon,
         location: menu.location,
-        sort: menu.sort,
         status: menu.status,
         items: menu.items,
     });
@@ -34,13 +34,10 @@ export default function MenusEdit({ menu, locationOptions, itemTypeOptions }: Pr
         <AdminLayout>
             <Head title="ویرایش منو" />
             <PageHeader title={menu.title} backHref="/admin/menus" />
-            <form
-                onSubmit={(e) => {
+            <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
                     form.put(`/admin/menus/${menu.id}`);
-                }}
-                className="mt-6 space-y-6"
-            >
+                }}>
                 <MenuFormFields
                     data={form.data}
                     errors={form.errors}
@@ -50,8 +47,11 @@ export default function MenusEdit({ menu, locationOptions, itemTypeOptions }: Pr
                     onChange={(k, v) => form.setData(k, v as never)}
                     onItemsChange={(items) => form.setData('items', items)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>به‌روزرسانی</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>به‌روزرسانی</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

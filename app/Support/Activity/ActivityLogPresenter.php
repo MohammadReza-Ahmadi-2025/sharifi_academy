@@ -34,6 +34,11 @@ class ActivityLogPresenter
             'stories' => 'استوری‌ها',
             'roles' => 'نقش‌ها',
             'users' => 'کاربران',
+            'home' => 'صفحه اصلی',
+            'menu' => 'منو',
+            'locations' => 'موقعیت‌ها',
+            'profile' => 'پروفایل',
+            'adobeconnect' => 'ادوبی کانکت',
             'app' => 'سیستم',
         ];
     }
@@ -52,6 +57,7 @@ class ActivityLogPresenter
             'action_label' => self::actionLabels()[$log->action] ?? $log->action,
             'module' => $log->module,
             'module_label' => self::moduleLabels()[$log->module] ?? $log->module,
+            'ip_address' => $log->ip_address,
             'subject_type' => $log->subject_type,
             'subject_id' => $log->subject_id,
             'user' => $user ? [

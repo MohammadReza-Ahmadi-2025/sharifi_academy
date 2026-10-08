@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Modules\Catalog\Models\Category;
+use App\Modules\Menu\Enums\MenuLocation;
+use App\Modules\Menu\Models\Menu;
+use App\Modules\Menu\Services\SiteMenuService;
 use App\Support\SiteNavigation;
-use Database\Seeders\CourseDemoSeeder;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,59 +15,71 @@ class SiteNavigationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_sees_public_and_auth_links(): void
+    public function test_header_navigation_comes_from_header_menus_in_database(): void
     {
-        $nav = SiteNavigation::forUser(null);
+        $this->seed(DatabaseSeeder::class);
 
+        $nav = SiteNavigation::forUser(null);
         $labels = collect($nav['items'])->pluck('label')->all();
 
         $this->assertContains('خانه', $labels);
         $this->assertContains('دوره‌ها', $labels);
-        $this->assertContains('ورود / ثبت‌نام', $labels);
-        $this->assertNotContains('حساب من', $labels);
         $this->assertNull($nav['cta']);
-
-        $courses = collect($nav['items'])->firstWhere('id', 'courses');
-        $this->assertSame('mega', $courses['type']);
-        $this->assertNotEmpty($courses['mega']['columns']);
     }
 
-    public function test_course_menu_includes_database_categories_marked_for_menu(): void
+    public function test_header_menu_with_children_becomes_mega_nav_item(): void
     {
-        $this->seed(CourseDemoSeeder::class);
+        $menu = Menu::query()->create([
+            'title' => 'خدمات',
+            'url' => '/services',
+            'location' => MenuLocation::Header,
+            'sort' => 5,
+            'status' => true,
+        ]);
 
-        Category::query()
-            ->where('slug', 'programming')
-            ->update(['show_in_menu' => true]);
+        $menu->allItems()->create([
+            'title' => 'مشاوره',
+            'type' => 'internal',
+            'url' => '/consult',
+            'sort' => 0,
+            'status' => true,
+        ]);
+
+        SiteMenuService::flush();
 
         $nav = SiteNavigation::forUser(null);
-        $courses = collect($nav['items'])->firstWhere('id', 'courses');
+        $item = collect($nav['items'])->firstWhere('id', 'menu-'.$menu->id);
 
-        $titles = collect($courses['mega']['columns'])->pluck('title')->all();
-        $this->assertContains('برنامه‌نویسی', $titles);
+        $this->assertNotNull($item);
+        $this->assertSame('mega', $item['type']);
+        $this->assertSame('مشاوره', $item['mega']['columns'][0]['links'][0]['label']);
     }
 
-    public function test_authenticated_user_sees_account_instead_of_login(): void
+    public function test_navigation_is_shared_with_inertia(): void
     {
-        $user = User::factory()->create();
-        $user->assignRole('student');
+        $this->seed(DatabaseSeeder::class);
 
-        $nav = SiteNavigation::forUser($user);
-        $labels = collect($nav['items'])->pluck('label')->all();
-
-        $this->assertContains('حساب من', $labels);
-        $this->assertNotContains('ورود / ثبت‌نام', $labels);
+        $this->get('/')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('navigation.items')
+                ->where('navigation.cta', null)
+            );
     }
 
-    public function test_navigation_and_menu_categories_are_shared_with_inertia(): void
+    public function test_navigation_does_not_depend_on_config_file(): void
     {
-        $response = $this->get('/');
+        Menu::query()->create([
+            'title' => 'تست منو',
+            'url' => '/test-menu',
+            'location' => MenuLocation::Header,
+            'sort' => 0,
+            'status' => true,
+        ]);
 
-        $response->assertOk();
-        $response->assertInertia(fn ($page) => $page
-            ->has('navigation.items')
-            ->has('menuCategories')
-            ->where('navigation.cta', null)
-        );
+        SiteMenuService::flush();
+
+        $nav = SiteNavigation::forUser(User::factory()->create());
+        $this->assertContains('تست منو', collect($nav['items'])->pluck('label')->all());
     }
 }

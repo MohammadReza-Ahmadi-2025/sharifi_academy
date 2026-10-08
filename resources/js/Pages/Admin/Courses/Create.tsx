@@ -6,6 +6,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { GalleryImagesField, useGalleryUploadState } from '@/Components/Admin/shared/GalleryImagesField';
 import { withGalleryPayload } from '@/Components/shared/gallery-form-payload';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     statusOptions: { value: string; label: string }[];
@@ -25,24 +26,23 @@ export default function CoursesCreate({ statusOptions, levelOptions, categoryOpt
         duration_minutes: '' as number | '',
         status: 'draft',
         is_featured: false,
-        display_order: 0,
         published_at: '',
         category_ids: [] as number[],
+        meta_title: '',
+        meta_description: '',
+        meta_keywords: '',
+        canonical: '',
     });
 
     return (
         <AdminLayout>
             <Head title="ایجاد دوره" />
             <PageHeader title="ایجاد دوره" backHref="/admin/courses" />
-            <form
-                onSubmit={(e) => {
+            <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
-                    form
-                        .transform((data) => withGalleryPayload(normalizeCourseFormPayload(data), gallery))
-                        .post('/admin/courses', { forceFormData: true });
-                }}
-                className="mt-6 space-y-6"
-            >
+                    form.transform((data) => withGalleryPayload(normalizeCourseFormPayload(data), gallery));
+                    form.post('/admin/courses', { forceFormData: true });
+                }}>
                 <GalleryImagesField
                     title="گالری تصاویر دوره"
                     description="می‌توانید چند تصویر برای معرفی دوره آپلود کنید. با دستگیره ترتیب را عوض کنید."
@@ -59,8 +59,11 @@ export default function CoursesCreate({ statusOptions, levelOptions, categoryOpt
                     processing={form.processing}
                     onChange={(key, value) => form.setData(key, value as never)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

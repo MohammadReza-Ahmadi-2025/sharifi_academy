@@ -74,6 +74,7 @@ export default function SocialIndex({ socials, filters, abilities }: Props) {
             <Head title="شبکه‌های اجتماعی" />
             <PageHeader
                 title="شبکه‌های اجتماعی"
+                description="لینک تلگرام، اینستاگرام و بقیه در فوتر سایت (زیر منوها) نمایش داده می‌شود. برای ستون‌های فوتر از بخش منوها با موقعیت «فوتر» استفاده کنید."
                 actions={
                     abilities.create ? (
                         <AdminButton href="/admin/socials/create">

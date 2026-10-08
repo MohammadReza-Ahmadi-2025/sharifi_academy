@@ -222,6 +222,8 @@ return [
             'label' => 'استوری‌ها',
             'permissions' => [
                 'stories-index' => 'مشاهده استوری‌ها',
+                'stories-create' => 'ایجاد استوری',
+                'stories-update' => 'ویرایش استوری',
                 'stories-moderate' => 'نظارت و حذف استوری',
             ],
         ],
@@ -232,10 +234,6 @@ return [
                 'home-sections-create' => 'ایجاد سکشن صفحه اصلی',
                 'home-sections-update' => 'ویرایش سکشن‌های صفحه اصلی',
                 'home-sections-delete' => 'حذف سکشن صفحه اصلی',
-                'home-banners-index' => 'مشاهده بنرها',
-                'home-banners-create' => 'ایجاد بنر',
-                'home-banners-update' => 'ویرایش بنر',
-                'home-banners-delete' => 'حذف بنر',
             ],
         ],
         'site_settings' => [

@@ -7,6 +7,7 @@ import { GalleryImagesField, useGalleryUploadState } from '@/Components/Admin/sh
 import { withGalleryPayload } from '@/Components/shared/gallery-form-payload';
 import type { ExistingFilePayload } from '@/Components/shared/file-upload';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     course: Record<string, unknown> & { gallery?: ExistingFilePayload[] };
@@ -27,24 +28,23 @@ export default function CoursesEdit({ course, statusOptions, levelOptions, categ
         duration_minutes: (course.duration_minutes as number | null) ?? '',
         status: String(course.status ?? 'draft'),
         is_featured: Boolean(course.is_featured),
-        display_order: Number(course.display_order ?? 0),
         published_at: String(course.published_at ?? ''),
         category_ids: (course.category_ids as number[]) ?? [],
+        meta_title: String(course.meta_title ?? ''),
+        meta_description: String(course.meta_description ?? ''),
+        meta_keywords: String(course.meta_keywords ?? ''),
+        canonical: String(course.canonical ?? ''),
     });
 
     return (
         <AdminLayout>
             <Head title="ویرایش دوره" />
             <PageHeader title="ویرایش دوره" backHref={`/admin/courses/${course.id}`} />
-            <form
-                onSubmit={(e) => {
+            <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
-                    form
-                        .transform((data) => withGalleryPayload(normalizeCourseFormPayload(data), gallery))
-                        .put(`/admin/courses/${course.id}`, { forceFormData: true });
-                }}
-                className="mt-6 space-y-6"
-            >
+                    form.transform((data) => withGalleryPayload(normalizeCourseFormPayload(data), gallery));
+                    form.put(`/admin/courses/${course.id}`, { forceFormData: true });
+                }}>
                 <GalleryImagesField
                     title="گالری تصاویر دوره"
                     items={gallery}
@@ -60,8 +60,11 @@ export default function CoursesEdit({ course, statusOptions, levelOptions, categ
                     processing={form.processing}
                     onChange={(key, value) => form.setData(key, value as never)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>به‌روزرسانی</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>به‌روزرسانی</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

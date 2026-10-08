@@ -19,6 +19,7 @@ export type HomeSectionTab = {
     title_url?: string | null;
     view_all_url?: string | null;
     items: HomeCatalogItem[];
+    features?: { label: string; text: string; image_url?: string | null }[];
 };
 
 export type HomeSection = {

@@ -59,6 +59,42 @@ class CommentPresenter
     /**
      * @return array<string, mixed>
      */
+    public static function forPublic(Comment $comment): array
+    {
+        $comment->loadMissing(['user', 'children.user', 'children.children.user']);
+
+        return [
+            'id' => $comment->id,
+            'body' => $comment->body,
+            'author_name' => $comment->author_name,
+            'rating' => $comment->rating,
+            'created_at' => $comment->created_at?->toIso8601String(),
+            'children' => $comment->children
+                ->map(fn (Comment $child) => self::forPublicChild($child))
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function forPublicChild(Comment $comment): array
+    {
+        return [
+            'id' => $comment->id,
+            'body' => $comment->body,
+            'author_name' => $comment->author_name,
+            'created_at' => $comment->created_at?->toIso8601String(),
+            'children' => $comment->relationLoaded('children')
+                ? $comment->children->map(fn (Comment $child) => self::forPublicChild($child))->values()->all()
+                : [],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     public static function forForm(Comment $comment): array
     {
         $comment->loadMissing('commentable');

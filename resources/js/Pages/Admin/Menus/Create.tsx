@@ -3,6 +3,7 @@ import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     locationOptions: { value: string; label: string }[];
@@ -15,7 +16,6 @@ export default function MenusCreate({ locationOptions, itemTypeOptions }: Props)
         url: '',
         icon: '',
         location: locationOptions[0]?.value ?? 'footer',
-        sort: 0,
         status: true,
         items: [] as import('@/Components/Admin/Menu/MenuFormFields').MenuItemFormData[],
     });
@@ -24,13 +24,10 @@ export default function MenusCreate({ locationOptions, itemTypeOptions }: Props)
         <AdminLayout>
             <Head title="ایجاد منو" />
             <PageHeader title="ایجاد منو" backHref="/admin/menus" />
-            <form
-                onSubmit={(e) => {
+            <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
                     form.post('/admin/menus');
-                }}
-                className="mt-6 space-y-6"
-            >
+                }}>
                 <MenuFormFields
                     data={form.data}
                     errors={form.errors}
@@ -40,8 +37,11 @@ export default function MenusCreate({ locationOptions, itemTypeOptions }: Props)
                     onChange={(k, v) => form.setData(k, v as never)}
                     onItemsChange={(items) => form.setData('items', items)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

@@ -5,7 +5,10 @@ import { AdminInput } from '@/Components/Admin/shared/ui/input';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { findSelectOption, mapToSelectOptions } from '@/Components/Admin/shared/lib/select-options';
 import { Select } from '@/Components/Admin/shared/ui/select';
-import { Plus, Trash2 } from 'lucide-react';
+import { reorderByIndex } from '@/Components/shared/reorder-list';
+import { cn } from '@/lib/utils';
+import { GripVertical, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 type Option = { value: string; label: string };
 
@@ -25,7 +28,6 @@ export type MenuFormData = {
     url: string;
     icon: string;
     location: string;
-    sort: number;
     status: boolean;
     items: MenuItemFormData[];
 };
@@ -49,6 +51,8 @@ export function MenuFormFields({
     onChange,
     onItemsChange,
 }: Props) {
+    const [itemDragIndex, setItemDragIndex] = useState<number | null>(null);
+    const [itemDropIndex, setItemDropIndex] = useState<number | null>(null);
     const locationSelectOptions = mapToSelectOptions(locationOptions);
     const typeSelectOptions = mapToSelectOptions(itemTypeOptions);
 
@@ -112,15 +116,6 @@ export function MenuFormFields({
                             onChange={(e) => onChange('icon', e.target.value)}
                         />
                     </FormField>
-                    <FormField label="ترتیب" error={errors.sort}>
-                        <AdminInput
-                            type="number"
-                            min={0}
-                            value={String(data.sort)}
-                            disabled={processing}
-                            onChange={(e) => onChange('sort', Number(e.target.value) || 0)}
-                        />
-                    </FormField>
                 </div>
                 <Switch
                     label="فعال"
@@ -142,15 +137,61 @@ export function MenuFormFields({
                     <p className="text-sm text-slate-500">هنوز آیتمی اضافه نشده است.</p>
                 ) : (
                     <div className="space-y-4">
-                        {data.items.map((item, index) => (
+                        {data.items.length > 1 && (
+                            <p className="text-sm text-slate-500">برای تغییر ترتیب آیتم‌ها، با دستگیره بکشید.</p>
+                        )}
+                        {data.items.map((item, index) => {
+                            const canDragItems = data.items.length > 1 && !processing;
+
+                            return (
                             <div
                                 key={item.id ?? `new-${index}`}
-                                className="rounded-lg border border-slate-200 p-4 dark:border-slate-700"
+                                className={cn(
+                                    'rounded-lg border border-slate-200 p-4 dark:border-slate-700',
+                                    itemDragIndex === index && 'opacity-50',
+                                    itemDropIndex === index &&
+                                        itemDragIndex !== index &&
+                                        'bg-slate-50 dark:bg-slate-900/40',
+                                )}
+                                draggable={canDragItems}
+                                onDragStart={() => canDragItems && setItemDragIndex(index)}
+                                onDragEnd={() => {
+                                    setItemDragIndex(null);
+                                    setItemDropIndex(null);
+                                }}
+                                onDragOver={(e) => {
+                                    if (!canDragItems || itemDragIndex === null) {
+                                        return;
+                                    }
+                                    e.preventDefault();
+                                    setItemDropIndex(index);
+                                }}
+                                onDrop={() => {
+                                    if (itemDragIndex === null || itemDragIndex === index) {
+                                        setItemDragIndex(null);
+                                        setItemDropIndex(null);
+
+                                        return;
+                                    }
+                                    onItemsChange(reorderByIndex(data.items, itemDragIndex, index));
+                                    setItemDragIndex(null);
+                                    setItemDropIndex(null);
+                                }}
                             >
-                                <div className="mb-3 flex items-center justify-between">
-                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                        آیتم {index + 1}
-                                    </span>
+                                <div className="mb-3 flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                        {canDragItems ? (
+                                            <span
+                                                className="cursor-grab text-slate-400 active:cursor-grabbing"
+                                                aria-hidden
+                                            >
+                                                <GripVertical className="size-4" />
+                                            </span>
+                                        ) : null}
+                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            آیتم {index + 1}
+                                        </span>
+                                    </div>
                                     <AdminButton
                                         type="button"
                                         variant="ghost"
@@ -223,7 +264,8 @@ export function MenuFormFields({
                                     />
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </Card>

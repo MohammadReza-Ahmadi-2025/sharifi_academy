@@ -5,6 +5,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { GalleryImagesField, useGalleryUploadState } from '@/Components/Admin/shared/GalleryImagesField';
 import { withGalleryPayload } from '@/Components/shared/gallery-form-payload';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     categoryOptions: { value: number; label: string }[];
@@ -29,16 +30,12 @@ export default function BlogPostsCreate({ categoryOptions, statusOptions }: Prop
     return (
         <AdminLayout>
             <Head title="ایجاد پست" />
-            <PageHeader title="ایجاد پست وبلاگ" backHref="/admin/blog/posts" />
-            <form
-                onSubmit={(e) => {
+            <PageHeader title="ایجاد پست" backHref="/admin/posts" />
+            <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
-                    form
-                        .transform((data) => withGalleryPayload(data, featured, { field: 'featured' }))
-                        .post('/admin/blog/posts', { forceFormData: true });
-                }}
-                className="mt-6 space-y-6"
-            >
+                    form.transform((data) => withGalleryPayload(data, featured, { field: 'featured' }));
+                    form.post('/admin/posts', { forceFormData: true });
+                }}>
                 <GalleryImagesField
                     title="تصویر شاخص"
                     description="حداقل یک تصویر الزامی است."
@@ -57,8 +54,11 @@ export default function BlogPostsCreate({ categoryOptions, statusOptions }: Prop
                     processing={form.processing}
                     onChange={(k, v) => form.setData(k, v as never)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>ذخیره پست</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>ذخیره پست</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

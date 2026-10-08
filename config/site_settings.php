@@ -88,12 +88,26 @@ return [
             'autoload' => true,
             'default' => 'مشاهده دوره‌ها',
         ],
+        'home_hero_cta_primary_url' => [
+            'type' => 'text',
+            'group' => 'general',
+            'label' => 'صفحه خانه — لینک دکمه اصلی هیرو',
+            'autoload' => true,
+            'default' => '/courses',
+        ],
         'home_hero_cta_secondary' => [
             'type' => 'text',
             'group' => 'general',
             'label' => 'صفحه خانه — دکمه ثانویه هیرو',
             'autoload' => true,
             'default' => 'ورود / ثبت‌نام',
+        ],
+        'home_hero_cta_secondary_url' => [
+            'type' => 'text',
+            'group' => 'general',
+            'label' => 'صفحه خانه — لینک دکمه ثانویه هیرو',
+            'autoload' => true,
+            'default' => '/login',
         ],
 
         'admin_email' => [

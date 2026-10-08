@@ -2,9 +2,11 @@
 
 namespace App\Modules\Courses\Http\Requests\Admin;
 
+use App\Modules\Catalog\Models\Category;
 use App\Modules\Courses\Enums\CourseLevel;
 use App\Modules\Courses\Enums\CourseStatus;
 use App\Modules\Courses\Http\Requests\Admin\Concerns\NormalizesCourseInput;
+use App\Modules\Courses\Http\Requests\Admin\Concerns\NormalizesCourseSeoInput;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Files\Http\Requests\Concerns\ValidatesGalleryUploads;
 use Illuminate\Contracts\Validation\Validator;
@@ -43,7 +45,11 @@ class UpdateCourseRequest extends FormRequest
             'published_at' => ['nullable', 'date'],
             'category_ids' => ['nullable', 'array'],
             'category_ids.*' => ['integer', 'exists:categories,id'],
-            ...$this->galleryImageRules(),
+            'category_ids.*' => [
+                'integer',
+                Rule::exists('categories', 'id')->where('type', Category::TYPE_COURSE),
+            ],
+            ...$this->seoRules(),
         ];
     }
 

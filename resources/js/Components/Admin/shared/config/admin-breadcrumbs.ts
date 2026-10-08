@@ -249,11 +249,11 @@ export function getAdminBreadcrumbs(urlOrPath: string): BreadcrumbItem[] {
         return items;
     }
 
-    if (first === 'blog' && second === 'posts') {
-        pushCrumb(items, 'پست‌های وبلاگ', '/admin/blog/posts');
-        if (third === 'create') {
+    if (first === 'posts') {
+        pushCrumb(items, 'پست‌ها', '/admin/posts');
+        if (second === 'create') {
             pushCrumb(items, 'ایجاد پست');
-        } else if (third && fourth === 'edit') {
+        } else if (second && third === 'edit') {
             pushCrumb(items, 'ویرایش پست');
         }
 
@@ -279,6 +279,11 @@ export function getAdminBreadcrumbs(urlOrPath: string): BreadcrumbItem[] {
 
     if (first === 'stories') {
         pushCrumb(items, 'استوری‌ها', '/admin/stories');
+        if (second === 'create') {
+            pushCrumb(items, 'ایجاد استوری');
+        } else if (second && third === 'edit') {
+            pushCrumb(items, 'ویرایش استوری');
+        }
 
         return items;
     }

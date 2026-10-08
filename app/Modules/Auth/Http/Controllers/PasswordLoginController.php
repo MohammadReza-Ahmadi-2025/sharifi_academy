@@ -33,7 +33,7 @@ class PasswordLoginController extends Controller
             'last_login_ip' => $request->ip(),
         ])->save();
 
-        Auth::login($user, $request->boolean('remember'));
+        Auth::login($user, true);
 
         return redirect()->intended(config('fortify.home', '/'));
     }

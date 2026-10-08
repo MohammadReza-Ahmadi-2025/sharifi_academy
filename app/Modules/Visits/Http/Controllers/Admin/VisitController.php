@@ -4,6 +4,7 @@ namespace App\Modules\Visits\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Visits\Models\Visit;
+use App\Modules\Visits\Services\VisitReportService;
 use App\Modules\Visits\Support\VisitPresenter;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,55 +12,63 @@ use Inertia\Response;
 
 class VisitController extends Controller
 {
+    public function __construct(
+        private VisitReportService $report,
+    ) {}
+
     public function index(Request $request): Response
     {
         abort_unless($request->user()?->can('visits-index'), 403);
 
-        $search = trim((string) $request->query('search', ''));
-        $type = trim((string) $request->query('type', ''));
-        $perPage = in_array((int) $request->query('per_page', 25), [25, 50, 100], true)
-            ? (int) $request->query('per_page', 25)
-            : 25;
+        $filters = $this->report->resolveFilters($request);
 
-        $query = Visit::query()
-            ->with(['visitable', 'visitor'])
-            ->latest('id');
+        $summary = $this->report->summary($filters);
+        $byType = $this->report->countsByType($filters);
+        $topRows = $this->report->topVisited($filters, 25);
+        $resolved = $this->report->resolveVisitables($topRows);
+        $dailyTrend = $this->report->dailyTrend($filters, 14);
 
-        if ($type !== '') {
-            $query->where('visitable_type', 'like', "%\\{$type}");
-        }
+        $topVisited = $topRows->map(function ($row) use ($resolved) {
+            $model = $resolved[$row->visitable_type][$row->visitable_id] ?? null;
 
-        if ($search !== '') {
-            $query->where(function ($builder) use ($search) {
-                $builder->where('ip_address', 'like', "%{$search}%")
-                    ->orWhereHas('visitor', fn ($q) => $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('mobile', 'like', "%{$search}%"));
-            });
-        }
+            return [
+                'visitable_type_label' => $this->report->typeLabelForClass($row->visitable_type),
+                'visitable_id' => (int) $row->visitable_id,
+                'visits_count' => (int) $row->visits_count,
+                'title' => $this->report->titleFor($model, $row->visitable_type, (int) $row->visitable_id),
+                'admin_url' => $this->report->adminUrlFor($row->visitable_type, (int) $row->visitable_id, $model),
+            ];
+        })->values();
 
-        $visits = $query->paginate($perPage)->withQueryString()
-            ->through(fn (Visit $visit) => VisitPresenter::forList($visit));
-
-        $stats = [
-            'total' => Visit::query()->count(),
-            'today' => Visit::query()->whereDate('created_at', today())->count(),
-            'week' => Visit::query()->where('created_at', '>=', now()->subDays(7))->count(),
-        ];
+        $recentVisits = $this->report->filteredQuery($filters)
+            ->with([
+                'visitor:id,name,family,mobile',
+                'visitable',
+            ])
+            ->latest('id')
+            ->paginate($filters['per_page'])
+            ->withQueryString()
+            ->through(fn (Visit $visit) => VisitPresenter::forRecent($visit));
 
         return Inertia::render('Admin/Visits/Index', [
-            'visits' => $visits,
-            'stats' => $stats,
-            'filters' => [
-                'search' => $search,
-                'type' => $type,
-                'per_page' => $perPage,
-            ],
+            'filters' => $filters,
+            'summary' => $summary,
+            'byType' => collect($byType)
+                ->map(fn (int $count, string $label) => ['label' => $label, 'count' => $count])
+                ->values(),
+            'topVisited' => $topVisited,
+            'dailyTrend' => $dailyTrend->map(fn ($row) => [
+                'day' => (string) $row->day,
+                'total' => (int) $row->total,
+            ])->values(),
+            'recentVisits' => $recentVisits,
             'typeOptions' => [
-                ['value' => 'Product', 'label' => 'محصول'],
-                ['value' => 'Post', 'label' => 'پست'],
-                ['value' => 'Category', 'label' => 'دسته'],
-                ['value' => 'Brand', 'label' => 'برند'],
-                ['value' => 'Course', 'label' => 'دوره'],
+                ['value' => '', 'label' => 'همه انواع'],
+                ['value' => 'product', 'label' => 'محصولات'],
+                ['value' => 'post', 'label' => 'مقالات'],
+                ['value' => 'category', 'label' => 'دسته‌بندی‌ها'],
+                ['value' => 'brand', 'label' => 'برندها'],
+                ['value' => 'course', 'label' => 'دوره‌ها'],
             ],
         ]);
     }

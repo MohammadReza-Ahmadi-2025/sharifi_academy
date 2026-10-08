@@ -4,73 +4,50 @@ namespace App\Modules\Activity\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
-use App\Models\User;
+use App\Support\Activity\ActivityLogIndexFilters;
 use App\Support\Activity\ActivityLogPresenter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ActivityLogController extends Controller
 {
+    public function __construct(
+        private readonly ActivityLogIndexFilters $filters,
+    ) {}
+
     public function index(Request $request): Response
     {
         abort_unless($request->user()?->can('activity-logs-index'), 403);
 
-        $search = trim((string) $request->query('search', ''));
-        $module = trim((string) $request->query('module', ''));
-        $action = trim((string) $request->query('action', ''));
-        $userId = $request->query('user_id');
-        $perPage = in_array((int) $request->query('per_page', 25), [25, 50, 100], true)
-            ? (int) $request->query('per_page', 25)
-            : 25;
+        $resolved = $this->filters->resolve($request);
 
-        $query = ActivityLog::query()
-            ->with('user')
-            ->orderByDesc('id');
-
-        if ($search !== '') {
-            $query->where(function ($builder) use ($search) {
-                $builder
-                    ->where('description', 'like', "%{$search}%")
-                    ->orWhere('subject_type', 'like', "%{$search}%");
-            });
-        }
-
-        if ($module !== '') {
-            $query->where('module', $module);
-        }
-
-        if ($action !== '' && array_key_exists($action, ActivityLogPresenter::actionLabels())) {
-            $query->where('action', $action);
-        }
-
-        if (is_numeric($userId)) {
-            $query->where('user_id', (int) $userId);
-        }
-
-        $logs = $query->paginate($perPage)->withQueryString()
+        $logs = ActivityLog::query()
+            ->with('user:id,name,family,mobile')
+            ->tap(fn (Builder $query) => $this->filters->apply($query, $resolved))
+            ->orderByDesc('id')
+            ->paginate($resolved['per_page'])
+            ->withQueryString()
             ->through(fn (ActivityLog $log) => ActivityLogPresenter::forList($log));
 
-        $actorOptions = User::query()
-            ->whereHas('roles')
-            ->orderBy('name')
-            ->get(['id', 'name', 'mobile'])
-            ->map(fn (User $user) => [
-                'value' => (string) $user->id,
-                'label' => trim($user->name.' — '.$user->mobile),
-            ])
-            ->all();
+        $moduleOptionsMap = $this->filters->moduleOptionsFromDatabase();
+        $staffUsers = $this->filters->staffUsersForFilter();
+        $actionStats = $this->filters->actionStats($resolved);
 
         return Inertia::render('Admin/ActivityLogs/Index', [
             'logs' => $logs,
             'filters' => [
-                'search' => $search,
-                'module' => $module,
-                'action' => $action,
-                'user_id' => is_numeric($userId) ? (string) $userId : '',
-                'per_page' => $perPage,
+                'search' => $resolved['search'],
+                'module' => $resolved['module'] ?? '',
+                'action' => $resolved['action'] ?? '',
+                'user_id' => $resolved['user_id'] ? (string) $resolved['user_id'] : '',
+                'period' => $resolved['period'],
+                'from' => $resolved['from'] ?? '',
+                'to' => $resolved['to'] ?? '',
+                'per_page' => $resolved['per_page'],
             ],
-            'moduleOptions' => collect(ActivityLogPresenter::moduleLabels())
+            'moduleOptions' => collect($moduleOptionsMap)
                 ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])
                 ->values()
                 ->all(),
@@ -78,7 +55,15 @@ class ActivityLogController extends Controller
                 ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])
                 ->values()
                 ->all(),
-            'userOptions' => $actorOptions,
+            'actionStats' => $actionStats,
+            'userOptions' => $staffUsers
+                ->map(fn ($user) => [
+                    'value' => (string) $user->id,
+                    'label' => trim($user->name.' '.$user->family).' — '.$user->mobile,
+                ])
+                ->all(),
+            'hasActiveFilters' => $this->filters->hasActiveFilters($resolved),
+            'activeFilterLabels' => $this->filters->activeFilterLabels($resolved, $staffUsers, $moduleOptionsMap),
             'abilities' => [
                 'show' => $request->user()?->can('activity-logs-show') ?? false,
             ],

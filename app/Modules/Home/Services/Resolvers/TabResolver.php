@@ -12,6 +12,7 @@ use App\Modules\Home\Models\HomeSectionTab;
 use App\Modules\Home\Services\HomeCacheInvalidator;
 use App\Modules\Home\Support\HomeItemPresenter;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class TabResolver
@@ -24,6 +25,10 @@ class TabResolver
     public function resolve(HomeSectionTab $tab): ?array
     {
         return Cache::remember($this->cache->tabKey($tab->id), 600, function () use ($tab) {
+            if ($tab->content_type === 'features') {
+                return $this->formatResponse($tab, collect());
+            }
+
             if ($tab->content_type === 'banner' && $tab->source_type === 'manual') {
                 $tab->loadMissing([
                     'items' => fn ($query) => $query->orderBy('sort_order'),
@@ -53,10 +58,12 @@ class TabResolver
 
             $this->applySource($query, $tab);
 
-            $items = $query->limit($tab->limit ?? 10)->get();
+            if ($tab->source_type === 'manual') {
+                $items = $query->get();
+            } else {
+                $limit = (int) ($tab->limit ?? 10);
 
-            if ($items->isEmpty() && $tab->source_type !== 'manual') {
-                return null;
+                $items = $query->limit($limit > 0 ? $limit : 10)->get();
             }
 
             return $this->formatResponse($tab, $items);
@@ -64,19 +71,28 @@ class TabResolver
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, mixed>  $items
+     * @param  Collection<int, mixed>  $items
      * @return array<string, mixed>
      */
     protected function formatResponse(HomeSectionTab $tab, $items): array
     {
-        return [
+        $payload = [
             'id' => $tab->id,
             'title' => $tab->title,
             'content_type' => $tab->content_type,
             'title_url' => data_get($tab->settings, 'title_url'),
             'view_all_url' => data_get($tab->settings, 'view_all_url'),
-            'items' => HomeItemPresenter::present($items, $tab->content_type),
+            'items' => HomeItemPresenter::present(
+                $items,
+                $tab->content_type === 'banner' ? 'banner' : $tab->content_type,
+            ),
         ];
+
+        if ($tab->content_type === 'features') {
+            $payload['features'] = data_get($tab->settings, 'features', []);
+        }
+
+        return $payload;
     }
 
     /**

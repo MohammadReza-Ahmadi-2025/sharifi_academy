@@ -3,6 +3,7 @@ import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     course: { id: number; title: string };
@@ -35,7 +36,7 @@ export default function CourseClassesCreate(props: Props) {
         <AdminLayout>
             <Head title="ایجاد کلاس" />
             <PageHeader title="ایجاد کلاس" backHref={`/admin/courses/${course.id}/classes`} />
-            <form onSubmit={(e) => { e.preventDefault(); form.post(`/admin/courses/${course.id}/classes`); }} className="mt-6 space-y-4">
+            <AdminFormPage onSubmit={(e) => { e.preventDefault(); form.post(`/admin/courses/${course.id}/classes`); }}>
                 <ClassFormFields
                     {...props}
                     data={form.data}
@@ -43,8 +44,11 @@ export default function CourseClassesCreate(props: Props) {
                     processing={form.processing}
                     onChange={(k, v) => form.setData(k, v as never)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

@@ -8,6 +8,7 @@ import { Select } from '@/Components/Admin/shared/ui/select';
 import { Textarea } from '@/Components/Admin/shared/ui/textarea';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     comment: {
@@ -40,16 +41,14 @@ export default function CommentsEdit({ comment, statusOptions }: Props) {
                 {comment.commentable_type_label}
                 {comment.commentable_title ? ` — ${comment.commentable_title}` : ''}
             </p>
-            <form
-                onSubmit={(e) => {
+            <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
                     form.transform((data) => ({
                         ...data,
                         status: Number(data.status),
-                    })).put(`/admin/comments/${comment.id}`);
-                }}
-                className="mt-6 space-y-6"
-            >
+                    }));
+                    form.put(`/admin/comments/${comment.id}`);
+                }}>
                 <Card className="space-y-4 p-6">
                     <FormField label="نام نمایشی" error={form.errors.display_name}>
                         <AdminInput
@@ -75,8 +74,11 @@ export default function CommentsEdit({ comment, statusOptions }: Props) {
                         />
                     </FormField>
                 </Card>
-                <AdminButton type="submit" disabled={form.processing}>به‌روزرسانی</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>به‌روزرسانی</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

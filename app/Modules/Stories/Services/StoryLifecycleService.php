@@ -30,13 +30,20 @@ class StoryLifecycleService
             ]);
         }
 
-        $publishedAt = now();
-        $ttlHours = max(1, (int) config('stories.ttl_hours', 24));
+        if ($story->published_at === null) {
+            throw ValidationException::withMessages([
+                'display_starts_at' => 'تاریخ شروع نمایش الزامی است.',
+            ]);
+        }
+
+        if ($story->expires_at !== null && $story->expires_at->lte($story->published_at)) {
+            throw ValidationException::withMessages([
+                'display_ends_at' => 'تاریخ پایان باید بعد از تاریخ شروع باشد.',
+            ]);
+        }
 
         $story->update([
             'status' => StoryStatus::Published,
-            'published_at' => $publishedAt,
-            'expires_at' => $publishedAt->copy()->addHours($ttlHours),
         ]);
 
         return $story->fresh(['file', 'user']);

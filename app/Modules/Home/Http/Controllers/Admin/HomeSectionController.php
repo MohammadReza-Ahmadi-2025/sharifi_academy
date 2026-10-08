@@ -11,13 +11,16 @@ use App\Modules\Courses\Models\Course;
 use App\Modules\Home\Http\Requests\Admin\ReorderHomeSectionsRequest;
 use App\Modules\Home\Http\Requests\Admin\StoreHomeSectionRequest;
 use App\Modules\Home\Http\Requests\Admin\UpdateHomeSectionRequest;
+use App\Modules\Home\Models\Banner;
 use App\Modules\Home\Models\HomeSection;
 use App\Modules\Home\Models\HomeSectionTab;
+use App\Modules\Home\Services\HomeCacheInvalidator;
+use App\Modules\Home\Services\HomeSectionBannerSync;
+use App\Modules\Home\Services\HomeSectionFeatureGridSync;
 use App\Modules\Home\Services\HomeSectionSyncService;
 use App\Modules\Home\Support\AdminHomeEnumOptions;
-use App\Modules\Home\Support\BannerPresenter;
 use App\Modules\Home\Support\HomeSectionPresenter;
-use App\Modules\Home\Models\Banner;
+use App\Services\Home\HomePageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,6 +32,8 @@ class HomeSectionController extends Controller
 {
     public function __construct(
         private readonly HomeSectionSyncService $sync,
+        private readonly HomeSectionBannerSync $bannerSync,
+        private readonly HomeSectionFeatureGridSync $featureGridSync,
     ) {}
 
     public function index(Request $request): Response
@@ -36,10 +41,6 @@ class HomeSectionController extends Controller
         abort_unless($request->user()?->can('home-sections-index'), 403);
 
         $search = trim((string) $request->query('search', ''));
-        $perPage = in_array((int) $request->query('per_page', 25), [25, 50, 100], true)
-            ? (int) $request->query('per_page', 25)
-            : 25;
-
         $query = HomeSection::query()
             ->with(['tabs' => fn ($q) => $q->orderBy('sort_order')])
             ->orderBy('sort')
@@ -49,8 +50,12 @@ class HomeSectionController extends Controller
             $query->where('title', 'like', "%{$search}%");
         }
 
-        $sections = $query->paginate($perPage)->withQueryString()
-            ->through(fn (HomeSection $section) => HomeSectionPresenter::forList($section));
+        $sections = $query
+            ->limit(200)
+            ->get()
+            ->map(fn (HomeSection $section) => HomeSectionPresenter::forList($section))
+            ->values()
+            ->all();
 
         $actor = $request->user();
 
@@ -58,7 +63,6 @@ class HomeSectionController extends Controller
             'sections' => $sections,
             'filters' => [
                 'search' => $search,
-                'per_page' => $perPage,
             ],
             'abilities' => [
                 'create' => $actor?->can('home-sections-create') ?? false,
@@ -79,7 +83,7 @@ class HomeSectionController extends Controller
     {
         $validated = $request->validated();
 
-        $section = DB::transaction(function () use ($validated) {
+        $section = DB::transaction(function () use ($validated, $request) {
             $section = HomeSection::query()->create([
                 'title' => $validated['title'],
                 'status' => (bool) ($validated['status'] ?? true),
@@ -87,10 +91,12 @@ class HomeSectionController extends Controller
                 'settings' => $validated['settings'] ?? [],
             ]);
 
-            $this->persistTabs($section, $validated['tabs']);
+            $this->persistTabs($section, $validated['tabs'], $request);
 
             return $section;
         });
+
+        HomePageService::flush();
 
         return redirect()
             ->route('admin.home-sections.edit', $section)
@@ -103,7 +109,10 @@ class HomeSectionController extends Controller
 
         $home_section->load([
             'tabs' => fn ($q) => $q->orderBy('sort_order'),
-            'tabs.items.item',
+            'tabs.items' => fn ($q) => $q->orderBy('sort_order'),
+            'tabs.items.item' => fn ($morph) => $morph->morphWith([
+                Banner::class => ['file'],
+            ]),
         ]);
 
         return Inertia::render('Admin/Home/Sections/Edit', array_merge(
@@ -116,7 +125,7 @@ class HomeSectionController extends Controller
     {
         $validated = $request->validated();
 
-        DB::transaction(function () use ($validated, $home_section) {
+        DB::transaction(function () use ($validated, $home_section, $request) {
             $home_section->update([
                 'title' => $validated['title'],
                 'status' => (bool) ($validated['status'] ?? true),
@@ -124,8 +133,10 @@ class HomeSectionController extends Controller
                 'settings' => array_merge($home_section->settings ?? [], $validated['settings'] ?? []),
             ]);
 
-            $this->persistTabs($home_section, $validated['tabs']);
+            $this->persistTabs($home_section, $validated['tabs'], $request);
         });
+
+        HomePageService::flush();
 
         return redirect()
             ->route('admin.home-sections.edit', $home_section)
@@ -146,10 +157,15 @@ class HomeSectionController extends Controller
     public function reorder(ReorderHomeSectionsRequest $request): RedirectResponse
     {
         foreach ($request->validated('sections') as $row) {
-            HomeSection::query()
-                ->whereKey($row['id'])
-                ->update(['sort' => (int) $row['sort']]);
+            $section = HomeSection::query()->find($row['id']);
+
+            if ($section) {
+                $section->update(['sort' => (int) $row['sort']]);
+            }
         }
+
+        app(HomeCacheInvalidator::class)->forgetAll();
+        HomePageService::flush();
 
         return back()->with('success', 'ترتیب سکشن‌ها ذخیره شد.');
     }
@@ -226,15 +242,30 @@ class HomeSectionController extends Controller
     /**
      * @param  list<array<string, mixed>>  $tabs
      */
-    protected function persistTabs(HomeSection $section, array $tabs): void
+    protected function persistTabs(HomeSection $section, array $tabs, Request $request): void
     {
         $keptTabIds = [];
 
         foreach (array_values($tabs) as $index => $tabData) {
+            if (($tabData['content_type'] ?? '') === 'features') {
+                $featureRows = $request->input("tabs.$index.settings.features", $tabData['settings']['features'] ?? []);
+                $tabData['settings'] = array_merge($tabData['settings'] ?? [], [
+                    'features' => $this->featureGridSync->mergeImages(
+                        $request,
+                        $index,
+                        is_array($featureRows) ? $featureRows : [],
+                    ),
+                ]);
+            }
+
             $payload = [
                 'title' => $tabData['title'] ?? 'default',
                 'content_type' => $tabData['content_type'],
-                'source_type' => $tabData['content_type'] === 'banner' ? 'manual' : $tabData['source_type'],
+                'source_type' => match ($tabData['content_type']) {
+                    'banner' => 'manual',
+                    'features' => 'section',
+                    default => $tabData['source_type'],
+                },
                 'limit' => (int) ($tabData['limit'] ?? 8),
                 'sort_order' => (int) ($tabData['sort_order'] ?? $index),
                 'is_active' => (bool) ($tabData['is_active'] ?? true),
@@ -254,7 +285,10 @@ class HomeSectionController extends Controller
             $keptTabIds[] = $tab->id;
 
             if ($tab->content_type === 'banner') {
-                $this->sync->syncBannerItems($tab, $tabData['banner_ids'] ?? []);
+                $bannerRows = $request->input("tabs.$index.banners", $tabData['banners'] ?? []);
+                $this->bannerSync->syncTab($tab, is_array($bannerRows) ? $bannerRows : [], $request, $index);
+            } elseif ($tab->content_type === 'features') {
+                $this->sync->clearItems($tab);
             } elseif ($tab->source_type === 'manual') {
                 $this->sync->syncManualItems($tab, $tab->content_type, $tabData['manual_item_ids'] ?? []);
             } else {
@@ -270,15 +304,6 @@ class HomeSectionController extends Controller
      */
     protected function formOptions(Request $request): array
     {
-        $banners = Banner::query()
-            ->with('file')
-            ->orderByDesc('id')
-            ->limit(200)
-            ->get()
-            ->map(fn (Banner $banner) => BannerPresenter::forPicker($banner))
-            ->values()
-            ->all();
-
         $productCategories = Category::query()
             ->active()
             ->product()
@@ -311,11 +336,11 @@ class HomeSectionController extends Controller
             'options' => [
                 'content_types' => AdminHomeEnumOptions::contentTypes(),
                 'source_types' => AdminHomeEnumOptions::sourceTypes(),
+                'section_templates' => AdminHomeEnumOptions::sectionTemplates(),
                 'section_layouts' => AdminHomeEnumOptions::sectionLayouts(),
                 'banner_layouts' => AdminHomeEnumOptions::bannerLayouts(),
             ],
             'lookups' => [
-                'banners' => $banners,
                 'product_categories' => $productCategories,
                 'course_categories' => $courseCategories,
                 'brands' => $brands,

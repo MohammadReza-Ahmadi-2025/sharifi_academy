@@ -12,6 +12,7 @@ import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { extendedToFormDefaults, type LocationOptions, type ProfileExtendedData } from '@/types/profile-extended';
 import { Head, useForm, usePage } from '@inertiajs/react';
+import { AdminFormActions } from '@/Components/Admin/shared/layout/admin-form-page';
 import { useState } from 'react';
 
 type ProfileData = {
@@ -66,9 +67,8 @@ export default function ProfileEdit({ profile, locations }: Props) {
 
     const submitInfo = (event: React.FormEvent) => {
         event.preventDefault();
-        infoForm
-            .transform((data) => withAvatarPayload(data, avatarFiles, { removeAvatar }))
-            .put('/admin/profile', { preserveScroll: true, forceFormData: true });
+        infoForm.transform((data) => withAvatarPayload(data, avatarFiles, { removeAvatar }));
+        infoForm.put('/admin/profile', { preserveScroll: true, forceFormData: true });
     };
 
     const submitPassword = (event: React.FormEvent) => {
@@ -258,7 +258,9 @@ export default function ProfileEdit({ profile, locations }: Props) {
                         </div>
                     </Card>
 
-                    <AdminButton type="submit" disabled={infoForm.processing}>ذخیره اطلاعات</AdminButton>
+                    <AdminFormActions>
+                        <AdminButton type="submit" disabled={infoForm.processing}>ذخیره اطلاعات</AdminButton>
+                    </AdminFormActions>
                     </form>
 
                     <Card>

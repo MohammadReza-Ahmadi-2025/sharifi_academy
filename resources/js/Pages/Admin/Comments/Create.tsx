@@ -8,6 +8,7 @@ import { Select } from '@/Components/Admin/shared/ui/select';
 import { Textarea } from '@/Components/Admin/shared/ui/textarea';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     statusOptions: { value: number; label: string }[];
@@ -35,18 +36,16 @@ export default function CommentsCreate({ statusOptions }: Props) {
         <AdminLayout>
             <Head title="ثبت نظر" />
             <PageHeader title="ثبت نظر دستی" backHref="/admin/comments" />
-            <form
-                onSubmit={(e) => {
+            <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
                     form.transform((data) => ({
                         ...data,
                         commentable_id: Number(data.commentable_id),
                         rating: data.rating === '' ? null : Number(data.rating),
                         status: Number(data.status),
-                    })).post('/admin/comments');
-                }}
-                className="mt-6 space-y-6"
-            >
+                    }));
+                    form.post('/admin/comments');
+                }}>
                 <Card className="space-y-4 p-6">
                     <div className="grid gap-4 md:grid-cols-2">
                         <FormField label="نوع منبع" required error={form.errors.commentable_type}>
@@ -105,8 +104,11 @@ export default function CommentsCreate({ statusOptions }: Props) {
                         />
                     </FormField>
                 </Card>
-                <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

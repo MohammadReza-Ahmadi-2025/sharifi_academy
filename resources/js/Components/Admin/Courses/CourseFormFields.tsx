@@ -1,5 +1,5 @@
 import { Card } from '@/Components/Admin/shared/ui/card';
-import { Checkbox } from '@/Components/Admin/shared/ui/checkbox';
+import { Switch } from '@/Components/Admin/shared/ui/switch';
 import { FormField } from '@/Components/Admin/shared/ui/form-field';
 import { AdminInput } from '@/Components/Admin/shared/ui/input';
 import { findSelectOption, findSelectOptions, mapToSelectOptions } from '@/Components/Admin/shared/lib/select-options';
@@ -7,6 +7,7 @@ import { MultiSelect } from '@/Components/Admin/shared/ui/multi-select';
 import { Select } from '@/Components/Admin/shared/ui/select';
 import { toGregorianDateOnly } from '@/Components/Admin/shared/lib/datetime-local-value';
 import { PersianDatePicker } from '@/Components/Admin/shared/ui/persian-date-picker';
+import { CatalogSeoFields } from '@/Components/Admin/Catalog/CatalogSeoFields';
 import { Textarea } from '@/Components/Admin/shared/ui/textarea';
 
 type Option = { value: string | number; label: string };
@@ -21,9 +22,12 @@ type CourseFormData = {
     duration_minutes: number | '';
     status: string;
     is_featured: boolean;
-    display_order: number | '';
     published_at: string;
     category_ids: number[];
+    meta_title: string;
+    meta_description: string;
+    meta_keywords: string;
+    canonical: string;
 };
 
 type Props = {
@@ -145,22 +149,12 @@ export function CourseFormFields({
                             onChange={(v) => onChange('published_at', v)}
                         />
                     </FormField>
-                    <FormField label="ترتیب نمایش" htmlFor="course-order" error={errors.display_order}>
-                        <AdminInput
-                            id="course-order"
-                            type="number"
-                            min={0}
-                            value={data.display_order}
-                            disabled={processing}
-                            onChange={(e) => onChange('display_order', e.target.value ? Number(e.target.value) : '')}
-                        />
-                    </FormField>
                 </div>
-                <Checkbox
+                <Switch
                     label="نمایش در دوره‌های ویژه"
                     checked={data.is_featured}
                     disabled={processing}
-                    onChange={(e) => onChange('is_featured', e.target.checked)}
+                    onCheckedChange={(v) => onChange('is_featured', v)}
                 />
                 <FormField
                     label="دسته‌های دوره"
@@ -182,6 +176,13 @@ export function CourseFormFields({
                     />
                 </FormField>
             </Card>
+
+            <CatalogSeoFields
+                data={data}
+                errors={errors}
+                processing={processing}
+                onChange={(key, value) => onChange(key as keyof CourseFormData, value)}
+            />
         </div>
     );
 }

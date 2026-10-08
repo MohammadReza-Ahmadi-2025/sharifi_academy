@@ -3,6 +3,7 @@ import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 export default function BrandCreate() {
     const form = useForm({
@@ -11,7 +12,6 @@ export default function BrandCreate() {
         description: '',
         website: '',
         status: true,
-        sort: 0,
         meta_title: '',
         meta_description: '',
         meta_keywords: '',
@@ -22,21 +22,21 @@ export default function BrandCreate() {
         <AdminLayout>
             <Head title="ایجاد برند" />
             <PageHeader title="ایجاد برند" backHref="/admin/catalog/brands" />
-            <form
-                onSubmit={(e) => {
+            <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
                     form.post('/admin/catalog/brands');
-                }}
-                className="mt-6 space-y-6"
-            >
+                }}>
                 <BrandFormFields
                     data={form.data}
                     errors={form.errors}
                     processing={form.processing}
                     onChange={(k, v) => form.setData(k, v as never)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

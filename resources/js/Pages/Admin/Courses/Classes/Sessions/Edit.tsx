@@ -3,6 +3,7 @@ import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     course: { id: number };
@@ -43,7 +44,7 @@ export default function SessionsEdit({ course, courseClass, session, statusOptio
         <AdminLayout>
             <Head title="ویرایش جلسه" />
             <PageHeader title="ویرایش جلسه" backHref={`/admin/courses/${course.id}/classes/${courseClass.id}/sessions`} />
-            <form onSubmit={(e) => { e.preventDefault(); form.put(base); }} className="mt-6 space-y-4">
+            <AdminFormPage onSubmit={(e) => { e.preventDefault(); form.put(base); }}>
                 <SessionFormFields
                     data={form.data}
                     errors={form.errors}
@@ -51,8 +52,11 @@ export default function SessionsEdit({ course, courseClass, session, statusOptio
                     processing={form.processing}
                     onChange={(k, v) => form.setData(k, v as never)}
                 />
-                <AdminButton type="submit">به‌روزرسانی</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit">به‌روزرسانی</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
             {(abilities.adobeIndex || abilities.adobeCreate || abilities.adobeDelete) && (
                 <section className="mt-8">
                     <h3 className="font-medium">اتاق جلسه</h3>

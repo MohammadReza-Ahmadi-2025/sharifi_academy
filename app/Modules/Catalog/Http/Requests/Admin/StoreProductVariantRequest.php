@@ -27,6 +27,8 @@ class StoreProductVariantRequest extends FormRequest
             'price' => ['required', 'integer', 'min:0'],
             'final_price' => ['nullable', 'integer', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
+            'attribute_value_ids' => ['nullable', 'array', 'max:3'],
+            'attribute_value_ids.*' => ['integer', 'exists:attribute_values,id'],
         ];
     }
 }

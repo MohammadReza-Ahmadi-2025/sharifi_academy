@@ -4,6 +4,7 @@ namespace App\Support\Activity;
 
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Modules\Admin\Support\AdminNavigation;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Request;

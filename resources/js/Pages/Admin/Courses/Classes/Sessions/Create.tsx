@@ -3,6 +3,7 @@ import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     course: { id: number };
@@ -26,7 +27,7 @@ export default function SessionsCreate({ course, courseClass, statusOptions }: P
         <AdminLayout>
             <Head title="جلسه جدید" />
             <PageHeader title="جلسه جدید" backHref={base} />
-            <form onSubmit={(e) => { e.preventDefault(); form.post(base); }} className="mt-6 space-y-4">
+            <AdminFormPage onSubmit={(e) => { e.preventDefault(); form.post(base); }}>
                 <SessionFormFields
                     data={form.data}
                     errors={form.errors}
@@ -34,8 +35,11 @@ export default function SessionsCreate({ course, courseClass, statusOptions }: P
                     processing={form.processing}
                     onChange={(k, v) => form.setData(k, v as never)}
                 />
-                <AdminButton type="submit">ذخیره</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit">ذخیره</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

@@ -3,9 +3,11 @@ import {
     sectionToFormData,
     type HomeSectionFormData,
 } from '@/Components/Admin/Home/HomeSectionFormFields';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
+import { prepareHomeSectionFormPayload } from '@/Components/Admin/Home/home-section-form-payload';
 import { Head, useForm } from '@inertiajs/react';
 
 type Props = {
@@ -17,7 +19,6 @@ type Props = {
         banner_layouts: Record<string, string>;
     };
     lookups: {
-        banners: { id: number; title: string; image_url?: string | null }[];
         product_categories: { id: number; title: string }[];
         course_categories: { id: number; title: string }[];
         brands: { id: number; title: string }[];
@@ -31,12 +32,12 @@ export default function HomeSectionsEdit({ section, options, lookups }: Props) {
         <AdminLayout>
             <Head title={`ویرایش سکشن: ${section.title}`} />
             <PageHeader title={section.title} description="تنظیم تب‌ها و منبع داده" backHref="/admin/home-sections" />
-            <form
+            <AdminFormPage
                 onSubmit={(e) => {
                     e.preventDefault();
-                    form.put(`/admin/home-sections/${section.id}`, { preserveScroll: true });
+                    form.transform((data) => prepareHomeSectionFormPayload(data));
+                    form.put(`/admin/home-sections/${section.id}`, { forceFormData: true, preserveScroll: true });
                 }}
-                className="mt-6 space-y-6"
             >
                 <HomeSectionFormFields
                     data={form.data}
@@ -47,8 +48,11 @@ export default function HomeSectionsEdit({ section, options, lookups }: Props) {
                     onChange={(patch) => form.setData({ ...form.data, ...patch })}
                     onTabsChange={(tabs) => form.setData('tabs', tabs)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>ذخیره تغییرات</AdminButton>
-            </form>
+                <AdminFormActions>
+                    <AdminButton type="submit" disabled={form.processing}>ذخیره تغییرات</AdminButton>
+                    <AdminButton type="button" variant="outline" href="/admin/home-sections">بازگشت</AdminButton>
+                </AdminFormActions>
+            </AdminFormPage>
         </AdminLayout>
     );
 }

@@ -6,6 +6,7 @@ import { GalleryImagesField, useGalleryUploadState } from '@/Components/Admin/sh
 import { withGalleryPayload } from '@/Components/shared/gallery-form-payload';
 import type { ExistingFilePayload } from '@/Components/shared/file-upload';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     post: {
@@ -44,16 +45,12 @@ export default function BlogPostsEdit({ post, categoryOptions, statusOptions }: 
     return (
         <AdminLayout>
             <Head title="ویرایش پست" />
-            <PageHeader title="ویرایش پست" backHref="/admin/blog/posts" />
-            <form
-                onSubmit={(e) => {
+            <PageHeader title="ویرایش پست" backHref="/admin/posts" />
+            <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
-                    form
-                        .transform((data) => withGalleryPayload(data, featured, { field: 'featured' }))
-                        .put(`/admin/blog/posts/${post.id}`, { forceFormData: true });
-                }}
-                className="mt-6 space-y-6"
-            >
+                    form.transform((data) => withGalleryPayload(data, featured, { field: 'featured' }));
+                    form.put(`/admin/posts/${post.id}`, { forceFormData: true });
+                }}>
                 <GalleryImagesField
                     title="تصویر شاخص"
                     items={featured}
@@ -71,8 +68,11 @@ export default function BlogPostsEdit({ post, categoryOptions, statusOptions }: 
                     processing={form.processing}
                     onChange={(k, v) => form.setData(k, v as never)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>به‌روزرسانی</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>به‌روزرسانی</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

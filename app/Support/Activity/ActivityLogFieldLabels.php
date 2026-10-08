@@ -38,6 +38,22 @@ class ActivityLogFieldLabels
             'parent_id' => 'دسته والد',
             'views' => 'بازدید',
             'target_blank' => 'باز شدن در تب جدید',
+            'settings' => 'تنظیمات',
+            'location' => 'محل نمایش',
+            'url' => 'آدرس',
+            'icon' => 'آیکن',
+            'content_type' => 'نوع محتوا',
+            'source_type' => 'روش نمایش',
+            'limit' => 'حداکثر آیتم',
+            'sort_order' => 'ترتیب تب',
+            'is_active' => 'فعال',
+            'button_text' => 'متن دکمه',
+            'button_link' => 'لینک دکمه',
+            'subtitle' => 'زیرعنوان',
+            'starts_at' => 'شروع نمایش',
+            'ends_at' => 'پایان نمایش',
+            'display_order' => 'ترتیب نمایش',
+            'show_in_menu' => 'نمایش در منو',
         ];
     }
 

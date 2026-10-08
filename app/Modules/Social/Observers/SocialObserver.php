@@ -3,7 +3,7 @@
 namespace App\Modules\Social\Observers;
 
 use App\Modules\Social\Models\Social;
-use Illuminate\Support\Facades\Cache;
+use App\Modules\Social\Services\SiteSocialService;
 
 class SocialObserver
 {
@@ -24,6 +24,6 @@ class SocialObserver
 
     protected function clearCache(): void
     {
-        Cache::forget('site_socials');
+        SiteSocialService::flush();
     }
 }

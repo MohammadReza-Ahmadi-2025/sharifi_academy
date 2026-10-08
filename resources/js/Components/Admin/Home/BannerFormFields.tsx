@@ -1,7 +1,10 @@
 import { GalleryImagesField, useGalleryUploadState } from '@/Components/Admin/shared/GalleryImagesField';
+import { toGregorianDateOnly } from '@/Components/Admin/shared/lib/datetime-local-value';
 import { findSelectOption, mapToSelectOptions } from '@/Components/Admin/shared/lib/select-options';
+import { Card } from '@/Components/Admin/shared/ui/card';
 import { FormField } from '@/Components/Admin/shared/ui/form-field';
 import { AdminInput } from '@/Components/Admin/shared/ui/input';
+import { PersianDatePicker } from '@/Components/Admin/shared/ui/persian-date-picker';
 import { Select } from '@/Components/Admin/shared/ui/select';
 import type { FormDataErrors } from '@inertiajs/core';
 
@@ -41,7 +44,7 @@ export function BannerFormFields({
     );
 
     return (
-        <div className="max-w-2xl space-y-6">
+        <Card className="w-full space-y-6 p-6">
             <GalleryImagesField
                 title="تصویر بنر"
                 description="تصویر اصلی اسلایدر یا بنر سکشن."
@@ -75,24 +78,27 @@ export function BannerFormFields({
                     />
                 </FormField>
                 <FormField label="شروع نمایش">
-                    <AdminInput
-                        type="datetime-local"
-                        dir="ltr"
+                    <PersianDatePicker
+                        includeTime
                         value={data.starts_at}
-                        onChange={(e) => onChange({ starts_at: e.target.value })}
                         disabled={processing}
+                        placeholder="تاریخ و زمان شروع"
+                        clearable
+                        onChange={(v) => onChange({ starts_at: v })}
                     />
                 </FormField>
                 <FormField label="پایان نمایش">
-                    <AdminInput
-                        type="datetime-local"
-                        dir="ltr"
+                    <PersianDatePicker
+                        includeTime
                         value={data.ends_at}
-                        onChange={(e) => onChange({ ends_at: e.target.value })}
                         disabled={processing}
+                        min={data.starts_at ? toGregorianDateOnly(data.starts_at) : undefined}
+                        placeholder="تاریخ و زمان پایان"
+                        clearable
+                        onChange={(v) => onChange({ ends_at: v })}
                     />
                 </FormField>
             </div>
-        </div>
+        </Card>
     );
 }

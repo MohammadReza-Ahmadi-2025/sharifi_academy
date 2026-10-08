@@ -3,6 +3,8 @@ import {
     ProductVariantFormFields,
     type VariantFormValues,
 } from '@/Components/Admin/Catalog/ProductVariantFormFields';
+import { VariantAttributesBuilder } from '@/Components/Admin/Catalog/VariantAttributesBuilder';
+import type { CatalogVariantAttribute } from '@/Components/Admin/Catalog/variant-attributes';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { Badge } from '@/Components/Admin/shared/ui/badge';
 import { Card } from '@/Components/Admin/shared/ui/card';
@@ -27,6 +29,9 @@ export type VariantRow = {
     final_price: number | null;
     stock: number;
     label: string;
+    attributes_text?: string;
+    attribute_value_ids?: number[];
+    is_default?: boolean;
 };
 
 type Option = { value: string; label: string };
@@ -34,6 +39,7 @@ type Option = { value: string; label: string };
 type Props = {
     productId: number;
     variants: VariantRow[];
+    variantAttributes: CatalogVariantAttribute[];
     displayModeOptions: Option[];
     canManage: boolean;
 };
@@ -50,6 +56,7 @@ function rowToFormValues(row: VariantRow): VariantFormValues {
         price: row.price ?? '',
         final_price: row.final_price ?? row.price ?? '',
         stock: row.stock,
+        attribute_value_ids: row.attribute_value_ids ?? [],
     };
 }
 
@@ -61,7 +68,13 @@ function formatPrice(amount: number | null): string {
     return `${formatNumberInput(String(amount))} ریال`;
 }
 
-export function ProductVariantPanel({ productId, variants, displayModeOptions, canManage }: Props) {
+export function ProductVariantPanel({
+    productId,
+    variants,
+    variantAttributes,
+    displayModeOptions,
+    canManage,
+}: Props) {
     const baseUrl = `/admin/catalog/products/${productId}/variants`;
     const [dialogMode, setDialogMode] = useState<DialogMode>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -118,7 +131,8 @@ export function ProductVariantPanel({ productId, variants, displayModeOptions, c
         };
 
         if (dialogMode === 'create') {
-            form.transform(() => payload).post(baseUrl, {
+            form.transform(() => payload);
+            form.post(baseUrl, {
                 preserveScroll: true,
                 onSuccess: closeDialog,
             });
@@ -127,7 +141,8 @@ export function ProductVariantPanel({ productId, variants, displayModeOptions, c
         }
 
         if (dialogMode === 'edit' && editingId !== null) {
-            form.transform(() => payload).put(`${baseUrl}/${editingId}`, {
+            form.transform(() => payload);
+            form.put(`${baseUrl}/${editingId}`, {
                 preserveScroll: true,
                 onSuccess: closeDialog,
             });
@@ -168,6 +183,13 @@ export function ProductVariantPanel({ productId, variants, displayModeOptions, c
     return (
         <>
             <Card className="mt-8 overflow-hidden p-0">
+                <VariantAttributesBuilder
+                    productId={productId}
+                    attributes={variantAttributes}
+                    disabled={!canManage}
+                    embedded
+                />
+
                 <div className="flex flex-col gap-4 border-b border-slate-100 p-6 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-start gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
@@ -175,11 +197,11 @@ export function ProductVariantPanel({ productId, variants, displayModeOptions, c
                         </div>
                         <div>
                             <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                                تنوع‌های فروش
+                                واریانت‌های فروش
                                 <span className="ms-2 text-sm font-normal text-slate-500">({variants.length})</span>
                             </h2>
                             <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                                خرید مشتری روی تنوع است؛ هر تنوع قیمت و موجودی جدا دارد.
+                                هر محصول همیشه حداقل یک واریانت دارد؛ خرید روی واریانت است (پیش‌فرض یا رنگ/سایز/…).
                             </p>
                         </div>
                     </div>
@@ -191,14 +213,12 @@ export function ProductVariantPanel({ productId, variants, displayModeOptions, c
 
                 <div className="p-6">
                     {orderedVariants.length === 0 ? (
-                        <div className="rounded-xl border border-dashed border-slate-200 px-6 py-12 text-center dark:border-slate-700">
-                            <Package className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600" />
-                            <p className="mt-3 text-sm font-medium text-slate-700 dark:text-slate-300">
-                                هنوز تنوعی ثبت نشده
+                        <div className="rounded-xl border border-dashed border-amber-200 bg-amber-50/50 px-6 py-8 text-center dark:border-amber-900/40 dark:bg-amber-950/20">
+                            <p className="text-sm text-amber-900 dark:text-amber-200">
+                                واریانتی ثبت نشده — در حالت عادی با ذخیره محصول، واریانت «پیش‌فرض» ساخته می‌شود.
                             </p>
-                            <p className="mt-1 text-sm text-slate-500">اولین تنوع را اضافه کنید تا محصول قابل فروش شود.</p>
                             <AdminButton type="button" className="mt-4" size="sm" onClick={openCreate}>
-                                افزودن تنوع
+                                افزودن واریانت دستی
                             </AdminButton>
                         </div>
                     ) : (
@@ -256,6 +276,9 @@ export function ProductVariantPanel({ productId, variants, displayModeOptions, c
                                                         {row.label}
                                                     </span>
                                                     <span className="text-xs text-slate-400">#{index + 1}</span>
+                                                    {row.is_default ? (
+                                                        <Badge variant="info">پیش‌فرض</Badge>
+                                                    ) : null}
                                                     {!row.status ? (
                                                         <Badge variant="secondary">غیرفعال</Badge>
                                                     ) : (
@@ -270,6 +293,11 @@ export function ProductVariantPanel({ productId, variants, displayModeOptions, c
                                                         <Badge variant="destructive">ناموجود</Badge>
                                                     ) : null}
                                                 </div>
+                                                {row.attributes_text ? (
+                                                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                                                        {row.attributes_text}
+                                                    </p>
+                                                ) : null}
                                                 <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
                                                     {row.sku ? (
                                                         <span dir="ltr" className="font-mono">SKU: {row.sku}</span>
@@ -344,6 +372,7 @@ export function ProductVariantPanel({ productId, variants, displayModeOptions, c
                         data={form.data}
                         errors={form.errors}
                         displayModeOptions={displayModeOptions}
+                        variantAttributes={variantAttributes}
                         processing={form.processing}
                         onChange={(key, value) => form.setData(key, value as never)}
                     />

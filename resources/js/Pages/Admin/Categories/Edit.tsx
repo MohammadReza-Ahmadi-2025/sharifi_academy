@@ -6,6 +6,7 @@ import { GalleryImagesField, useGalleryUploadState } from '@/Components/Admin/sh
 import { withGalleryPayload } from '@/Components/shared/gallery-form-payload';
 import type { ExistingFilePayload } from '@/Components/shared/file-upload';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     category: {
@@ -48,17 +49,11 @@ export default function CategoriesEdit({ category, categoryType, categoryTypeLab
         <AdminLayout>
             <Head title={`ویرایش دسته ${categoryTypeLabel}`} />
             <PageHeader title={`ویرایش دسته ${categoryTypeLabel}`} backHref={indexUrl} />
-            <form
-                onSubmit={(e) => {
+            <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
-                    form
-                        .transform((data) =>
-                            withGalleryPayload(data, image, { field: 'image' }),
-                        )
-                        .put(`/admin/categories/${category.id}`, { forceFormData: true });
-                }}
-                className="mt-6 space-y-6"
-            >
+                    form.transform((data) => withGalleryPayload(data, image, { field: 'image' }));
+                    form.put(`/admin/categories/${category.id}`, { forceFormData: true });
+                }}>
                 <GalleryImagesField
                     title="تصویر دسته"
                     items={image}
@@ -74,8 +69,11 @@ export default function CategoriesEdit({ category, categoryType, categoryTypeLab
                     processing={form.processing}
                     onChange={(k, v) => form.setData(k, v as never)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>به‌روزرسانی</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>به‌روزرسانی</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

@@ -37,4 +37,20 @@ class SocialPresenter
             'is_active' => (bool) $social->is_active,
         ];
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function forSite(Social $social): array
+    {
+        $typeLabel = AdminSocialTypeOptions::map()[$social->type] ?? $social->type;
+
+        return [
+            'id' => $social->id,
+            'type' => $social->type,
+            'url' => $social->url,
+            'label' => filled($social->label) ? $social->label : $typeLabel,
+            'target_blank' => (bool) $social->target_blank,
+        ];
+    }
 }

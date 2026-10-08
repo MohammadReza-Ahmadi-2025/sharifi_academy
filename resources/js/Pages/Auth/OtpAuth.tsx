@@ -1,9 +1,11 @@
 import { OtpDigitInputs } from '@/Components/Auth/OtpDigitInputs';
 import { otpCodeSchema, otpPhoneSchema, passwordLoginSchema } from '@/lib/schemas/auth';
 import { normalizePhoneInput } from '@/lib/utils';
+import { SiteDefaultHead } from '@/Components/Site/SiteDefaultHead';
+import { SiteTheme } from '@/Components/Site/SiteTheme';
 import { PageProps } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { ArrowRight, KeyRound, Lock, Smartphone } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -91,7 +93,7 @@ export default function OtpAuth() {
 
     const passwordForm = useForm<PasswordForm>({
         resolver: zodResolver(passwordLoginSchema),
-        defaultValues: { phone: '', password: '', remember: false },
+        defaultValues: { phone: '', password: '' },
         mode: 'onChange',
     });
 
@@ -142,7 +144,6 @@ export default function OtpAuth() {
         router.post('/auth/password/login', {
             phone: values.phone,
             password: values.password,
-            remember: values.remember ?? false,
         });
     });
 
@@ -182,7 +183,8 @@ export default function OtpAuth() {
 
     return (
         <div className="otp-auth-shell" dir="rtl">
-            <Head title="ورود / ثبت‌نام" />
+            <SiteTheme />
+            <SiteDefaultHead title="ورود / ثبت‌نام" />
 
             <div className="otp-auth-stack">
                 {authTab === 'password' ? (
@@ -235,11 +237,6 @@ export default function OtpAuth() {
                             />
                         </div>
                         {passwordError && <p className="otp-auth-error">{passwordError}</p>}
-
-                        <label className="otp-auth-remember mt-3 flex items-center justify-center gap-2 text-sm text-neutral-black/65">
-                            <input type="checkbox" className="size-4 rounded border-secondary" {...passwordForm.register('remember')} />
-                            مرا به خاطر بسپار
-                        </label>
 
                         <div className="otp-auth-actions">
                             <button

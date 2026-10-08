@@ -6,6 +6,7 @@ import { AdminInput } from '@/Components/Admin/shared/ui/input';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     permissionGroups: PermissionGroup[];
@@ -32,8 +33,8 @@ export default function RolesCreate({ permissionGroups }: Props) {
                 backHref="/admin/roles"
             />
 
-            <form onSubmit={submit} className="mt-6 space-y-6">
-                <Card className="max-w-xl space-y-4">
+            <AdminFormPage onSubmit={submit}>
+                <Card className="w-full space-y-4 p-6">
                     <FormField label="نام نقش (slug)" htmlFor="name" required error={form.errors.name}>
                         <AdminInput
                             id="name"
@@ -58,11 +59,12 @@ export default function RolesCreate({ permissionGroups }: Props) {
                     disabled={form.processing}
                 />
 
-                <div className="flex gap-3">
-                    <AdminButton type="submit" disabled={form.processing}>ذخیره نقش</AdminButton>
+                <AdminFormActions>
+
+                        <AdminButton type="submit" disabled={form.processing}>ذخیره نقش</AdminButton>
                     <AdminButton type="button" variant="outline" href="/admin/roles">انصراف</AdminButton>
-                </div>
-            </form>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

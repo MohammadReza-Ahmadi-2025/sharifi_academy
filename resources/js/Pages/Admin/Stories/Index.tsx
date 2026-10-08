@@ -15,11 +15,13 @@ import {
     TableRow,
 } from '@/Components/Admin/shared/ui/table';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import { Pencil, Plus } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 type Row = {
     id: number;
+    title: string;
     user_name: string | null;
     type_label: string;
     status: string;
@@ -40,7 +42,7 @@ type Props = {
     };
     filters: { search: string; status: string; per_page: number };
     statusOptions: { value: string; label: string }[];
-    abilities: { moderate: boolean };
+    abilities: { create: boolean; update: boolean; moderate: boolean };
 };
 
 export default function StoriesIndex({ stories, filters, statusOptions, abilities }: Props) {
@@ -81,13 +83,27 @@ export default function StoriesIndex({ stories, filters, statusOptions, abilitie
     return (
         <AdminLayout>
             <Head title="استوری‌ها" />
-            <PageHeader title="استوری‌ها" />
+            <PageHeader
+                title="استوری‌ها"
+                actions={
+                    abilities.create
+                        ? (
+                              <AdminButton asChild>
+                                  <Link href="/admin/stories/create">
+                                      <Plus className="size-4" />
+                                      استوری جدید
+                                  </Link>
+                              </AdminButton>
+                          )
+                        : undefined
+                }
+            />
             <AdminListFilters
                 search={search}
                 onSearchChange={setSearch}
                 onSubmit={applySearch}
                 onClear={clearFilters}
-                searchPlaceholder="جستجو نام یا موبایل کاربر…"
+                searchPlaceholder="جستجو عنوان یا ناشر…"
             >
                 <AdminFilterSelect
                     className="lg:col-span-2"
@@ -101,20 +117,22 @@ export default function StoriesIndex({ stories, filters, statusOptions, abilitie
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>کاربر</TableHead>
+                            <TableHead>عنوان</TableHead>
+                            <TableHead>ناشر</TableHead>
                             <TableHead>نوع</TableHead>
                             <TableHead>وضعیت</TableHead>
-                            <TableHead>انتشار</TableHead>
-                            <TableHead>انقضا</TableHead>
+                            <TableHead>شروع نمایش</TableHead>
+                            <TableHead>پایان نمایش</TableHead>
                             <TableHead className="w-28" />
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {stories.data.length === 0 ? (
-                            <TableEmptyState colSpan={6} message="استوری ثبت نشده است." />
+                            <TableEmptyState colSpan={7} message="استوری ثبت نشده است." />
                         ) : (
                             stories.data.map((row) => (
                                 <TableRow key={row.id}>
+                                    <TableCell className="font-medium">{row.title}</TableCell>
                                     <TableCell>{row.user_name ?? '—'}</TableCell>
                                     <TableCell>{row.type_label}</TableCell>
                                     <TableCell>
@@ -125,11 +143,21 @@ export default function StoriesIndex({ stories, filters, statusOptions, abilitie
                                     <TableCell className="text-xs text-slate-500">{row.published_at ?? '—'}</TableCell>
                                     <TableCell className="text-xs text-slate-500">{row.expires_at ?? '—'}</TableCell>
                                     <TableCell>
-                                        {abilities.moderate && row.status !== 'removed' ? (
-                                            <AdminButton variant="ghost" size="sm" onClick={() => removeStory(row)}>
-                                                حذف
-                                            </AdminButton>
-                                        ) : null}
+                                        <div className="flex items-center justify-end gap-1">
+                                            {abilities.update && (
+                                                <AdminButton variant="ghost" size="sm" asChild>
+                                                    <Link href={`/admin/stories/${row.id}/edit`}>
+                                                        <Pencil className="size-4" />
+                                                        ویرایش
+                                                    </Link>
+                                                </AdminButton>
+                                            )}
+                                            {abilities.moderate && row.status !== 'removed' ? (
+                                                <AdminButton variant="ghost" size="sm" onClick={() => removeStory(row)}>
+                                                    حذف
+                                                </AdminButton>
+                                            ) : null}
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))

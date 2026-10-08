@@ -1,3 +1,5 @@
+import { ProductVariantAttributeFields } from '@/Components/Admin/Catalog/ProductVariantAttributeFields';
+import type { CatalogVariantAttribute } from '@/Components/Admin/Catalog/variant-attributes';
 import { FormField } from '@/Components/Admin/shared/ui/form-field';
 import { AdminInput } from '@/Components/Admin/shared/ui/input';
 import { findSelectOption, mapToSelectOptions } from '@/Components/Admin/shared/lib/select-options';
@@ -14,6 +16,7 @@ export type VariantFormValues = {
     price: number | '';
     final_price: number | '';
     stock: number | '';
+    attribute_value_ids: number[];
 };
 
 type Option = { value: string; label: string };
@@ -22,6 +25,7 @@ type Props = {
     data: VariantFormValues;
     errors: Record<string, string>;
     displayModeOptions: Option[];
+    variantAttributes?: CatalogVariantAttribute[];
     processing?: boolean;
     onChange: (key: keyof VariantFormValues, value: unknown) => void;
 };
@@ -34,6 +38,7 @@ export function ProductVariantFormFields({
     data,
     errors,
     displayModeOptions,
+    variantAttributes = [],
     processing = false,
     onChange,
 }: Props) {
@@ -85,6 +90,14 @@ export function ProductVariantFormFields({
                     </FormField>
                 </div>
             </div>
+
+            <ProductVariantAttributeFields
+                attributes={variantAttributes}
+                valueIds={data.attribute_value_ids}
+                disabled={processing}
+                error={fieldError(errors, 'attribute_value_ids')}
+                onChange={(valueIds) => onChange('attribute_value_ids', valueIds)}
+            />
 
             <div className="space-y-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -140,4 +153,5 @@ export const emptyVariantFormValues: VariantFormValues = {
     price: '',
     final_price: '',
     stock: '',
+    attribute_value_ids: [],
 };

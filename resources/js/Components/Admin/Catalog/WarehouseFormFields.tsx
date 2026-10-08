@@ -20,7 +20,7 @@ type Props = {
 
 export function WarehouseFormFields({ data, errors, onChange }: Props) {
     return (
-        <div className="space-y-4 max-w-xl">
+        <div className="w-full space-y-4">
             <FormField label="نام انبار" error={errors.name} required>
                 <Input value={data.name} onChange={(e) => onChange('name', e.target.value)} />
             </FormField>

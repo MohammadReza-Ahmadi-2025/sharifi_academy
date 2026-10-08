@@ -3,9 +3,11 @@ import {
     HomeSectionFormFields,
     type HomeSectionFormData,
 } from '@/Components/Admin/Home/HomeSectionFormFields';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
+import { prepareHomeSectionFormPayload } from '@/Components/Admin/Home/home-section-form-payload';
 import { Head, useForm } from '@inertiajs/react';
 
 type Props = {
@@ -16,7 +18,6 @@ type Props = {
         banner_layouts: Record<string, string>;
     };
     lookups: {
-        banners: { id: number; title: string; image_url?: string | null }[];
         product_categories: { id: number; title: string }[];
         course_categories: { id: number; title: string }[];
         brands: { id: number; title: string }[];
@@ -30,12 +31,12 @@ export default function HomeSectionsCreate({ options, lookups }: Props) {
         <AdminLayout>
             <Head title="ایجاد سکشن صفحه اصلی" />
             <PageHeader title="ایجاد سکشن" description="سکشن جدید برای صفحه خانه" backHref="/admin/home-sections" />
-            <form
+            <AdminFormPage
                 onSubmit={(e) => {
                     e.preventDefault();
-                    form.post('/admin/home-sections');
+                    form.transform((data) => prepareHomeSectionFormPayload(data));
+                    form.post('/admin/home-sections', { forceFormData: true });
                 }}
-                className="mt-6 space-y-6"
             >
                 <HomeSectionFormFields
                     data={form.data}
@@ -46,8 +47,11 @@ export default function HomeSectionsCreate({ options, lookups }: Props) {
                     onChange={(patch) => form.setData({ ...form.data, ...patch })}
                     onTabsChange={(tabs) => form.setData('tabs', tabs)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>ذخیره سکشن</AdminButton>
-            </form>
+                <AdminFormActions>
+                    <AdminButton type="submit" disabled={form.processing}>ذخیره سکشن</AdminButton>
+                    <AdminButton type="button" variant="outline" href="/admin/home-sections">انصراف</AdminButton>
+                </AdminFormActions>
+            </AdminFormPage>
         </AdminLayout>
     );
 }

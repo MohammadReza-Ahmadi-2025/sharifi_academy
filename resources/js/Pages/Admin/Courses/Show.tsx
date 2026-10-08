@@ -1,4 +1,5 @@
 import { formatPersianDateTime } from '@/Components/Admin/shared/lib/format-persian-datetime';
+import { SiteRichHtml } from '@/Components/Site/SiteRichHtml';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { Badge } from '@/Components/Admin/shared/ui/badge';
 import { Card } from '@/Components/Admin/shared/ui/card';
@@ -86,11 +87,10 @@ export default function CoursesShow({ course, abilities }: Props) {
                     </div>
 
                     {course.description ? (
-                        <div className="prose prose-sm max-w-none dark:prose-invert">
-                            <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700 dark:text-slate-300">
-                                {course.description}
-                            </p>
-                        </div>
+                        <SiteRichHtml
+                            html={course.description}
+                            className="text-sm dark:text-slate-300 [&_p]:text-slate-700"
+                        />
                     ) : (
                         <p className="text-sm text-slate-500">توضیحات تکمیلی ثبت نشده.</p>
                     )}
@@ -107,9 +107,6 @@ export default function CoursesShow({ course, abilities }: Props) {
                             {course.duration_minutes != null
                                 ? `${course.duration_minutes.toLocaleString('fa-IR')} دقیقه`
                                 : '—'}
-                        </MetaRow>
-                        <MetaRow label="ترتیب نمایش">
-                            {(course.display_order ?? 0).toLocaleString('fa-IR')}
                         </MetaRow>
                         <MetaRow label="دسته‌ها">
                             {course.category_labels.length > 0 ? course.category_labels.join('، ') : '—'}

@@ -33,7 +33,14 @@ class AdminVisitsTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Admin/Visits/Index')
-                ->has('stats', 3)
+                ->has('summary', fn ($summary) => $summary
+                    ->has('total')
+                    ->has('unique_visitors')
+                    ->has('logged_in')
+                    ->has('guests'))
+                ->has('topVisited')
+                ->has('dailyTrend')
+                ->has('recentVisits')
             );
     }
 }

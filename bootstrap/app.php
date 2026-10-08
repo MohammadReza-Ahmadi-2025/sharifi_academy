@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureSiteNotInMaintenance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\Admin\Http\Middleware\EnsureAdminPanelAccess;
 use Illuminate\Console\Scheduling\Schedule;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
+            EnsureSiteNotInMaintenance::class,
             HandleInertiaRequests::class,
         ]);
 
@@ -35,9 +37,18 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
-        );
+        $exceptions->shouldRenderJsonWhen(function (Request $request) {
+            if ($request->is('api/*')) {
+                return true;
+            }
+
+            // در حالت debug، Inertia همان صفحهٔ خطای Laravel (Ignition) را در مودال نشان می‌دهد.
+            if ($request->header('X-Inertia')) {
+                return ! config('app.debug');
+            }
+
+            return $request->expectsJson();
+        });
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('cart:clear-expired-items')->everyFiveMinutes();

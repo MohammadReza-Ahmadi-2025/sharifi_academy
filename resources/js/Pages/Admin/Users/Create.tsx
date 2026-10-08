@@ -7,6 +7,7 @@ import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     roleOptions: RoleOption[];
@@ -28,9 +29,8 @@ export default function UsersCreate({ roleOptions }: Props) {
 
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
-        form
-            .transform((data) => withAvatarPayload(data, avatarFiles))
-            .post('/admin/users', { forceFormData: true });
+        form.transform((data) => withAvatarPayload(data, avatarFiles));
+        form.post('/admin/users', { forceFormData: true });
     };
 
     return (
@@ -39,7 +39,7 @@ export default function UsersCreate({ roleOptions }: Props) {
 
             <PageHeader title="ایجاد کاربر" description="حساب جدید با نقش و وضعیت مشخص" backHref="/admin/users" />
 
-            <form onSubmit={submit} className="mt-6 space-y-6">
+            <AdminFormPage onSubmit={submit}>
                 <UserAvatarField
                     files={avatarFiles}
                     onFilesChange={setAvatarFiles}
@@ -57,11 +57,12 @@ export default function UsersCreate({ roleOptions }: Props) {
                     passwordRequired
                 />
 
-                <div className="flex gap-3">
-                    <AdminButton type="submit" disabled={form.processing}>ذخیره کاربر</AdminButton>
+                <AdminFormActions>
+
+                        <AdminButton type="submit" disabled={form.processing}>ذخیره کاربر</AdminButton>
                     <AdminButton type="button" variant="outline" href="/admin/users">انصراف</AdminButton>
-                </div>
-            </form>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

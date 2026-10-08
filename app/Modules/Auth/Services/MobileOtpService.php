@@ -129,7 +129,7 @@ class MobileOtpService
             'last_login_ip' => $request->ip(),
         ])->save();
 
-        Auth::login($user, false);
+        Auth::login($user, true);
 
         return $user;
     }

@@ -132,11 +132,17 @@ class HomeSectionSyncService
     {
         $settings = is_array($tab['settings'] ?? null) ? $tab['settings'] : [];
 
-        return array_filter([
+        $normalized = array_filter([
             'category_id' => $settings['category_id'] ?? null,
             'brand_id' => $settings['brand_id'] ?? null,
             'title_url' => $settings['title_url'] ?? ($tab['title_url'] ?? null),
             'view_all_url' => $settings['view_all_url'] ?? ($tab['view_all_url'] ?? null),
         ], fn ($value) => $value !== null && $value !== '');
+
+        if (isset($settings['features']) && is_array($settings['features'])) {
+            $normalized['features'] = array_values($settings['features']);
+        }
+
+        return $normalized;
     }
 }

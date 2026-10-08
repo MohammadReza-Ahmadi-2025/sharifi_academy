@@ -3,6 +3,7 @@ import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     social: {
@@ -29,13 +30,10 @@ export default function SocialEdit({ social, typeOptions }: Props) {
         <AdminLayout>
             <Head title="ویرایش شبکه اجتماعی" />
             <PageHeader title="ویرایش آیتم" backHref="/admin/socials" />
-            <form
-                onSubmit={(e) => {
+            <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
                     form.put(`/admin/socials/${social.id}`);
-                }}
-                className="mt-6 space-y-6"
-            >
+                }}>
                 <SocialFormFields
                     data={form.data}
                     errors={form.errors}
@@ -43,8 +41,11 @@ export default function SocialEdit({ social, typeOptions }: Props) {
                     processing={form.processing}
                     onChange={(k, v) => form.setData(k, v as never)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>به‌روزرسانی</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>به‌روزرسانی</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

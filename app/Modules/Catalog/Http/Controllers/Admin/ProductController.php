@@ -9,9 +9,10 @@ use App\Modules\Catalog\Http\Requests\Admin\UpdateProductRequest;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Product;
-use App\Modules\Catalog\Services\AdminProductVariantService;
+use App\Modules\Catalog\Services\AdminProductVariantsSyncService;
 use App\Modules\Catalog\Support\AdminCatalogEnumOptions;
 use App\Modules\Catalog\Support\ProductPresenter;
+use App\Modules\Catalog\Support\VariantAttributeCatalog;
 use App\Modules\Files\Http\Concerns\SyncsMorphFilesFromRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,7 @@ class ProductController extends Controller
     use SyncsMorphFilesFromRequest;
 
     public function __construct(
-        private readonly AdminProductVariantService $variantService,
+        private readonly AdminProductVariantsSyncService $variantsSync,
     ) {}
 
     public function index(Request $request): Response
@@ -89,6 +90,7 @@ class ProductController extends Controller
         return Inertia::render('Admin/Catalog/Products/Create', [
             ...$this->formOptions(),
             'displayModeOptions' => AdminCatalogEnumOptions::fromEnum(VariantDisplayMode::class),
+            'variantAttributes' => VariantAttributeCatalog::forAdmin(),
         ]);
     }
 
@@ -103,15 +105,15 @@ class ProductController extends Controller
 
         $product->categories()->sync($data['category_ids'] ?? []);
         $this->syncGalleryFromRequest($product, $request);
-        $this->variantService->ensureInitialVariant(
+        $this->variantsSync->sync(
             $product,
-            $request->initialVariantPayload(),
+            $request->productVariantsPayload(),
             $request->user()?->id,
         );
 
         return redirect()
             ->route('admin.catalog.products.edit', $product)
-            ->with('success', 'محصول و تنوع اولیه ایجاد شد.');
+            ->with('success', 'محصول ایجاد شد.');
     }
 
     public function edit(Request $request, Product $product): Response
@@ -119,7 +121,8 @@ class ProductController extends Controller
         abort_unless($request->user()?->can('catalog-products-update'), 403);
 
         $variants = $product->variants()
-            ->with(['currentPrice', 'inventory'])
+            ->where('status', true)
+            ->with(['currentPrice', 'inventory', 'attributeValues.attribute'])
             ->orderBy('sort')
             ->orderBy('id')
             ->get()
@@ -132,6 +135,7 @@ class ProductController extends Controller
             'variants' => $variants,
             ...$this->formOptions(),
             'displayModeOptions' => AdminCatalogEnumOptions::fromEnum(VariantDisplayMode::class),
+            'variantAttributes' => VariantAttributeCatalog::forAdmin(),
             'abilities' => [
                 'variants' => $actor?->can('catalog-products-update') ?? false,
                 'delete' => $actor?->can('catalog-products-delete') ?? false,
@@ -154,6 +158,11 @@ class ProductController extends Controller
 
         $product->categories()->sync($data['category_ids'] ?? []);
         $this->syncGalleryFromRequest($product, $request);
+        $this->variantsSync->sync(
+            $product,
+            $request->productVariantsPayload(),
+            $request->user()?->id,
+        );
 
         return redirect()
             ->route('admin.catalog.products.edit', $product)

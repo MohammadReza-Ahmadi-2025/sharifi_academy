@@ -22,6 +22,8 @@ trait ValidatesInitialProductVariant
             'variant.price' => ['nullable', 'integer', 'min:0'],
             'variant.final_price' => ['nullable', 'integer', 'min:0'],
             'variant.stock' => ['nullable', 'integer', 'min:0'],
+            'variant.attribute_value_ids' => ['nullable', 'array', 'max:3'],
+            'variant.attribute_value_ids.*' => ['integer', 'exists:attribute_values,id'],
         ];
     }
 
@@ -47,6 +49,11 @@ trait ValidatesInitialProductVariant
                 ? (int) $variant['final_price']
                 : null,
             'stock' => isset($variant['stock']) && $variant['stock'] !== '' ? (int) $variant['stock'] : 0,
+            'attribute_value_ids' => collect($variant['attribute_value_ids'] ?? [])
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn (int $id) => $id > 0)
+                ->values()
+                ->all(),
         ];
     }
 
@@ -68,6 +75,10 @@ trait ValidatesInitialProductVariant
         }
 
         if (isset($variant['display_mode']) && $variant['display_mode'] !== '' && $variant['display_mode'] !== VariantDisplayMode::NORMAL->value) {
+            return true;
+        }
+
+        if (collect($variant['attribute_value_ids'] ?? [])->filter()->isNotEmpty()) {
             return true;
         }
 

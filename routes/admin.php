@@ -5,6 +5,7 @@ use App\Modules\Admin\Http\Controllers\DashboardController;
 use App\Modules\AdobeConnect\Http\Controllers\Admin\AdobeRecordingController;
 use App\Modules\AdobeConnect\Http\Controllers\Admin\AdobeRoomController;
 use App\Modules\Blog\Http\Controllers\Admin\PostController as BlogPostController;
+use App\Modules\Blog\Models\Post as BlogPost;
 use App\Modules\Catalog\Http\Controllers\Admin\BrandController;
 use App\Modules\Catalog\Http\Controllers\Admin\CategoryController;
 use App\Modules\Catalog\Http\Controllers\Admin\InventoryController;
@@ -18,10 +19,9 @@ use App\Modules\Courses\Http\Controllers\Admin\CourseController;
 use App\Modules\Courses\Http\Controllers\Admin\EnrollmentController;
 use App\Modules\Courses\Http\Controllers\Admin\SessionAttendanceController;
 use App\Modules\Files\Http\Controllers\Admin\FileController;
-use App\Modules\Home\Http\Controllers\Admin\BannerController;
 use App\Modules\Home\Http\Controllers\Admin\HomeSectionController;
-use App\Modules\Menu\Http\Controllers\Admin\MenuController;
 use App\Modules\Locations\Http\Controllers\Admin\ProvinceCityController;
+use App\Modules\Menu\Http\Controllers\Admin\MenuController;
 use App\Modules\Profile\Http\Controllers\Admin\SkillController;
 use App\Modules\Profile\Http\Controllers\ProfileController;
 use App\Modules\Roles\Http\Controllers\RoleController;
@@ -276,6 +276,7 @@ Route::prefix('admin')
             Route::get('catalog/products/{product}/edit', [CatalogProductController::class, 'edit'])->name('catalog.products.edit');
             Route::put('catalog/products/{product}', [CatalogProductController::class, 'update'])->name('catalog.products.update');
             Route::post('catalog/products/{product}/variants', [CatalogProductVariantController::class, 'store'])->name('catalog.products.variants.store');
+            Route::post('catalog/products/{product}/variants/generate', [CatalogProductVariantController::class, 'generate'])->name('catalog.products.variants.generate');
             Route::put('catalog/products/{product}/variants/reorder', [CatalogProductVariantController::class, 'reorder'])->name('catalog.products.variants.reorder');
             Route::put('catalog/products/{product}/variants/{variant}', [CatalogProductVariantController::class, 'update'])->name('catalog.products.variants.update');
             Route::delete('catalog/products/{product}/variants/{variant}', [CatalogProductVariantController::class, 'destroy'])->name('catalog.products.variants.destroy');
@@ -324,26 +325,41 @@ Route::prefix('admin')
             Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
         });
 
+        Route::redirect('blog/posts', '/admin/posts');
+        Route::redirect('blog/posts/create', '/admin/posts/create');
+        Route::get('blog/posts/{post}/edit', fn (BlogPost $post) => redirect()->route('admin.posts.edit', $post))
+            ->whereNumber('post');
+
         Route::middleware('permission:blog-posts-index')->group(function () {
-            Route::get('blog/posts', [BlogPostController::class, 'index'])->name('blog.posts.index');
+            Route::get('posts', [BlogPostController::class, 'index'])->name('posts.index');
         });
 
         Route::middleware('permission:blog-posts-create')->group(function () {
-            Route::get('blog/posts/create', [BlogPostController::class, 'create'])->name('blog.posts.create');
-            Route::post('blog/posts', [BlogPostController::class, 'store'])->name('blog.posts.store');
+            Route::get('posts/create', [BlogPostController::class, 'create'])->name('posts.create');
+            Route::post('posts', [BlogPostController::class, 'store'])->name('posts.store');
         });
 
         Route::middleware('permission:blog-posts-update')->group(function () {
-            Route::get('blog/posts/{post}/edit', [BlogPostController::class, 'edit'])->name('blog.posts.edit');
-            Route::put('blog/posts/{post}', [BlogPostController::class, 'update'])->name('blog.posts.update');
+            Route::get('posts/{post}/edit', [BlogPostController::class, 'edit'])->name('posts.edit');
+            Route::put('posts/{post}', [BlogPostController::class, 'update'])->name('posts.update');
         });
 
         Route::middleware('permission:blog-posts-delete')->group(function () {
-            Route::delete('blog/posts/{post}', [BlogPostController::class, 'destroy'])->name('blog.posts.destroy');
+            Route::delete('posts/{post}', [BlogPostController::class, 'destroy'])->name('posts.destroy');
         });
 
         Route::middleware('permission:stories-index')->group(function () {
             Route::get('stories', [AdminStoryController::class, 'index'])->name('stories.index');
+        });
+
+        Route::middleware('permission:stories-create')->group(function () {
+            Route::get('stories/create', [AdminStoryController::class, 'create'])->name('stories.create');
+            Route::post('stories', [AdminStoryController::class, 'store'])->name('stories.store');
+        });
+
+        Route::middleware('permission:stories-update')->group(function () {
+            Route::get('stories/{story}/edit', [AdminStoryController::class, 'edit'])->name('stories.edit');
+            Route::put('stories/{story}', [AdminStoryController::class, 'update'])->name('stories.update');
         });
 
         Route::middleware('permission:stories-moderate')->group(function () {
@@ -372,23 +388,9 @@ Route::prefix('admin')
             Route::delete('home-sections/{home_section}', [HomeSectionController::class, 'destroy'])->name('home-sections.destroy');
         });
 
-        Route::middleware('permission:home-banners-index')->group(function () {
-            Route::get('home-banners', [BannerController::class, 'index'])->name('home-banners.index');
-        });
-
-        Route::middleware('permission:home-banners-create')->group(function () {
-            Route::get('home-banners/create', [BannerController::class, 'create'])->name('home-banners.create');
-            Route::post('home-banners', [BannerController::class, 'store'])->name('home-banners.store');
-        });
-
-        Route::middleware('permission:home-banners-update')->group(function () {
-            Route::get('home-banners/{banner}/edit', [BannerController::class, 'edit'])->name('home-banners.edit');
-            Route::put('home-banners/{banner}', [BannerController::class, 'update'])->name('home-banners.update');
-        });
-
-        Route::middleware('permission:home-banners-delete')->group(function () {
-            Route::delete('home-banners/{banner}', [BannerController::class, 'destroy'])->name('home-banners.destroy');
-        });
+        Route::redirect('home-banners', '/admin/home-sections')->name('home-banners.index');
+        Route::redirect('home-banners/create', '/admin/home-sections/create');
+        Route::get('home-banners/{banner}/edit', fn () => redirect('/admin/home-sections'));
 
         Route::middleware('permission:menus-index')->group(function () {
             Route::get('menus', [MenuController::class, 'index'])->name('menus.index');

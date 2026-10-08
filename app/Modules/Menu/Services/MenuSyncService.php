@@ -20,7 +20,7 @@ class MenuSyncService
                 'type' => $row['type'],
                 'url' => $row['url'] ?? null,
                 'reference_id' => $row['reference_id'] ?? null,
-                'sort' => (int) ($row['sort'] ?? $index),
+                'sort' => $index,
                 'status' => (bool) ($row['status'] ?? true),
                 'target_blank' => (bool) ($row['target_blank'] ?? false),
             ];

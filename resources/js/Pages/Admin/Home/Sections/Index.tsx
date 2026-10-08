@@ -1,24 +1,14 @@
-import { AdminFilterSelect } from '@/Components/Admin/shared/ui/admin-filter-select';
 import { AdminListFilters } from '@/Components/Admin/shared/ui/admin-list-filters';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { Badge } from '@/Components/Admin/shared/ui/badge';
 import { Card } from '@/Components/Admin/shared/ui/card';
-import { AdminInput } from '@/Components/Admin/shared/ui/input';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
-import { SimpleTablePagination } from '@/Components/Admin/shared/ui/simple-table-pagination';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableEmptyState,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/Components/Admin/shared/ui/table';
+import { cn } from '@/lib/utils';
+import { reorderById } from '@/Components/shared/reorder-list';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-react';
+import { FormEvent, useEffect, useState } from 'react';
 
 type Row = {
     id: number;
@@ -27,64 +17,84 @@ type Row = {
     sort: number;
     content_type: string | null;
     content_type_label: string | null;
+    section_template_label?: string | null;
     tabs_count: number;
 };
 
 type Props = {
-    sections: {
-        data: Row[];
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-    };
-    filters: { search: string; per_page: number };
+    sections: Row[];
+    filters: { search: string };
     abilities: { create: boolean; update: boolean; delete: boolean };
 };
 
 export default function HomeSectionsIndex({ sections, filters, abilities }: Props) {
     const [search, setSearch] = useState(filters.search);
-    const [sortDraft, setSortDraft] = useState<Record<number, number>>(
-        () => Object.fromEntries(sections.data.map((row) => [row.id, row.sort])),
-    );
+    const [ordered, setOrdered] = useState(sections);
+    const [dragId, setDragId] = useState<number | null>(null);
+    const [dropId, setDropId] = useState<number | null>(null);
 
-    const applyFilters = (overrides: Record<string, string | number | undefined> = {}) => {
+    useEffect(() => {
+        setOrdered(sections);
+    }, [sections]);
+
+    const applyFilters = (overrides: Record<string, string | undefined> = {}) => {
         router.get(
             '/admin/home-sections',
-            { search: search || undefined, per_page: filters.per_page, ...overrides },
+            { search: search || undefined, ...overrides },
             { preserveState: true, replace: true },
-        );
-    };
-
-    const saveOrder = () => {
-        router.put(
-            '/admin/home-sections/reorder',
-            {
-                sections: sections.data.map((row) => ({
-                    id: row.id,
-                    sort: sortDraft[row.id] ?? row.sort,
-                })),
-            },
-            { preserveScroll: true },
         );
     };
 
     const onFilterSubmit = (e: FormEvent) => {
         e.preventDefault();
-        applyFilters({ page: 1 });
+        applyFilters();
     };
 
     const clearFilters = () => {
         setSearch('');
-        router.get('/admin/home-sections', { per_page: filters.per_page }, { replace: true });
+        router.get('/admin/home-sections', {}, { replace: true });
     };
+
+    const persistOrder = (next: Row[]) => {
+        setOrdered(next);
+        router.put(
+            '/admin/home-sections/reorder',
+            {
+                sections: next.map((row, index) => ({
+                    id: row.id,
+                    sort: (index + 1) * 10,
+                })),
+            },
+            { preserveScroll: true, preserveState: true },
+        );
+    };
+
+    const handleDrop = (targetId: number) => {
+        if (dragId === null || dragId === targetId) {
+            setDragId(null);
+            setDropId(null);
+            return;
+        }
+
+        const reordered = reorderById(
+            ordered.map((row) => ({ ...row, id: String(row.id) })),
+            String(dragId),
+            String(targetId),
+        ).map((row) => ({ ...row, id: Number(row.id) }));
+
+        persistOrder(reordered);
+        setDragId(null);
+        setDropId(null);
+    };
+
+    const canDrag = abilities.update && ordered.length > 1 && !filters.search;
 
     return (
         <AdminLayout>
             <Head title="سکشن‌های صفحه اصلی" />
             <PageHeader
                 title="سکشن‌های خانه"
-                description="چیدمان و محتوای داینامیک صفحه اصلی"
+                description="چیدمان داینامیک صفحه اصلی — با دستگیره جابه‌جا کنید"
                 actions={
                     abilities.create ? (
                         <AdminButton href="/admin/home-sections/create">
@@ -101,103 +111,86 @@ export default function HomeSectionsIndex({ sections, filters, abilities }: Prop
                 onSubmit={onFilterSubmit}
                 onClear={clearFilters}
                 searchPlaceholder="جستجو عنوان سکشن…"
-            >
-                <AdminFilterSelect
-                    value={String(filters.per_page)}
-                    onChange={(e) => applyFilters({ per_page: Number(e.target.value), page: 1 })}
-                    options={[
-                        { value: '25', label: '۲۵ در صفحه' },
-                        { value: '50', label: '۵۰ در صفحه' },
-                        { value: '100', label: '۱۰۰ در صفحه' },
-                    ]}
-                />
-                {abilities.update && (
-                    <AdminButton type="button" variant="outline" onClick={saveOrder}>
-                        ذخیره ترتیب
-                    </AdminButton>
-                )}
-            </AdminListFilters>
+            />
 
-            <Card className="mt-4 overflow-hidden">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>عنوان</TableHead>
-                            <TableHead>نوع</TableHead>
-                            <TableHead>ترتیب</TableHead>
-                            <TableHead>وضعیت</TableHead>
-                            <TableHead className="w-28">عملیات</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {sections.data.length === 0 ? (
-                            <TableEmptyState colSpan={5} message="سکشنی ثبت نشده است." />
-                        ) : (
-                            sections.data.map((row) => (
-                                <TableRow key={row.id}>
-                                    <TableCell className="font-medium">{row.title}</TableCell>
-                                    <TableCell>{row.content_type_label ?? '—'}</TableCell>
-                                    <TableCell>
-                                        {abilities.update ? (
-                                            <AdminInput
-                                                type="number"
-                                                className="w-20"
-                                                value={sortDraft[row.id] ?? row.sort}
-                                                onChange={(e) =>
-                                                    setSortDraft((prev) => ({
-                                                        ...prev,
-                                                        [row.id]: Number(e.target.value),
-                                                    }))
+            {canDrag && (
+                <p className="mt-4 text-sm text-slate-500">برای تغییر ترتیب، ردیف‌ها را با دستگیره بکشید و رها کنید.</p>
+            )}
+
+            <Card className="mt-4 overflow-hidden p-2">
+                {ordered.length === 0 ? (
+                    <p className="px-4 py-10 text-center text-sm text-slate-500">سکشنی ثبت نشده است.</p>
+                ) : (
+                    <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {ordered.map((row) => (
+                            <li
+                                key={row.id}
+                                draggable={canDrag}
+                                onDragStart={() => setDragId(row.id)}
+                                onDragEnd={() => {
+                                    setDragId(null);
+                                    setDropId(null);
+                                }}
+                                onDragOver={(e) => {
+                                    if (!canDrag || dragId === null) {
+                                        return;
+                                    }
+                                    e.preventDefault();
+                                    setDropId(row.id);
+                                }}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    handleDrop(row.id);
+                                }}
+                                className={cn(
+                                    'flex flex-wrap items-center gap-3 px-3 py-3 sm:flex-nowrap',
+                                    dragId === row.id && 'opacity-50',
+                                    dropId === row.id && dragId !== row.id && 'bg-slate-50 dark:bg-slate-900/40',
+                                )}
+                            >
+                                {canDrag ? (
+                                    <span
+                                        className="inline-flex cursor-grab text-slate-400 active:cursor-grabbing"
+                                        title="جابه‌جایی"
+                                    >
+                                        <GripVertical className="size-5" />
+                                    </span>
+                                ) : (
+                                    <span className="w-5" />
+                                )}
+                                <div className="min-w-0 flex-1">
+                                    <p className="font-medium text-slate-900 dark:text-slate-100">{row.title}</p>
+                                    <p className="text-xs text-slate-500">
+                                        {row.section_template_label ?? row.content_type_label ?? '—'} · {row.tabs_count} تب
+                                    </p>
+                                </div>
+                                <Badge variant={row.status ? 'success' : 'secondary'}>
+                                    {row.status ? 'فعال' : 'غیرفعال'}
+                                </Badge>
+                                <div className="flex gap-1">
+                                    {abilities.update && (
+                                        <AdminButton variant="ghost" size="sm" href={`/admin/home-sections/${row.id}/edit`}>
+                                            <Pencil className="size-4" />
+                                        </AdminButton>
+                                    )}
+                                    {abilities.delete && (
+                                        <AdminButton
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                                if (window.confirm('این سکشن حذف شود؟')) {
+                                                    router.delete(`/admin/home-sections/${row.id}`);
                                                 }
-                                            />
-                                        ) : (
-                                            row.sort
-                                        )}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge variant={row.status ? 'success' : 'secondary'}>
-                                            {row.status ? 'فعال' : 'غیرفعال'}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-1">
-                                            {abilities.update && (
-                                                <AdminButton variant="ghost" size="sm" href={`/admin/home-sections/${row.id}/edit`}>
-                                                    <Pencil className="size-4" />
-                                                </AdminButton>
-                                            )}
-                                            {abilities.delete && (
-                                                <AdminButton
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        if (window.confirm('این سکشن حذف شود؟')) {
-                                                            router.delete(`/admin/home-sections/${row.id}`);
-                                                        }
-                                                    }}
-                                                >
-                                                    <Trash2 className="size-4 text-red-600" />
-                                                </AdminButton>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-                <SimpleTablePagination
-                    className="border-t"
-                    currentPage={sections.current_page}
-                    lastPage={sections.last_page}
-                    total={sections.total}
-                    perPage={sections.per_page}
-                    from={null}
-                    to={null}
-                    itemLabel="سکشن"
-                    onPageChange={(page) => applyFilters({ page })}
-                    onPerPageChange={(perPage) => applyFilters({ per_page: perPage, page: 1 })}
-                />
+                                            }}
+                                        >
+                                            <Trash2 className="size-4 text-red-600" />
+                                        </AdminButton>
+                                    )}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </Card>
         </AdminLayout>
     );

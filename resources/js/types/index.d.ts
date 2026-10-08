@@ -62,30 +62,16 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
     };
     app: {
         name: string;
+        debug?: boolean;
     };
     navigation: {
         items: NavItem[];
         cta: { label: string; url: string } | null;
     };
-    menuCategories: Array<{
-        id: number;
-        title: string;
-        slug: string;
-        url: string;
-        image_url?: string | null;
-        children: Array<{
-            id: number;
-            title: string;
-            slug: string;
-            url: string;
-            children?: Array<{ id: number; title: string; slug: string; url: string }>;
-        }>;
-        brands: Array<{ id: number; title: string; slug: string; url: string }>;
-    }>;
     adminPanel: {
         navigation: AdminPanelNavItem[];
     } | null;
-    siteSettings: Record<string, unknown>;
+    siteSettings: import('@/lib/site-settings').SiteSettings;
     siteMenus: Record<
         string,
         Array<{
@@ -96,5 +82,12 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
             items: Array<{ id: number; title: string; url: string; target_blank: boolean }>;
         }>
     >;
+    siteSocials: Array<{
+        id: number;
+        type: string;
+        url: string;
+        label: string;
+        target_blank: boolean;
+    }>;
     url: string;
 };

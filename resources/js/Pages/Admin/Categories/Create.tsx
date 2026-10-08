@@ -5,6 +5,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { GalleryImagesField, useGalleryUploadState } from '@/Components/Admin/shared/GalleryImagesField';
 import { withGalleryPayload } from '@/Components/shared/gallery-form-payload';
 import { Head, useForm } from '@inertiajs/react';
+import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     categoryType: string;
@@ -34,17 +35,11 @@ export default function CategoriesCreate({ categoryType, categoryTypeLabel, pare
         <AdminLayout>
             <Head title={`ایجاد دسته ${categoryTypeLabel}`} />
             <PageHeader title={`ایجاد دسته ${categoryTypeLabel}`} backHref={indexUrl} />
-            <form
-                onSubmit={(e) => {
+            <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
-                    form
-                        .transform((data) =>
-                            withGalleryPayload(data, image, { field: 'image' }),
-                        )
-                        .post(`/admin/categories?type=${categoryType}`, { forceFormData: true });
-                }}
-                className="mt-6 space-y-6"
-            >
+                    form.transform((data) => withGalleryPayload(data, image, { field: 'image' }));
+                    form.post(`/admin/categories?type=${categoryType}`, { forceFormData: true });
+                }}>
                 <GalleryImagesField
                     title="تصویر دسته"
                     description="فقط یک تصویر برای نمایش در فروشگاه."
@@ -61,8 +56,11 @@ export default function CategoriesCreate({ categoryType, categoryTypeLabel, pare
                     processing={form.processing}
                     onChange={(k, v) => form.setData(k, v as never)}
                 />
-                <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
-            </form>
+                <AdminFormActions>
+
+                    <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
+                </AdminFormActions>
+</AdminFormPage>
         </AdminLayout>
     );
 }

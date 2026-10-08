@@ -234,10 +234,21 @@ class InventoryService
 
     public function setStock(int $variantId, int $stock, ?int $warehouseId = null, ?int $userId = null): Inventory
     {
+        return $this->setStockAndMin($variantId, $stock, null, $warehouseId, $userId);
+    }
+
+    public function setStockAndMin(
+        int $variantId,
+        int $stock,
+        ?int $minStock = null,
+        ?int $warehouseId = null,
+        ?int $userId = null,
+    ): Inventory {
         $warehouseId = $warehouseId ?: $this->defaultWarehouseId();
         $stock = max(0, $stock);
+        $minStock = $minStock === null ? null : max(0, $minStock);
 
-        return DB::transaction(function () use ($variantId, $stock, $warehouseId, $userId) {
+        return DB::transaction(function () use ($variantId, $stock, $minStock, $warehouseId, $userId) {
             $inventory = $this->getOrCreate($variantId, $warehouseId);
             $inventory = Inventory::query()->whereKey($inventory->id)->lockForUpdate()->firstOrFail();
 
@@ -246,7 +257,13 @@ class InventoryService
                 ->exists();
 
             $change = $stock - (int) $inventory->stock;
-            $inventory->update(['stock' => $stock]);
+            $updates = ['stock' => $stock];
+
+            if ($minStock !== null) {
+                $updates['min_stock'] = $minStock;
+            }
+
+            $inventory->update($updates);
 
             if ($change !== 0) {
                 $this->logChange($inventory, $change, 'adjustment', 'تنظیم موجودی از پنل ادمین', null, $userId);

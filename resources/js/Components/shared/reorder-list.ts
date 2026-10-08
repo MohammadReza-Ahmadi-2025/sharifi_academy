@@ -1,3 +1,15 @@
+export function reorderByIndex<T>(items: T[], fromIndex: number, toIndex: number): T[] {
+    if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex || fromIndex >= items.length || toIndex >= items.length) {
+        return items;
+    }
+
+    const next = [...items];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+
+    return next;
+}
+
 export function reorderById<T extends { id: string }>(items: T[], fromId: string, toId: string): T[] {
     const fromIndex = items.findIndex((item) => item.id === fromId);
     const toIndex = items.findIndex((item) => item.id === toId);

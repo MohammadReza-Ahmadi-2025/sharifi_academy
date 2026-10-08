@@ -17,11 +17,15 @@ class HomeSectionPresenter
     {
         $firstTab = $section->tabs->first();
 
+        $template = data_get($section->settings, 'section_template', 'catalog');
+
         return [
             'id' => $section->id,
             'title' => $section->title,
             'status' => (bool) $section->status,
             'sort' => $section->sort,
+            'section_template' => $template,
+            'section_template_label' => AdminHomeEnumOptions::sectionTemplates()[$template] ?? $template,
             'content_type' => $firstTab?->content_type,
             'content_type_label' => $firstTab
                 ? (AdminHomeEnumOptions::contentTypes()[$firstTab->content_type] ?? $firstTab->content_type)
@@ -61,8 +65,34 @@ class HomeSectionPresenter
             'settings' => $tab->settings ?? [],
             'manual_items' => self::manualItemsForTab($tab),
             'manual_item_ids' => self::manualItemIdsForTab($tab),
-            'banner_ids' => self::bannerIdsForTab($tab),
+            'banners' => self::bannersForTab($tab),
         ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public static function bannersForTab(HomeSectionTab $tab): array
+    {
+        if ($tab->content_type !== 'banner') {
+            return [];
+        }
+
+        return $tab->items
+            ->where('item_type', Banner::class)
+            ->sortBy('sort_order')
+            ->map(function ($row) {
+                $banner = $row->item;
+
+                if (! $banner instanceof Banner) {
+                    return null;
+                }
+
+                return BannerPresenter::forForm($banner);
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     /**
@@ -70,7 +100,7 @@ class HomeSectionPresenter
      */
     public static function manualItemsForTab(HomeSectionTab $tab): array
     {
-        if ($tab->content_type === 'banner') {
+        if (in_array($tab->content_type, ['banner', 'features'], true)) {
             return [];
         }
 

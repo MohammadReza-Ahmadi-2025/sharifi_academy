@@ -2,6 +2,7 @@
 
 namespace App\Modules\Files\Models;
 
+use App\Support\Storage\PublicStorageUrl;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -55,7 +56,7 @@ class File extends Model
         }
 
         if (Storage::disk('public')->exists($path)) {
-            return $cache[$cacheKey] = Storage::disk('public')->url($path);
+            return $cache[$cacheKey] = PublicStorageUrl::forPath($path);
         }
 
         return $cache[$cacheKey] = '';

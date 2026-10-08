@@ -34,7 +34,7 @@ class AdminBlogTest extends TestCase
         $this->assertSame(Category::TYPE_BLOG, $category->type);
 
         $this->actingAs($admin)
-            ->post('/admin/blog/posts', [
+            ->post('/admin/posts', [
                 'title' => 'معرفی دوره',
                 'content' => 'متن کامل پست',
                 'status' => 'published',
@@ -51,7 +51,7 @@ class AdminBlogTest extends TestCase
         $this->assertNotNull($post->featuredImage);
 
         $this->actingAs($admin)
-            ->get('/admin/blog/posts/'.$post->id.'/edit')
+            ->get('/admin/posts/'.$post->id.'/edit')
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component('Admin/Blog/Posts/Edit'));
     }

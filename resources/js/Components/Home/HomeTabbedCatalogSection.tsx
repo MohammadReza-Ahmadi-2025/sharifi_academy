@@ -1,3 +1,4 @@
+import { HomeCatalogSwiper } from '@/Components/Home/HomeCatalogSwiper';
 import type { HomeCatalogItem, HomeSection, HomeSectionTab } from '@/Components/Home/types';
 import { Link } from '@inertiajs/react';
 import { useState } from 'react';
@@ -5,27 +6,33 @@ import { useState } from 'react';
 type Props = {
     section: HomeSection;
     tabs: HomeSectionTab[];
-    hrefPrefix: string;
-    empty: string;
-    showPrice?: boolean;
+    hrefPrefixForType: (contentType: string) => string;
+    emptyForType: (contentType: string) => string;
+    showPriceForType: (contentType: string) => boolean;
     sectionId?: string;
+    catalogLayout?: 'grid' | 'carousel';
 };
 
 export function HomeTabbedCatalogSection({
     section,
     tabs,
-    hrefPrefix,
-    empty,
-    showPrice = true,
+    hrefPrefixForType,
+    emptyForType,
+    showPriceForType,
     sectionId,
+    catalogLayout = 'grid',
 }: Props) {
     const [activeTabId, setActiveTabId] = useState(tabs[0]?.id ?? 0);
     const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
     const items = activeTab?.items ?? [];
     const viewAll = activeTab?.view_all_url;
+    const contentType = activeTab?.content_type ?? 'product';
+    const hrefPrefix = hrefPrefixForType(contentType);
+    const empty = emptyForType(contentType);
+    const showPrice = showPriceForType(contentType);
 
     return (
-        <section id={sectionId} className="mx-auto max-w-6xl scroll-mt-24 px-4 py-10">
+        <section id={sectionId} className="mx-auto w-full max-w-6xl scroll-mt-24 overflow-visible px-4 py-10">
             <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-extrabold text-neutral-black">{section.title}</h2>
@@ -60,6 +67,15 @@ export function HomeTabbedCatalogSection({
                 <p className="rounded-2xl border border-dashed border-secondary bg-neutral-white px-4 py-10 text-center text-sm text-neutral-black/70">
                     {empty}
                 </p>
+            ) : catalogLayout === 'carousel' ? (
+                <div className="min-w-0">
+                    <HomeCatalogSwiper
+                        key={`tab-${activeTab.id}-${items.length}`}
+                        items={items}
+                        hrefPrefix={hrefPrefix}
+                        showPrice={showPrice}
+                    />
+                </div>
             ) : (
                 <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
                     {items.map((item) => (

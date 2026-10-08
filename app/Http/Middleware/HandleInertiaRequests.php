@@ -6,8 +6,9 @@ use App\Modules\Admin\Support\AdminNavigation;
 use App\Modules\Cart\Models\Cart;
 use App\Modules\Menu\Services\SiteMenuService;
 use App\Modules\Settings\Services\SiteSettingsService;
+use App\Modules\Settings\Support\SiteSettingsInertiaPayload;
+use App\Modules\Social\Services\SiteSocialService;
 use App\Modules\Users\Support\UserAvatarMedia;
-use App\Support\SiteMenuCategoryService;
 use App\Support\SiteNavigation;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -24,17 +25,21 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $settings = app(SiteSettingsService::class);
+        $siteName = (string) ($settings->get('site_name') ?: config('app.name'));
+        $isAdminRequest = $user !== null
+            && ($request->routeIs('admin.*') || $request->is('admin', 'admin/*'));
 
         return [
             ...parent::share($request),
             'app' => [
-                'name' => config('app.name'),
+                'name' => $siteName,
+                'debug' => (bool) config('app.debug'),
             ],
             'navigation' => fn () => SiteNavigation::forUser($user),
-            'menuCategories' => fn () => app(SiteMenuCategoryService::class)->productRootsForHeader(),
-            'adminPanel' => fn () => ($user && ($request->routeIs('admin.*') || $request->is('admin', 'admin/*')))
+            'adminPanel' => fn () => ($isAdminRequest
                 ? ['navigation' => AdminNavigation::forUser($user)]
-                : null,
+                : null),
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
@@ -43,8 +48,10 @@ class HandleInertiaRequests extends Middleware
                     'email' => $user->email,
                     'mobile' => $user->mobile,
                     'avatar' => UserAvatarMedia::payload($user),
-                    'roles' => $user->getRoleNames()->values()->all(),
-                    'permissions' => $user->getAllPermissions()->pluck('name')->values()->all(),
+                    'roles' => $isAdminRequest ? $user->getRoleNames()->values()->all() : [],
+                    'permissions' => $isAdminRequest
+                        ? $user->getAllPermissions()->pluck('name')->values()->all()
+                        : [],
                 ] : null,
             ],
             'flash' => [
@@ -52,8 +59,9 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->hasSession() ? $request->session()->get('error') : null,
             ],
             'cartQty' => fn () => Cart::currentQty(),
-            'siteSettings' => fn () => app(SiteSettingsService::class)->autoload(),
+            'siteSettings' => fn () => SiteSettingsInertiaPayload::build($settings),
             'siteMenus' => fn () => app(SiteMenuService::class)->groupedByLocation(),
+            'siteSocials' => fn () => app(SiteSocialService::class)->forSite(),
             'url' => fn () => $request->url(),
         ];
     }

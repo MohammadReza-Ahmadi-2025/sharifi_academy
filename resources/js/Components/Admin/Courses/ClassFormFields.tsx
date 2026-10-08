@@ -1,6 +1,6 @@
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { Card } from '@/Components/Admin/shared/ui/card';
-import { Checkbox } from '@/Components/Admin/shared/ui/checkbox';
+import { Switch } from '@/Components/Admin/shared/ui/switch';
 import { FormField } from '@/Components/Admin/shared/ui/form-field';
 import { AdminInput } from '@/Components/Admin/shared/ui/input';
 import { findSelectOption, mapToSelectOptions } from '@/Components/Admin/shared/lib/select-options';
@@ -153,11 +153,11 @@ export function ClassFormFields({
                             onChange={(e) => onChange('description', e.target.value)}
                         />
                     </FormField>
-                    <Checkbox
+                    <Switch
                         label="قابل مشاهده برای عموم"
                         checked={data.is_public}
                         disabled={processing}
-                        onChange={(e) => onChange('is_public', e.target.checked)}
+                        onCheckedChange={(v) => onChange('is_public', v)}
                     />
                 </div>
             </Card>
@@ -237,11 +237,11 @@ export function ClassFormFields({
                                     value={findSelectOption(roleSelectOptions, row.role)}
                                     onChange={(option) => updateInstructor(index, { role: option?.value ?? '' })}
                                 />
-                                <Checkbox
+                                <Switch
                                     label="استاد اصلی"
                                     checked={row.is_primary}
                                     disabled={processing}
-                                    onChange={(e) => updateInstructor(index, { is_primary: e.target.checked })}
+                                    onCheckedChange={(v) => updateInstructor(index, { is_primary: v })}
                                 />
                                 <AdminButton
                                     type="button"

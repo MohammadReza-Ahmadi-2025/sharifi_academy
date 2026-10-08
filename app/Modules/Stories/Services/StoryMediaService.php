@@ -26,4 +26,23 @@ class StoryMediaService
 
         return $file;
     }
+
+    public function attachThumbnail(Story $story, UploadedFile $upload): File
+    {
+        $path = $upload->store('stories/'.$story->id.'/thumbnails', 'public');
+
+        $file = $story->files()->create([
+            'name' => $upload->getClientOriginalName(),
+            'path' => $path,
+            'type' => 'story_thumbnail',
+            'extension' => $upload->getClientOriginalExtension(),
+            'size' => $upload->getSize(),
+            'status' => 1,
+            'sort' => 0,
+        ]);
+
+        $story->update(['thumbnail_file_id' => $file->id]);
+
+        return $file;
+    }
 }

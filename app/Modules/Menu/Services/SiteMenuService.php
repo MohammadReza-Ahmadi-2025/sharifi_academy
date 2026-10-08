@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Cache;
 
 class SiteMenuService
 {
+    /** @var array<string, list<array<string, mixed>>>|null */
+    private ?array $requestGrouped = null;
+
     public static function flush(): void
     {
         Cache::forget('site:menus');
@@ -19,7 +22,11 @@ class SiteMenuService
      */
     public function groupedByLocation(): array
     {
-        return Cache::remember('site:menus', 600, function () {
+        if ($this->requestGrouped !== null) {
+            return $this->requestGrouped;
+        }
+
+        return $this->requestGrouped = Cache::remember('site:menus', 600, function () {
             $menus = Menu::query()
                 ->where('status', true)
                 ->orderBy('sort')

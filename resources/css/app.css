@@ -577,3 +577,140 @@ body {
 .toast-progress {
     animation: toast-progress 4.8s linear both;
 }
+
+/* محتوای HTML (CKEditor) — صفحات عمومی */
+.site-rich-html {
+    font-size: 1rem;
+    line-height: 1.9;
+    color: rgb(0 0 0 / 0.82);
+    word-wrap: break-word;
+}
+
+.site-rich-html p {
+    margin-bottom: 1rem;
+}
+
+.site-rich-html p:last-child {
+    margin-bottom: 0;
+}
+
+.site-rich-html h2,
+.site-rich-html h3,
+.site-rich-html h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 800;
+    color: var(--color-neutral-black);
+    line-height: 1.4;
+}
+
+.site-rich-html h2 {
+    font-size: 1.25rem;
+}
+
+.site-rich-html h3 {
+    font-size: 1.125rem;
+}
+
+.site-rich-html ul,
+.site-rich-html ol {
+    margin: 1rem 0;
+    padding-right: 1.5rem;
+}
+
+.site-rich-html li {
+    margin-bottom: 0.35rem;
+}
+
+.site-rich-html a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.site-rich-html a:hover {
+    opacity: 0.9;
+}
+
+.site-rich-html blockquote {
+    margin: 1.25rem 0;
+    padding: 0.75rem 1rem;
+    border-right: 3px solid var(--color-primary);
+    background: rgb(var(--color-primary-rgb) / 0.06);
+    border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.site-rich-html img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.75rem;
+    margin: 1rem 0;
+}
+
+.site-rich-html table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.875rem;
+}
+
+.site-rich-html th,
+.site-rich-html td {
+    border: 1px solid var(--color-border);
+    padding: 0.5rem 0.75rem;
+}
+
+/* سکشن لیست کارت — Swiper (RTL) */
+.home-catalog-swiper {
+    overflow: visible;
+}
+
+.home-catalog-swiper .home-catalog-swiper__nav {
+    pointer-events: auto;
+}
+
+.home-catalog-swiper .home-catalog-swiper__root {
+    position: relative;
+    z-index: 1;
+    overflow-x: clip;
+    overflow-y: visible;
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+}
+
+.home-catalog-swiper .swiper-wrapper {
+    display: flex;
+    align-items: stretch;
+    box-sizing: content-box;
+}
+
+.home-catalog-swiper .home-catalog-swiper__slide {
+    height: auto;
+    flex-shrink: 0;
+    min-width: 0;
+    overflow: visible;
+    position: relative;
+    z-index: 0;
+}
+
+.home-catalog-swiper .home-catalog-swiper__slide:hover {
+    z-index: 20;
+}
+
+.home-catalog-swiper .home-catalog-swiper__card {
+    min-height: 100%;
+}
+
+.home-catalog-swiper .swiper-pagination {
+    position: relative;
+    margin-top: 0.75rem;
+}
+
+.home-catalog-swiper .swiper-pagination-bullet {
+    background: rgb(var(--color-primary-rgb) / 0.35);
+    opacity: 1;
+}
+
+.home-catalog-swiper .swiper-pagination-bullet-active {
+    background: var(--color-primary);
+}
