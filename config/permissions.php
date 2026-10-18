@@ -43,6 +43,19 @@ return [
                 'activity-logs-show' => 'جزئیات گزارش فعالیت',
             ],
         ],
+        'instructor_panel' => [
+            'label' => 'پنل استاد',
+            'permissions' => [
+                'instructor-panel-access' => 'ورود به پنل استاد',
+                'instructor-resume-manage' => 'مدیریت رزومه شخصی',
+            ],
+        ],
+        'student_panel' => [
+            'label' => 'پنل دانشجو',
+            'permissions' => [
+                'student-panel-access' => 'ورود به پنل دانشجو',
+            ],
+        ],
         'courses' => [
             'label' => 'دوره‌ها',
             'permissions' => [
@@ -50,6 +63,13 @@ return [
                 'courses-create' => 'ایجاد دوره',
                 'courses-update' => 'ویرایش دوره',
                 'courses-delete' => 'حذف دوره',
+            ],
+        ],
+        'instructor_moderation' => [
+            'label' => 'تایید محتوای اساتید',
+            'permissions' => [
+                'instructor-moderation-index' => 'مشاهده درخواست‌های تایید',
+                'instructor-moderation-update' => 'تایید یا رد دوره و رزومه استاد',
             ],
         ],
         'course_classes' => [
@@ -207,6 +227,15 @@ return [
                 'blog-posts-create' => 'ایجاد پست',
                 'blog-posts-update' => 'ویرایش پست',
                 'blog-posts-delete' => 'حذف پست',
+            ],
+        ],
+        'pages' => [
+            'label' => 'صفحات ثابت',
+            'permissions' => [
+                'pages-index' => 'مشاهده صفحات',
+                'pages-create' => 'ایجاد صفحه',
+                'pages-update' => 'ویرایش صفحه',
+                'pages-delete' => 'حذف صفحه',
             ],
         ],
         'blog_categories' => [

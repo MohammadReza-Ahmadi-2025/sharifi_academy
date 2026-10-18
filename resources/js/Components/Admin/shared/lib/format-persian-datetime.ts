@@ -118,6 +118,22 @@ export function formatGregorianApiDate(
   return formatIsoToJalali(value, preset === "short" ? "short" : "long") || "—";
 }
 
+/** تاریخ/زمان خام API یا «نامحدود» برای جدول‌ها و متادیتای پنل */
+export function formatAdminDateDisplay(
+  value: string | null | undefined,
+  style: PersianDateTimeStyle = "table",
+): string {
+  if (!value?.trim()) {
+    return "—";
+  }
+
+  if (value === "نامحدود") {
+    return value;
+  }
+
+  return formatPersianDateTime(value, style);
+}
+
 export function formatPersianDateTime(
   value: string | Date | null | undefined,
   style: PersianDateTimeStyle = "table",

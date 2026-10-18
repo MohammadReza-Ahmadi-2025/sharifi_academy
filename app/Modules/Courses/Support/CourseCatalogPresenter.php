@@ -23,7 +23,7 @@ class CourseCatalogPresenter
         return [
             'id' => $course->id,
             'title' => $course->title,
-            'slug' => $course->slug,
+            'slug' => $course->publicSlug(),
             'description' => $course->short_description,
             'level_label' => $course->level?->label(),
             'price_from' => $minPrice !== null ? (int) $minPrice : null,

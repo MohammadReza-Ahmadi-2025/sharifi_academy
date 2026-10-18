@@ -22,8 +22,17 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
+        host: '127.0.0.1',
+        hmr: {
+            host: '127.0.0.1',
+        },
         watch: {
-            ignored: ['**/storage/framework/views/**'],
+            ignored: [
+                '**/storage/**',
+                '**/public/ckeditor/**',
+                '**/public/build/**',
+                '**/node_modules/**',
+            ],
         },
     },
 });

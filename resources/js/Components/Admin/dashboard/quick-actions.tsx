@@ -1,9 +1,20 @@
+import type { ModerationQueue } from '@/Components/Admin/dashboard/dashboard-moderation-alerts';
+import { Badge } from '@/Components/Admin/shared/ui/badge';
 import { Card } from '@/Components/Admin/shared/ui/card';
 import { cn } from '@/lib/utils';
 import { Link } from '@inertiajs/react';
-import { ArrowLeft, ExternalLink, LayoutDashboard } from 'lucide-react';
+import { ArrowLeft, BarChart3, ExternalLink, GraduationCap, UserCheck } from 'lucide-react';
 
-const actions = [
+type QuickAction = {
+    label: string;
+    description: string;
+    href: string;
+    icon: typeof ExternalLink;
+    featured?: boolean;
+    badge?: number;
+};
+
+const baseActions: QuickAction[] = [
     {
         label: 'صفحه اصلی سایت',
         description: 'باز کردن وب‌سایت آکادمی',
@@ -12,14 +23,36 @@ const actions = [
         featured: true,
     },
     {
-        label: 'داشبورد',
-        description: 'بازگشت به خلاصه آمار',
-        href: '/admin',
-        icon: LayoutDashboard,
+        label: 'دوره‌ها',
+        description: 'مدیریت دوره و کلاس',
+        href: '/admin/courses',
+        icon: GraduationCap,
+    },
+    {
+        label: 'آمار بازدید',
+        description: 'گزارش بازدید صفحات',
+        href: '/admin/visits',
+        icon: BarChart3,
     },
 ];
 
-export function QuickActions() {
+type Props = {
+    moderation?: ModerationQueue | null;
+};
+
+export function QuickActions({ moderation }: Props) {
+    const actions: QuickAction[] = [...baseActions];
+    if (moderation && moderation.total > 0) {
+        actions.unshift({
+            label: 'تایید اساتید',
+            description: `${moderation.total.toLocaleString('fa-IR')} مورد در صف بررسی`,
+            href: '/admin/instructor-moderation',
+            icon: UserCheck,
+            featured: true,
+            badge: moderation.total,
+        });
+    }
+
     return (
         <Card>
             <div className="mb-4">
@@ -30,6 +63,7 @@ export function QuickActions() {
             <div className="space-y-3">
                 {actions.map((action) => {
                     const Icon = action.icon;
+                    const badge = action.badge ?? 0;
                     const className = cn(
                         'flex w-full items-center justify-between rounded-lg border px-4 py-3 text-right transition-colors',
                         action.featured
@@ -52,7 +86,14 @@ export function QuickActions() {
                                 </div>
 
                                 <div className="min-w-0">
-                                    <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{action.label}</p>
+                                    <p className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-100">
+                                        {action.label}
+                                        {badge > 0 ? (
+                                            <Badge variant="warning" className="text-[10px]">
+                                                {badge.toLocaleString('fa-IR')}
+                                            </Badge>
+                                        ) : null}
+                                    </p>
                                     <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{action.description}</p>
                                 </div>
                             </div>

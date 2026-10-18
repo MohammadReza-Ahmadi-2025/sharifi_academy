@@ -2,6 +2,8 @@
 
 namespace App\Modules\Courses\Http\Requests\Admin\Concerns;
 
+use App\Support\SeoSlug;
+
 trait NormalizesCourseInput
 {
     protected function prepareForValidation(): void
@@ -9,7 +11,7 @@ trait NormalizesCourseInput
         $duration = $this->input('duration_minutes');
 
         $this->merge([
-            'slug' => $this->filled('slug') ? $this->input('slug') : null,
+            'slug' => $this->filled('slug') ? SeoSlug::normalize((string) $this->input('slug')) : null,
             'code' => $this->filled('code') ? $this->input('code') : null,
             'level' => $this->filled('level') ? $this->input('level') : null,
             'published_at' => $this->filled('published_at') ? $this->input('published_at') : null,

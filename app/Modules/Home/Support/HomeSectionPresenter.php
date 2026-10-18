@@ -2,6 +2,7 @@
 
 namespace App\Modules\Home\Support;
 
+use App\Models\User;
 use App\Modules\Home\Models\Banner;
 use App\Modules\Home\Models\HomeSection;
 use App\Modules\Home\Models\HomeSectionTab;
@@ -100,7 +101,7 @@ class HomeSectionPresenter
      */
     public static function manualItemsForTab(HomeSectionTab $tab): array
     {
-        if (in_array($tab->content_type, ['banner', 'features'], true)) {
+        if (in_array($tab->content_type, ['banner', 'features', 'testimonials'], true)) {
             return [];
         }
 
@@ -120,9 +121,14 @@ class HomeSectionPresenter
                     return null;
                 }
 
+                $title = $item->title ?? null;
+                if ($item instanceof User) {
+                    $title = trim(($item->name ?? '').' '.($item->family ?? '')) ?: ('استاد #'.$item->getKey());
+                }
+
                 return [
                     'id' => $item->getKey(),
-                    'title' => (string) ($item->title ?? $item->name ?? '#'.$item->getKey()),
+                    'title' => (string) ($title ?? '#'.$item->getKey()),
                     'slug' => $item->slug ?? null,
                 ];
             })

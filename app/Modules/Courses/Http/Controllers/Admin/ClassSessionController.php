@@ -29,6 +29,7 @@ class ClassSessionController extends Controller
     public function index(Request $request, Course $course, CourseClass $courseClass): Response
     {
         abort_unless($request->user()?->can('class-sessions-index'), 403);
+        $this->authorizeManagedCourse($request, $course);
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
 
         $sessions = $courseClass->classSessions()
@@ -52,6 +53,7 @@ class ClassSessionController extends Controller
     public function create(Request $request, Course $course, CourseClass $courseClass): Response
     {
         abort_unless($request->user()?->can('class-sessions-create'), 403);
+        $this->authorizeManagedCourse($request, $course, 'update');
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
 
         return Inertia::render('Admin/Courses/Classes/Sessions/Create', [
@@ -63,6 +65,7 @@ class ClassSessionController extends Controller
 
     public function store(StoreClassSessionRequest $request, Course $course, CourseClass $courseClass): RedirectResponse
     {
+        $this->authorizeManagedCourse($request, $course, 'update');
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
         $data = $request->validated();
 
@@ -73,13 +76,14 @@ class ClassSessionController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.courses.classes.sessions.edit', [$course, $courseClass, $session])
+            ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.sessions.edit', [$course, $courseClass, $session])
             ->with('success', 'جلسه ایجاد شد.');
     }
 
     public function edit(Request $request, Course $course, CourseClass $courseClass, ClassSession $classSession): Response
     {
         abort_unless($request->user()?->can('class-sessions-update'), 403);
+        $this->authorizeManagedCourse($request, $course, 'update');
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
         $session = $this->classSessionOrFail($course, $courseClass, $classSession->id);
 
@@ -126,25 +130,27 @@ class ClassSessionController extends Controller
 
     public function update(UpdateClassSessionRequest $request, Course $course, CourseClass $courseClass, ClassSession $classSession): RedirectResponse
     {
+        $this->authorizeManagedCourse($request, $course, 'update');
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
         $session = $this->classSessionOrFail($course, $courseClass, $classSession->id);
 
         $session->update($request->validated());
 
         return redirect()
-            ->route('admin.courses.classes.sessions.edit', [$course, $courseClass, $session])
+            ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.sessions.edit', [$course, $courseClass, $session])
             ->with('success', 'جلسه به‌روزرسانی شد.');
     }
 
     public function destroy(Request $request, Course $course, CourseClass $courseClass, ClassSession $classSession): RedirectResponse
     {
         abort_unless($request->user()?->can('class-sessions-delete'), 403);
+        $this->authorizeManagedCourse($request, $course, 'update');
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
         $session = $this->classSessionOrFail($course, $courseClass, $classSession->id);
         $session->delete();
 
         return redirect()
-            ->route('admin.courses.classes.sessions.index', [$course, $courseClass])
+            ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.sessions.index', [$course, $courseClass])
             ->with('success', 'جلسه حذف شد.');
     }
 }

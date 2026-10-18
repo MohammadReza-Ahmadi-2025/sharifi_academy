@@ -3,7 +3,6 @@
 namespace App\Modules\Courses\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Modules\AdobeConnect\Models\AdobeRoom;
 use App\Modules\AdobeConnect\Support\AdminAdobeEnumOptions;
 use App\Modules\Courses\Enums\ClassInstructorRole;
@@ -19,6 +18,7 @@ use App\Modules\Courses\Models\Enrollment;
 use App\Modules\Courses\Support\AdminEnumOptions;
 use App\Modules\Courses\Support\CourseClassPresenter;
 use App\Modules\Courses\Support\CoursePresenter;
+use App\Modules\Courses\Support\EnrollableUserOptions;
 use App\Modules\Courses\Support\EnsuresNestedCourseAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,6 +32,7 @@ class CourseClassController extends Controller
     public function index(Request $request, Course $course): Response
     {
         abort_unless($request->user()?->can('course-classes-index'), 403);
+        $this->authorizeManagedCourse($request, $course);
 
         $classes = $course->courseClasses()
             ->withCount(['classSessions', 'enrollments'])
@@ -55,6 +56,7 @@ class CourseClassController extends Controller
     public function create(Request $request, Course $course): Response
     {
         abort_unless($request->user()?->can('course-classes-create'), 403);
+        $this->authorizeManagedCourse($request, $course, 'update');
 
         return Inertia::render('Admin/Courses/Classes/Create', [
             'course' => CoursePresenter::forShow($course),
@@ -64,6 +66,8 @@ class CourseClassController extends Controller
 
     public function store(StoreCourseClassRequest $request, Course $course): RedirectResponse
     {
+        $this->authorizeManagedCourse($request, $course, 'update');
+
         $data = $request->validated();
 
         $courseClass = $course->courseClasses()->create([
@@ -74,13 +78,14 @@ class CourseClassController extends Controller
         $this->syncInstructors($courseClass, $data['instructors'] ?? []);
 
         return redirect()
-            ->route('admin.courses.classes.edit', [$course, $courseClass])
+            ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.edit', [$course, $courseClass])
             ->with('success', 'کلاس ایجاد شد.');
     }
 
     public function edit(Request $request, Course $course, CourseClass $courseClass): Response
     {
         abort_unless($request->user()?->can('course-classes-update'), 403);
+        $this->authorizeManagedCourse($request, $course, 'update');
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
 
         $courseClass->load(['classInstructors.user']);
@@ -140,6 +145,7 @@ class CourseClassController extends Controller
 
     public function update(UpdateCourseClassRequest $request, Course $course, CourseClass $courseClass): RedirectResponse
     {
+        $this->authorizeManagedCourse($request, $course, 'update');
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
         $data = $request->validated();
 
@@ -147,18 +153,19 @@ class CourseClassController extends Controller
         $this->syncInstructors($courseClass, $data['instructors'] ?? []);
 
         return redirect()
-            ->route('admin.courses.classes.edit', [$course, $courseClass])
+            ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.edit', [$course, $courseClass])
             ->with('success', 'کلاس به‌روزرسانی شد.');
     }
 
     public function destroy(Request $request, Course $course, CourseClass $courseClass): RedirectResponse
     {
         abort_unless($request->user()?->can('course-classes-delete'), 403);
+        $this->authorizeManagedCourse($request, $course, 'update');
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
         $courseClass->delete();
 
         return redirect()
-            ->route('admin.courses.classes.index', $course)
+            ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.index', $course)
             ->with('success', 'کلاس حذف شد.');
     }
 
@@ -221,15 +228,6 @@ class CourseClassController extends Controller
      */
     private function userOptions(): array
     {
-        return User::query()
-            ->orderBy('name')
-            ->limit(200)
-            ->get(['id', 'name', 'family', 'mobile'])
-            ->map(fn (User $user) => [
-                'value' => $user->id,
-                'label' => trim("{$user->name} {$user->family}")." ({$user->mobile})",
-            ])
-            ->values()
-            ->all();
+        return EnrollableUserOptions::forSelect();
     }
 }

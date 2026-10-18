@@ -10,6 +10,7 @@ use App\Modules\Courses\Http\Requests\Admin\SyncSessionAttendanceRequest;
 use App\Modules\Courses\Models\ClassSession;
 use App\Modules\Courses\Models\SessionAttendance;
 use App\Modules\Courses\Support\AdminSessionAttendanceOptions;
+use App\Modules\Courses\Support\SessionAttendanceSheetPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -71,41 +72,9 @@ class SessionAttendanceController extends Controller
         $courseClass = $classSession->courseClass;
         abort_if($courseClass === null, 404);
 
-        $enrollments = $courseClass->enrollments()
-            ->where('status', EnrollmentStatus::Confirmed)
-            ->with('user')
-            ->get();
-
-        $existing = SessionAttendance::query()
-            ->where('class_session_id', $classSession->id)
-            ->get()
-            ->keyBy('user_id');
-
-        $rows = $enrollments->map(function ($enrollment) use ($existing) {
-            $user = $enrollment->user;
-            $attendance = $existing->get($user->id);
-
-            return [
-                'user_id' => $user->id,
-                'name' => trim($user->name.' '.$user->family),
-                'mobile' => $user->mobile,
-                'status' => $attendance?->status?->value ?? SessionAttendanceStatus::Absent->value,
-                'note' => $attendance?->note ?? '',
-            ];
-        })->values();
-
-        $course = $classSession->courseClass?->course;
-
         return Inertia::render('Admin/SessionAttendances/Show', [
-            'session' => [
-                'id' => $classSession->id,
-                'title' => $classSession->title,
-                'session_number' => $classSession->session_number,
-                'starts_at' => $classSession->scheduled_start_at?->toIso8601String(),
-                'course_title' => $course?->title,
-                'class_title' => $classSession->courseClass?->title,
-            ],
-            'rows' => $rows,
+            'session' => SessionAttendanceSheetPresenter::sessionMeta($classSession),
+            'rows' => SessionAttendanceSheetPresenter::rowsForSession($classSession),
             'statusOptions' => AdminSessionAttendanceOptions::statuses(),
             'abilities' => [
                 'update' => $request->user()?->can('session-attendances-update') ?? false,

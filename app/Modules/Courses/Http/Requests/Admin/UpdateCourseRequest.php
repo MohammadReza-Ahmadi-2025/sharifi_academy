@@ -16,11 +16,14 @@ use Illuminate\Validation\Rule;
 class UpdateCourseRequest extends FormRequest
 {
     use NormalizesCourseInput;
+    use NormalizesCourseSeoInput;
     use ValidatesGalleryUploads;
 
     public function authorize(): bool
     {
-        return $this->user()?->can('courses-update') ?? false;
+        $course = $this->route('course');
+
+        return $course instanceof Course && ($this->user()?->can('update', $course) ?? false);
     }
 
     /**
@@ -43,8 +46,7 @@ class UpdateCourseRequest extends FormRequest
             'is_featured' => ['boolean'],
             'display_order' => ['nullable', 'integer', 'min:0'],
             'published_at' => ['nullable', 'date'],
-            'category_ids' => ['nullable', 'array'],
-            'category_ids.*' => ['integer', 'exists:categories,id'],
+            'category_ids' => ['required', 'array', 'min:1'],
             'category_ids.*' => [
                 'integer',
                 Rule::exists('categories', 'id')->where('type', Category::TYPE_COURSE),

@@ -2,6 +2,8 @@
 
 namespace App\Modules\Home\Services\Resolvers;
 
+use App\Models\User;
+use App\Modules\Profile\Http\Controllers\Site\InstructorResumeController;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
@@ -11,6 +13,7 @@ use App\Modules\Home\Models\Banner;
 use App\Modules\Home\Models\HomeSectionTab;
 use App\Modules\Home\Services\HomeCacheInvalidator;
 use App\Modules\Home\Support\HomeItemPresenter;
+use App\Modules\Profile\Enums\ResumeModerationStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -25,7 +28,7 @@ class TabResolver
     public function resolve(HomeSectionTab $tab): ?array
     {
         return Cache::remember($this->cache->tabKey($tab->id), 600, function () use ($tab) {
-            if ($tab->content_type === 'features') {
+            if (in_array($tab->content_type, ['features', 'testimonials'], true)) {
                 return $this->formatResponse($tab, collect());
             }
 
@@ -56,14 +59,29 @@ class TabResolver
                 return null;
             }
 
-            $this->applySource($query, $tab);
+            $manualOrder = $this->applySource($query, $tab);
 
             if ($tab->source_type === 'manual') {
                 $items = $query->get();
+
+                if ($manualOrder !== []) {
+                    $positions = array_flip($manualOrder);
+                    $items = $items
+                        ->sortBy(fn ($model) => $positions[$model->getKey()] ?? PHP_INT_MAX)
+                        ->values();
+                }
             } else {
                 $limit = (int) ($tab->limit ?? 10);
 
                 $items = $query->limit($limit > 0 ? $limit : 10)->get();
+            }
+
+            if ($tab->content_type === 'instructor') {
+                $items = $items
+                    ->filter(
+                        fn ($item) => $item instanceof User && InstructorResumeController::isPublicInstructor($item),
+                    )
+                    ->values();
             }
 
             return $this->formatResponse($tab, $items);
@@ -92,6 +110,10 @@ class TabResolver
             $payload['features'] = data_get($tab->settings, 'features', []);
         }
 
+        if ($tab->content_type === 'testimonials') {
+            $payload['testimonials'] = data_get($tab->settings, 'testimonials', []);
+        }
+
         return $payload;
     }
 
@@ -116,23 +138,37 @@ class TabResolver
 
             'category' => Category::query()
                 ->active()
-                ->whereNull('parent_id')
-                ->product()
+                ->when(
+                    $tab->source_type !== 'manual',
+                    fn (Builder $builder) => $builder->whereNull('parent_id'),
+                )
+                ->whereIn('type', [Category::TYPE_PRODUCT, Category::TYPE_COURSE])
                 ->with('image'),
 
             'post' => Post::query()
                 ->published()
                 ->with('featuredImage'),
 
+            'instructor' => User::query()
+                ->role('instructor')
+                ->where('status', 1)
+                ->whereHas('profile', fn ($q) => $q->where('resume_moderation_status', ResumeModerationStatus::Approved->value))
+                ->with('profile'),
+
             default => null,
         };
     }
 
-    protected function applySource(Builder $query, HomeSectionTab $tab): void
+    /**
+     * @return list<int> Manual item ids in display order (empty when not manual).
+     */
+    protected function applySource(Builder $query, HomeSectionTab $tab): array
     {
         switch ($tab->source_type) {
             case 'latest':
-                if ($tab->content_type === 'course') {
+                if ($tab->content_type === 'instructor') {
+                    $query->orderByDesc('id');
+                } elseif ($tab->content_type === 'course') {
                     $query->orderedForDisplay();
                 } elseif ($tab->content_type === 'product') {
                     $query->orderBy('sort')->orderByDesc('id');
@@ -195,12 +231,14 @@ class TabResolver
                 if ($ids === []) {
                     $query->whereRaw('1 = 0');
 
-                    return;
+                    return [];
                 }
 
-                $query->whereIn('id', $ids)
-                    ->orderByRaw('FIELD(id,'.implode(',', $ids).')');
-                break;
+                $query->whereIn('id', $ids);
+
+                return $ids;
         }
+
+        return [];
     }
 }

@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Modules\Catalog\Models\Category;
 use App\Modules\Home\Models\Banner;
 use App\Modules\Home\Models\HomeSection;
 use App\Services\Home\HomePageService;
@@ -84,6 +85,133 @@ class HomeAdminTest extends TestCase
             ->first();
 
         $this->assertNotNull($banner);
+    }
+
+    public function test_super_admin_can_create_features_grid_section_with_images(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $admin = User::where('mobile', '09120000001')->firstOrFail();
+
+        $response = $this->actingAs($admin)->post('/admin/home-sections', [
+            'title' => 'گرید سه‌تایی تست',
+            'status' => true,
+            'settings' => [
+                'section_template' => 'features',
+            ],
+            'tabs' => [
+                [
+                    'title' => 'default',
+                    'content_type' => 'features',
+                    'source_type' => 'section',
+                    'is_active' => true,
+                    'sort_order' => 0,
+                    'settings' => [
+                        'features' => [
+                            [
+                                'label' => 'ستون ۱',
+                                'text' => 'توضیح',
+                                'image_url' => '',
+                                'image' => [
+                                    0 => [
+                                        'alt' => 'alt یک',
+                                        'title' => 'title یک',
+                                        'file' => UploadedFile::fake()->image('one.jpg'),
+                                    ],
+                                ],
+                            ],
+                            [
+                                'label' => 'ستون ۲',
+                                'text' => '',
+                                'image_url' => '',
+                                'image' => [
+                                    0 => [
+                                        'file' => UploadedFile::fake()->image('two.jpg'),
+                                    ],
+                                ],
+                            ],
+                            [
+                                'label' => '',
+                                'text' => '',
+                                'image_url' => '',
+                                'image' => [],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect();
+
+        $section = HomeSection::query()->where('title', 'گرید سه‌تایی تست')->first();
+        $this->assertNotNull($section);
+
+        $tab = $section->tabs()->first();
+        $this->assertNotNull($tab);
+        $features = $tab->settings['features'] ?? [];
+        $this->assertCount(3, $features);
+        $this->assertNotNull($features[0]['image_url'] ?? null);
+        $this->assertNotNull($features[1]['image_url'] ?? null);
+        $this->assertSame('alt یک', $features[0]['image_alt'] ?? null);
+        $this->assertSame('title یک', $features[0]['image_title'] ?? null);
+        $this->assertNull($features[2]['image_url'] ?? null);
+    }
+
+    public function test_manual_item_search_includes_nested_course_categories(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $admin = User::where('mobile', '09120000001')->firstOrFail();
+
+        $parent = Category::query()->create([
+            'type' => Category::TYPE_COURSE,
+            'title' => 'دسته والد تست',
+            'slug' => 'parent-cat-search-test',
+            'status' => true,
+            'parent_id' => null,
+            'sort' => 0,
+        ]);
+
+        $child = Category::query()->create([
+            'type' => Category::TYPE_COURSE,
+            'title' => 'زیردسته جستجو تست',
+            'slug' => 'child-cat-search-test',
+            'status' => true,
+            'parent_id' => $parent->id,
+            'sort' => 0,
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson('/admin/home-sections/search-items?type=category&q='.urlencode('زیردسته'))
+            ->assertOk()
+            ->assertJsonFragment([
+                'id' => $child->id,
+                'title' => $child->title,
+            ]);
+    }
+
+    public function test_manual_item_search_includes_course_root_categories(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $admin = User::where('mobile', '09120000001')->firstOrFail();
+
+        $category = Category::query()->create([
+            'type' => Category::TYPE_COURSE,
+            'title' => 'دسته جستجو تست',
+            'slug' => 'search-test-course-cat',
+            'status' => true,
+            'parent_id' => null,
+            'sort' => 0,
+        ]);
+
+        $needle = 'دسته';
+
+        $this->actingAs($admin)
+            ->getJson('/admin/home-sections/search-items?type=category&q='.urlencode($needle))
+            ->assertOk()
+            ->assertJsonFragment([
+                'id' => $category->id,
+                'title' => $category->title,
+            ]);
     }
 
     public function test_reorder_home_sections_updates_sort_and_flushes_home_cache(): void

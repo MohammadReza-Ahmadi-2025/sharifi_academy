@@ -4,7 +4,7 @@
     "type": "module",
     "scripts": {
         "build": "node scripts/copy-ckeditor.mjs && vite build",
-        "dev": "node scripts/copy-ckeditor.mjs && vite",
+        "dev": "vite",
         "postinstall": "node scripts/copy-ckeditor.mjs"
     },
     "dependencies": {

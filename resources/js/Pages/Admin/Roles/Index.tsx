@@ -6,6 +6,7 @@ import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent, useState } from 'react';
 
 type Props = {
@@ -15,6 +16,7 @@ type Props = {
 };
 
 export default function RolesIndex({ roles, filters, abilities }: Props) {
+    const confirmToast = useConfirmToast();
     const [search, setSearch] = useState(filters.search);
 
     const submitSearch = (event: FormEvent) => {
@@ -23,11 +25,9 @@ export default function RolesIndex({ roles, filters, abilities }: Props) {
     };
 
     const handleDelete = (role: AdminRoleListItem) => {
-        if (!window.confirm(`نقش «${role.label}» حذف شود؟`)) {
-            return;
-        }
-
+        confirmToast(`نقش «${role.label}» حذف شود؟`, () => {
         router.delete(`/admin/roles/${role.id}`, { preserveScroll: true });
+    });
     };
 
     return (

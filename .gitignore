@@ -36,6 +36,10 @@ pnpm-debug.log*
 # Database (local SQLite dumps)
 /database/*.sqlite*
 
+# Meilisearch (باینری روت پروژه + دیتای لوکال — مثل shop-exe)
+/data.ms
+meilisearch
+
 # OS & editors
 .DS_Store
 Thumbs.db

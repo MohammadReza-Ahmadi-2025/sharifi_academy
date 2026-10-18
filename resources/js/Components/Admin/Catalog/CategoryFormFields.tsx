@@ -9,7 +9,10 @@ import { Textarea } from '@/Components/Admin/shared/ui/textarea';
 
 type Option = { value: number; label: string };
 
+type StringOption = { value: string; label: string };
+
 type CategoryFormData = CatalogSeoFormData & {
+    type?: string;
     parent_id: number | null;
     title: string;
     slug: string;
@@ -22,18 +25,48 @@ type Props = {
     data: CategoryFormData;
     errors: Record<string, string>;
     parentOptions: Option[];
+    typeOptions?: StringOption[];
     processing?: boolean;
     onChange: (key: keyof CategoryFormData, value: unknown) => void;
+    onTypeChange?: (type: string) => void;
 };
 
-export function CategoryFormFields({ data, errors, parentOptions, processing = false, onChange }: Props) {
+export function CategoryFormFields({
+    data,
+    errors,
+    parentOptions,
+    typeOptions,
+    processing = false,
+    onChange,
+    onTypeChange,
+}: Props) {
     const parentSelectOptions = mapToSelectOptions(parentOptions);
+    const typeSelectOptions = typeOptions?.map((option) => ({
+        value: option.value,
+        label: option.label,
+    }));
 
     return (
         <div className="space-y-6">
             <Card className="space-y-4 p-6">
                 <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">اطلاعات دسته</h2>
                 <div className="grid gap-4 md:grid-cols-2">
+                    {typeSelectOptions && typeSelectOptions.length > 0 && (
+                        <FormField label="نوع دسته" required error={errors.type}>
+                            <Select
+                                isDisabled={processing || typeSelectOptions.length <= 1}
+                                options={typeSelectOptions}
+                                value={typeSelectOptions.find((option) => option.value === data.type) ?? null}
+                                onChange={(option) => {
+                                    const nextType = option?.value ? String(option.value) : '';
+                                    if (nextType) {
+                                        onChange('type', nextType);
+                                        onTypeChange?.(nextType);
+                                    }
+                                }}
+                            />
+                        </FormField>
+                    )}
                     <FormField label="عنوان" required error={errors.title}>
                         <AdminInput
                             value={data.title}

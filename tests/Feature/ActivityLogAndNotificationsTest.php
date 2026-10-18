@@ -2,12 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use App\Modules\Roles\Models\Permission;
 use App\Modules\Roles\Models\Role;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ActivityLogAndNotificationsTest extends TestCase
@@ -75,5 +76,36 @@ class ActivityLogAndNotificationsTest extends TestCase
             'notifiable_type' => User::class,
             'notifiable_id' => $user->id,
         ]);
+    }
+
+    public function test_authenticated_user_sees_notifications_in_inertia_shared_data(): void
+    {
+        $user = User::factory()->create();
+
+        $user->notify(new class extends Notification
+        {
+            public function via(object $notifiable): array
+            {
+                return ['database'];
+            }
+
+            /** @return array<string, string> */
+            public function toDatabase(object $notifiable): array
+            {
+                return [
+                    'title' => 'خوش آمدید',
+                    'message' => 'به آکادمی شریفی خوش آمدید.',
+                ];
+            }
+        });
+
+        $this->actingAs($user)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('auth.notifications.unread_count', 1)
+                ->has('auth.notifications.items', 1)
+                ->where('auth.notifications.items.0.title', 'خوش آمدید')
+            );
     }
 }

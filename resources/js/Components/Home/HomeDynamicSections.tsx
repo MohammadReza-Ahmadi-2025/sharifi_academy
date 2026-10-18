@@ -1,6 +1,10 @@
 import { HomeBannerCarousel } from '@/Components/Home/HomeBannerCarousel';
 import { HomeCmsHeroSection } from '@/Components/Home/HomeCmsHeroSection';
 import { HomeFeaturesSection } from '@/Components/Home/HomeFeaturesSection';
+import { HomeInstructorsSection } from '@/Components/Home/HomeInstructorsSection';
+import { HomeTestimonialsSection } from '@/Components/Home/HomeTestimonialsSection';
+import { resolveHomeSectionIcon } from '@/Components/Home/home-section-icon';
+import { HomeSectionShell } from '@/Components/Home/HomeSectionShell';
 import { HomeTabbedCatalogSection } from '@/Components/Home/HomeTabbedCatalogSection';
 import {
     homeCatalogEmptyMessage,
@@ -8,6 +12,7 @@ import {
     homeCatalogShowPrice,
 } from '@/Components/Home/home-section-config';
 import type { HomeSection, HomeSectionTab } from '@/Components/Home/types';
+import type { ReactNode } from 'react';
 
 type Props = {
     sections: HomeSection[];
@@ -30,8 +35,8 @@ function sectionCatalogLayout(section: HomeSection): 'grid' | 'carousel' {
 export function HomeDynamicSections({ sections }: Props) {
     if (!sections.length) {
         return (
-            <section className="mx-auto max-w-6xl px-4 py-16">
-                <p className="rounded-2xl border border-dashed border-secondary bg-neutral-white px-4 py-12 text-center text-sm text-neutral-black/70">
+            <section className="mx-auto max-w-7xl px-4 py-16">
+                <p className="text-center text-sm text-neutral-black/65">
                     سکشنی برای صفحه اصلی فعال نیست. از پنل مدیریت → صفحه اصلی، سکشن‌ها را تنظیم کنید.
                 </p>
             </section>
@@ -39,41 +44,59 @@ export function HomeDynamicSections({ sections }: Props) {
     }
 
     return (
-        <>
+        <div className="home-sections-flow">
             {sections.map((section) => {
                 const tabs = section.tabs ?? [];
                 const sectionId = `home-section-${section.id}`;
 
+                const wrap = (node: ReactNode) => (
+                    <div key={section.id} className="home-section-wrap">
+                        {node}
+                    </div>
+                );
+
                 if (tabs.length === 0) {
-                    return (
-                        <section key={section.id} id={sectionId} className="mx-auto max-w-6xl scroll-mt-24 px-4 py-10">
-                            <h2 className="text-2xl font-extrabold text-neutral-black">{section.title}</h2>
-                            <p className="mt-6 rounded-2xl border border-dashed border-secondary bg-neutral-white px-4 py-10 text-center text-sm text-neutral-black/70">
+                    const Icon = resolveHomeSectionIcon(section);
+
+                    return wrap(
+                        <HomeSectionShell id={sectionId} title={section.title} icon={Icon}>
+                            <p className="text-center text-sm text-neutral-black/55 md:py-6">
                                 تب فعالی برای این سکشن تعریف نشده است.
                             </p>
-                        </section>
+                        </HomeSectionShell>,
                     );
                 }
 
                 if (section.settings?.section_template === 'hero_split') {
-                    return <HomeCmsHeroSection key={section.id} section={section} sectionId={sectionId} />;
+                    return wrap(<HomeCmsHeroSection section={section} sectionId={sectionId} />);
                 }
 
                 if (section.settings?.section_template === 'features') {
-                    return <HomeFeaturesSection key={section.id} section={section} sectionId={sectionId} />;
+                    return wrap(<HomeFeaturesSection section={section} sectionId={sectionId} />);
+                }
+
+                if (section.settings?.section_template === 'testimonials') {
+                    return wrap(<HomeTestimonialsSection section={section} sectionId={sectionId} />);
+                }
+
+                if (section.settings?.section_template === 'instructors') {
+                    return wrap(<HomeInstructorsSection section={section} sectionId={sectionId} />);
                 }
 
                 const contentType = primaryContentType(tabs);
 
                 switch (contentType) {
                     case 'features':
-                        return <HomeFeaturesSection key={section.id} section={section} sectionId={sectionId} />;
+                        return wrap(<HomeFeaturesSection section={section} sectionId={sectionId} />);
+                    case 'testimonials':
+                        return wrap(<HomeTestimonialsSection section={section} sectionId={sectionId} />);
                     case 'banner':
-                        return <HomeBannerCarousel key={section.id} section={section} tabs={tabs} sectionId={sectionId} />;
+                        return wrap(
+                            <HomeBannerCarousel section={section} tabs={tabs} sectionId={sectionId} />,
+                        );
                     default:
-                        return (
+                        return wrap(
                             <HomeTabbedCatalogSection
-                                key={section.id}
                                 section={section}
                                 tabs={tabs}
                                 hrefPrefixForType={homeCatalogHrefPrefix}
@@ -81,10 +104,10 @@ export function HomeDynamicSections({ sections }: Props) {
                                 showPriceForType={homeCatalogShowPrice}
                                 sectionId={sectionId}
                                 catalogLayout={sectionCatalogLayout(section)}
-                            />
+                            />,
                         );
                 }
             })}
-        </>
+        </div>
     );
 }

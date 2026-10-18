@@ -1,3 +1,4 @@
+import { HomeHeroBackdrop } from '@/Components/Home/HomeHeroBackdrop';
 import { HeroVisualCarousel } from '@/Components/Home/HeroVisualCarousel';
 import type { HomeCatalogItem, HomeSection } from '@/Components/Home/types';
 import { Link } from '@inertiajs/react';
@@ -37,20 +38,8 @@ export function HomeCmsHeroSection({ section, sectionId }: { section: HomeSectio
 
     return (
         <section id={sectionId} className="relative overflow-hidden border-b border-secondary bg-neutral-white">
-            <div
-                className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[120%] -translate-x-1/2 rounded-[100%] bg-primary/10 blur-3xl"
-                aria-hidden
-            />
-            <div
-                className="pointer-events-none absolute inset-0 opacity-[0.35]"
-                style={{
-                    backgroundImage:
-                        'linear-gradient(to left, rgb(var(--color-secondary-rgb) / 0.5) 1px, transparent 1px), linear-gradient(to bottom, rgb(var(--color-secondary-rgb) / 0.5) 1px, transparent 1px)',
-                    backgroundSize: '48px 48px',
-                }}
-                aria-hidden
-            />
-            <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-12 md:py-16 lg:grid-cols-2 lg:gap-16 lg:py-20">
+            <HomeHeroBackdrop />
+            <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-12 md:py-16 lg:grid-cols-2 lg:gap-16 lg:py-20">
                 <div className="order-2 lg:order-1">
                     {hero.badge && (
                         <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">

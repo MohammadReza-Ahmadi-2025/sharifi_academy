@@ -37,6 +37,7 @@ type Props = {
     levelOptions: Option[];
     categoryOptions: Option[];
     processing?: boolean;
+    showFeatured?: boolean;
     onChange: (key: keyof CourseFormData, value: unknown) => void;
 };
 
@@ -47,6 +48,7 @@ export function CourseFormFields({
     levelOptions,
     categoryOptions,
     processing = false,
+    showFeatured = true,
     onChange,
 }: Props) {
     const statusSelectOptions = mapToSelectOptions(statusOptions);
@@ -120,6 +122,7 @@ export function CourseFormFields({
                 <FormField label="خلاصه" htmlFor="course-short-desc" error={errors.short_description}>
                     <Textarea
                         id="course-short-desc"
+                        plain
                         rows={2}
                         value={data.short_description}
                         disabled={processing}
@@ -129,7 +132,7 @@ export function CourseFormFields({
                 <FormField label="توضیحات" htmlFor="course-desc" error={errors.description}>
                     <Textarea
                         id="course-desc"
-                        rows={5}
+                        rows={8}
                         value={data.description}
                         disabled={processing}
                         onChange={(e) => onChange('description', e.target.value)}
@@ -150,19 +153,22 @@ export function CourseFormFields({
                         />
                     </FormField>
                 </div>
-                <Switch
-                    label="نمایش در دوره‌های ویژه"
-                    checked={data.is_featured}
-                    disabled={processing}
-                    onCheckedChange={(v) => onChange('is_featured', v)}
-                />
+                {showFeatured && (
+                    <Switch
+                        label="نمایش در دوره‌های ویژه"
+                        checked={data.is_featured}
+                        disabled={processing}
+                        onCheckedChange={(v) => onChange('is_featured', v)}
+                    />
+                )}
                 <FormField
                     label="دسته‌های دوره"
+                    required
                     error={errors.category_ids}
                     hint={
                         categoryOptions.length === 0
                             ? 'ابتدا در کاتالوگ، دسته با نوع «دوره» تعریف کنید.'
-                            : 'می‌توانید چند دسته انتخاب کنید.'
+                            : 'حداقل یک دسته انتخاب کنید؛ می‌توانید چند دسته داشته باشید.'
                     }
                 >
                     <MultiSelect

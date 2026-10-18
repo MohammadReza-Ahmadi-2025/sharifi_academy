@@ -4,6 +4,7 @@ import { Card } from '@/Components/Admin/shared/ui/card';
 import { Table, TableBody, TableCell, TableEmptyState, TableHead, TableHeader, TableRow } from '@/Components/Admin/shared/ui/table';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export default function CourseClassesIndex({ course, classes, abilities }: Props) {
+    const confirmToast = useConfirmToast();
     return (
         <AdminLayout>
             <Head title={`کلاس‌های ${course.title}`} />
@@ -64,7 +66,7 @@ export default function CourseClassesIndex({ course, classes, abilities }: Props
                                     </Link>
                                 )}
                                 {abilities.delete && (
-                                    <AdminButton variant="ghost" size="sm" onClick={() => confirm('حذف؟') && router.delete(`/admin/courses/${course.id}/classes/${row.id}`)}>
+                                    <AdminButton variant="ghost" size="sm" onClick={() => confirmToast('حذف؟', () => router.delete(`/admin/courses/${course.id}/classes/${row.id}`))}>
                                         <Trash2 className="size-4 text-red-600" />
                                     </AdminButton>
                                 )}

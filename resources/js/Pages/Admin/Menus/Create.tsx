@@ -8,9 +8,10 @@ import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layou
 type Props = {
     locationOptions: { value: string; label: string }[];
     itemTypeOptions: { value: string; label: string }[];
+    pageOptions: { value: number; label: string }[];
 };
 
-export default function MenusCreate({ locationOptions, itemTypeOptions }: Props) {
+export default function MenusCreate({ locationOptions, itemTypeOptions, pageOptions }: Props) {
     const form = useForm({
         title: '',
         url: '',
@@ -33,6 +34,7 @@ export default function MenusCreate({ locationOptions, itemTypeOptions }: Props)
                     errors={form.errors}
                     locationOptions={locationOptions}
                     itemTypeOptions={itemTypeOptions}
+                    pageOptions={pageOptions}
                     processing={form.processing}
                     onChange={(k, v) => form.setData(k, v as never)}
                     onItemsChange={(items) => form.setData('items', items)}

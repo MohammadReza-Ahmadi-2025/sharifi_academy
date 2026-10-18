@@ -1,6 +1,8 @@
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { Card } from '@/Components/Admin/shared/ui/card';
 import { AdminInput } from '@/Components/Admin/shared/ui/input';
+import { formatPersianDateTime } from '@/Components/Admin/shared/lib/format-persian-datetime';
+import { PersianDatePicker } from '@/Components/Admin/shared/ui/persian-date-picker';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import { SimpleTablePagination } from '@/Components/Admin/shared/ui/simple-table-pagination';
 import {
@@ -70,23 +72,6 @@ const ACTION_BADGE: Record<string, string> = {
     deleted: 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-900/20 dark:text-rose-300',
     restored: 'bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-900/20 dark:text-violet-300',
 };
-
-function formatDate(iso: string | null): { date: string; time: string } {
-    if (!iso) {
-        return { date: '—', time: '' };
-    }
-
-    try {
-        const d = new Date(iso);
-
-        return {
-            date: new Intl.DateTimeFormat('fa-IR', { dateStyle: 'short' }).format(d),
-            time: new Intl.DateTimeFormat('fa-IR', { timeStyle: 'short' }).format(d),
-        };
-    } catch {
-        return { date: iso, time: '' };
-    }
-}
 
 export default function ActivityLogsIndex({
     logs,
@@ -257,14 +242,19 @@ export default function ActivityLogsIndex({
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 items-end">
-                        <div className="space-y-1">
-                            <label className="text-sm text-slate-600 dark:text-slate-400">از تاریخ</label>
-                            <AdminInput type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-sm text-slate-600 dark:text-slate-400">تا تاریخ</label>
-                            <AdminInput type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-                        </div>
+                        <PersianDatePicker
+                            label="از تاریخ"
+                            value={from}
+                            onChange={setFrom}
+                            placeholder="شروع بازه"
+                        />
+                        <PersianDatePicker
+                            label="تا تاریخ"
+                            value={to}
+                            onChange={setTo}
+                            min={from || undefined}
+                            placeholder="پایان بازه"
+                        />
                         <div className="space-y-1">
                             <label className="text-sm text-slate-600 dark:text-slate-400">تعداد در صفحه</label>
                             <select
@@ -371,14 +361,12 @@ export default function ActivityLogsIndex({
                             />
                         ) : (
                             logs.data.map((row) => {
-                                const { date, time } = formatDate(row.created_at);
                                 const actionBadge = ACTION_BADGE[row.action] ?? 'bg-slate-50 text-slate-700 ring-slate-200';
 
                                 return (
                                     <TableRow key={row.id}>
-                                        <TableCell className="whitespace-nowrap">
-                                            <div className="font-medium">{date}</div>
-                                            {time && <div className="text-xs text-slate-400">{time}</div>}
+                                        <TableCell className="whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">
+                                            {formatPersianDateTime(row.created_at, 'table')}
                                         </TableCell>
                                         <TableCell>
                                             {row.user ? (

@@ -24,13 +24,54 @@ class AdminCategoryTypes
     /**
      * @return array<int, array{value: string, label: string, icon: string}>
      */
+    /**
+     * نوع‌هایی که در پنل «دسته‌بندی» (دوره / وبلاگ) مدیریت می‌شوند.
+     *
+     * @return list<string>
+     */
+    public static function managedTypes(): array
+    {
+        return [
+            Category::TYPE_COURSE,
+            Category::TYPE_BLOG,
+        ];
+    }
+
     public static function optionsFor(?User $user): array
+    {
+        return self::optionsForTypes($user, self::managedTypes());
+    }
+
+    /**
+     * @param  list<string>  $types
+     * @return array<int, array{value: string, label: string, icon: string}>
+     */
+    public static function creatableOptionsFor(?User $user): array
+    {
+        return self::optionsForTypes($user, self::managedTypes(), requireCreate: true);
+    }
+
+    /**
+     * @param  list<string>  $types
+     * @return array<int, array{value: string, label: string, icon: string}>
+     */
+    private static function optionsForTypes(?User $user, array $types, bool $requireCreate = false): array
     {
         $options = [];
 
-        foreach (self::definitions() as $type => $definition) {
-            if ($user !== null && ! self::canIndex($user, $type)) {
+        foreach ($types as $type) {
+            $definition = self::definitions()[$type] ?? null;
+            if ($definition === null) {
                 continue;
+            }
+
+            if ($user !== null) {
+                if ($requireCreate && ! self::canCreate($user, $type)) {
+                    continue;
+                }
+                if (! $requireCreate && ! self::canIndex($user, $type)) {
+                    continue;
+                }
             }
 
             $options[] = [
@@ -79,7 +120,7 @@ class AdminCategoryTypes
             return false;
         }
 
-        foreach (self::values() as $type) {
+        foreach (self::managedTypes() as $type) {
             if (self::canIndex($user, $type)) {
                 return true;
             }
@@ -90,9 +131,20 @@ class AdminCategoryTypes
 
     public static function resolveType(?string $type): string
     {
-        $type = $type ?: Category::TYPE_PRODUCT;
+        $type = $type ?: Category::TYPE_COURSE;
 
         if (! in_array($type, self::values(), true)) {
+            abort(404);
+        }
+
+        return $type;
+    }
+
+    public static function resolveManagedType(?string $type): string
+    {
+        $type = self::resolveType($type);
+
+        if (! in_array($type, self::managedTypes(), true)) {
             abort(404);
         }
 

@@ -1,27 +1,25 @@
 import { useToast } from '@/Components/shared/contexts/toast-context';
-import { useEffect, useRef } from 'react';
+import type { PageProps } from '@/types';
+import { router, usePage } from '@inertiajs/react';
+import { useCallback, useEffect, useRef } from 'react';
 
 type HttpExceptionResponse = {
     status: number;
     data: string | Record<string, unknown>;
 };
 
-function readAppDebug(): boolean {
-    const script = document.querySelector<HTMLScriptElement>('script[data-page][type="application/json"]');
+type FlashPayload = {
+    success?: string | null;
+    error?: string | null;
+};
 
-    if (!script?.textContent) {
-        return false;
-    }
+type InertiaPage = {
+    flash?: Record<string, unknown>;
+    props?: { flash?: FlashPayload; app?: { debug?: boolean } };
+};
 
-    try {
-        const page = JSON.parse(script.textContent) as {
-            props?: { app?: { debug?: boolean } };
-        };
-
-        return page.props?.app?.debug === true;
-    } catch {
-        return false;
-    }
+function readAppDebug(page?: InertiaPage): boolean {
+    return page?.props?.app?.debug === true;
 }
 
 function messageFromHttpException(response: HttpExceptionResponse, debug: boolean): string {
@@ -58,70 +56,98 @@ function messageFromHttpException(response: HttpExceptionResponse, debug: boolea
         : `خطا در درخواست (${status}).`;
 }
 
-type FlashPayload = {
-    success?: string | null;
-    error?: string | null;
-};
-
-function readInitialFlash(): FlashPayload | null {
-    const script = document.querySelector<HTMLScriptElement>('script[data-page][type="application/json"]');
-
-    if (!script?.textContent) {
+function normalizeFlash(input: unknown): FlashPayload | null {
+    if (!input || typeof input !== 'object') {
         return null;
     }
 
-    try {
-        const page = JSON.parse(script.textContent) as {
-            props?: { flash?: FlashPayload };
-        };
+    const record = input as Record<string, unknown>;
 
-        return page.props?.flash ?? null;
-    } catch {
+    return {
+        success: typeof record.success === 'string' && record.success !== '' ? record.success : null,
+        error: typeof record.error === 'string' && record.error !== '' ? record.error : null,
+    };
+}
+
+function flashFromPage(page?: InertiaPage): FlashPayload | null {
+    if (!page) {
         return null;
     }
+
+    const fromRoot = normalizeFlash(page.flash);
+    const fromProps = normalizeFlash(page.props?.flash);
+
+    if (!fromRoot && !fromProps) {
+        return null;
+    }
+
+    return {
+        success: fromRoot?.success ?? fromProps?.success ?? null,
+        error: fromRoot?.error ?? fromProps?.error ?? null,
+    };
+}
+
+function flashSignature(flash: FlashPayload | null): string {
+    if (!flash) {
+        return '';
+    }
+
+    return `${flash.success ?? ''}|${flash.error ?? ''}`;
 }
 
 export function InertiaFlashToasts() {
     const toast = useToast();
-    const lastFlashRef = useRef({ success: null as string | null, error: null as string | null });
+    const { flash: sharedFlash } = usePage<PageProps>().props;
+    const lastSignatureRef = useRef('');
 
-    const showFlash = (flash: FlashPayload | null | undefined) => {
-        if (!flash) {
-            return;
-        }
+    const showFlash = useCallback(
+        (flash: FlashPayload | null | undefined) => {
+            if (!flash) {
+                return;
+            }
 
-        if (flash.success && flash.success !== lastFlashRef.current.success) {
-            toast.success(flash.success);
-            lastFlashRef.current.success = flash.success;
-        }
+            const signature = flashSignature(flash);
+            if (signature === '') {
+                lastSignatureRef.current = '';
 
-        if (flash.error && flash.error !== lastFlashRef.current.error) {
-            toast.error(flash.error);
-            lastFlashRef.current.error = flash.error;
-        }
+                return;
+            }
 
-        if (!flash.success) {
-            lastFlashRef.current.success = null;
-        }
+            if (signature === lastSignatureRef.current) {
+                return;
+            }
 
-        if (!flash.error) {
-            lastFlashRef.current.error = null;
-        }
-    };
+            lastSignatureRef.current = signature;
+
+            if (flash.success) {
+                toast.success(flash.success);
+            }
+
+            if (flash.error) {
+                toast.error(flash.error);
+            }
+        },
+        [toast],
+    );
 
     useEffect(() => {
-        showFlash(readInitialFlash());
-    }, [toast]);
+        showFlash(normalizeFlash(sharedFlash));
+    }, [sharedFlash?.success, sharedFlash?.error, showFlash]);
 
     useEffect(() => {
         const onFlash = (event: Event) => {
-            const detail = (event as CustomEvent<{ flash?: FlashPayload }>).detail;
-            showFlash(detail?.flash);
+            const detail = (event as CustomEvent<{ flash?: Record<string, unknown> }>).detail;
+            showFlash(normalizeFlash(detail?.flash));
         };
 
         const onSuccess = (event: Event) => {
-            const page = (event as CustomEvent<{ page?: { flash?: FlashPayload } }>).detail?.page;
-            showFlash(page?.flash);
+            const page = (event as CustomEvent<{ page?: InertiaPage }>).detail?.page;
+            showFlash(flashFromPage(page));
+        };
+
+        const onNavigate = (event: Event) => {
+            const page = (event as CustomEvent<{ page?: InertiaPage }>).detail?.page;
+            showFlash(flashFromPage(page));
         };
 
         const onValidationError = (event: Event) => {
@@ -137,8 +163,9 @@ export function InertiaFlashToasts() {
         };
 
         const onHttpException = (event: Event) => {
-            const custom = event as CustomEvent<{ response: HttpExceptionResponse }>;
+            const custom = event as CustomEvent<{ response: HttpExceptionResponse; page?: InertiaPage }>;
             const response = custom.detail?.response;
+            const debug = readAppDebug(custom.detail?.page);
 
             if (!response) {
                 toast.error('خطای سرور. لطفاً دوباره تلاش کنید.');
@@ -146,32 +173,53 @@ export function InertiaFlashToasts() {
                 return;
             }
 
-            // در debug، Laravel/Ignition خودش خطا را نشان می‌دهد.
-            if (readAppDebug() && response.status >= 500) {
+            if (debug && response.status >= 500) {
                 return;
             }
 
-            toast.error(messageFromHttpException(response, readAppDebug()));
+            toast.error(messageFromHttpException(response, debug));
         };
 
         const onNetworkError = () => {
             toast.error('خطا در ارتباط با سرور. اتصال اینترنت را بررسی کنید.');
         };
 
+        /** هر درخواست Inertia (مثلاً ذخیرهٔ دوباره) اجازهٔ نمایش همان متن توست را می‌دهد */
+        const resetFlashDedup = () => {
+            lastSignatureRef.current = '';
+        };
+
+        const removeFlash = router.on('flash', (event) => {
+            showFlash(normalizeFlash(event.detail.flash));
+        });
+
+        const removeSuccess = router.on('success', (event) => {
+            showFlash(flashFromPage(event.detail.page as InertiaPage));
+        });
+
+        const removeStart = router.on('start', resetFlashDedup);
+
+        document.addEventListener('inertia:start', resetFlashDedup);
         document.addEventListener('inertia:flash', onFlash);
         document.addEventListener('inertia:success', onSuccess);
+        document.addEventListener('inertia:navigate', onNavigate);
         document.addEventListener('inertia:error', onValidationError);
         document.addEventListener('inertia:httpException', onHttpException);
         document.addEventListener('inertia:networkError', onNetworkError);
 
         return () => {
+            removeFlash();
+            removeSuccess();
+            removeStart();
+            document.removeEventListener('inertia:start', resetFlashDedup);
             document.removeEventListener('inertia:flash', onFlash);
             document.removeEventListener('inertia:success', onSuccess);
+            document.removeEventListener('inertia:navigate', onNavigate);
             document.removeEventListener('inertia:error', onValidationError);
             document.removeEventListener('inertia:httpException', onHttpException);
             document.removeEventListener('inertia:networkError', onNetworkError);
         };
-    }, [toast]);
+    }, [showFlash, toast]);
 
     return null;
 }

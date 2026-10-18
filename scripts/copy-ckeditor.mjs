@@ -6,7 +6,17 @@ import { fileURLToPath } from 'node:url';
 const CKEDITOR_VERSION = '4.22.1';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dest = join(root, 'public/ckeditor');
+const versionMarker = join(dest, '.installed-version');
 const nodeModulesSrc = join(root, 'node_modules/ckeditor4');
+
+if (
+    existsSync(versionMarker)
+    && readFileSync(versionMarker, 'utf8').trim() === CKEDITOR_VERSION
+    && existsSync(join(dest, 'ckeditor.js'))
+) {
+    console.log(`[copy-ckeditor] skip (already ${CKEDITOR_VERSION})`);
+    process.exit(0);
+}
 
 function packageVersion(dir) {
     try {
@@ -25,6 +35,7 @@ function installToPublic(src) {
     mkdirSync(dirname(dest), { recursive: true });
     cpSync(src, dest, { recursive: true });
     patchEditorConfig();
+    writeFileSync(versionMarker, CKEDITOR_VERSION);
     console.log(`[copy-ckeditor] installed ${CKEDITOR_VERSION} to public/ckeditor`);
 }
 

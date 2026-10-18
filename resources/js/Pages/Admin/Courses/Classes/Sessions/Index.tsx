@@ -3,6 +3,7 @@ import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/Admin/shared/ui/table';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export default function SessionsIndex({ course, courseClass, sessions, abilities }: Props) {
+    const confirmToast = useConfirmToast();
     const base = `/admin/courses/${course.id}/classes/${courseClass.id}/sessions`;
     return (
         <AdminLayout>
@@ -42,7 +44,7 @@ export default function SessionsIndex({ course, courseClass, sessions, abilities
                                         <Pencil className="h-4 w-4" />
                                     </Link>
                                 )}
-                                {abilities.delete && <AdminButton variant="ghost" size="sm" onClick={() => confirm('حذف؟') && router.delete(`${base}/${s.id}`)}><Trash2 className="size-4 text-red-600" /></AdminButton>}
+                                {abilities.delete && <AdminButton variant="ghost" size="sm" onClick={() => confirmToast('حذف؟', () => router.delete(`${base}/${s.id}`))}><Trash2 className="size-4 text-red-600" /></AdminButton>}
                             </TableCell>
                         </TableRow>
                     ))}

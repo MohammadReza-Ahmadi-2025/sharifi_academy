@@ -14,6 +14,11 @@ export type SiteSettings = {
     seo_meta_description?: string | null;
     seo_meta_keywords?: string | null;
     seo_og_image?: string | null;
+    blogs_meta_title?: string | null;
+    blogs_meta_description?: string | null;
+    blogs_meta_keywords?: string | null;
+    blogs_header_title?: string | null;
+    blogs_subheader_title?: string | null;
     google_analytics_id?: string | null;
     google_search_console?: string | null;
     home_hero_badge?: string | null;

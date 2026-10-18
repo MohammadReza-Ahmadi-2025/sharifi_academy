@@ -2,11 +2,13 @@
 
 namespace App\Modules\Profile\Models;
 
+use App\Models\Concerns\HasMediaFiles;
 use App\Models\User;
-
+use App\Modules\Profile\Support\ResumeAttachmentMedia;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\MediaLibrary\HasMedia;
 
 #[Fillable([
     'user_id',
@@ -20,8 +22,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'description',
     'display_order',
 ])]
-class Resume extends Model
+class Resume extends Model implements HasMedia
 {
+    use HasMediaFiles;
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(ResumeAttachmentMedia::COLLECTION);
+    }
+
     protected function casts(): array
     {
         return [

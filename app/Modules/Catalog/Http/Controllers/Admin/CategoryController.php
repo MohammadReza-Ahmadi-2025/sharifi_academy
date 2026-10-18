@@ -6,14 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Modules\Catalog\Http\Requests\Admin\StoreCategoryRequest;
 use App\Modules\Catalog\Http\Requests\Admin\UpdateCategoryRequest;
 use App\Modules\Catalog\Models\Category;
+use App\Modules\Catalog\Services\SiteCourseCategoryNavService;
 use App\Modules\Catalog\Support\AdminCategoryTypes;
 use App\Modules\Catalog\Support\CategoryPresenter;
 use App\Modules\Files\Http\Concerns\SyncsMorphFilesFromRequest;
 use App\Services\Home\HomePageService;
+use App\Support\SeoSlug;
 use App\Support\SiteMenuCategoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -76,7 +77,7 @@ class CategoryController extends Controller
         return Inertia::render('Admin/Categories/Create', [
             'categoryType' => $type,
             'categoryTypeLabel' => AdminCategoryTypes::label($type),
-            'typeOptions' => AdminCategoryTypes::optionsFor($request->user()),
+            'creatableTypeOptions' => AdminCategoryTypes::creatableOptionsFor($request->user()),
             ...$this->formOptions($type),
         ]);
     }
@@ -85,7 +86,7 @@ class CategoryController extends Controller
     {
         $data = $request->validated();
         $type = AdminCategoryTypes::resolveType($data['type'] ?? null);
-        $slug = $this->uniqueCategorySlug($data['slug'] ?? Str::slug($data['title']));
+        $slug = $this->uniqueCategorySlug($data['slug'] ?? $data['title']);
 
         $category = Category::query()->create([
             'parent_id' => $data['parent_id'] ?? null,
@@ -123,7 +124,7 @@ class CategoryController extends Controller
     public function update(UpdateCategoryRequest $request, Category $category): RedirectResponse
     {
         $data = $request->validated();
-        $slug = $data['slug'] ?? $category->slug;
+        $slug = SeoSlug::normalize((string) ($data['slug'] ?? $category->slug));
 
         if ($slug !== $category->slug) {
             $slug = $this->uniqueCategorySlug($slug, $category->id);
@@ -179,17 +180,19 @@ class CategoryController extends Controller
     private function bustSiteCaches(): void
     {
         SiteMenuCategoryService::flush();
+        SiteCourseCategoryNavService::flush();
         HomePageService::flush();
     }
 
     private function resolveType(Request $request): string
     {
-        $type = (string) $request->query('type', Category::TYPE_PRODUCT);
-        $type = AdminCategoryTypes::resolveType($type);
-
+        $requested = trim((string) $request->query('type', ''));
         $user = $request->user();
 
-        if (AdminCategoryTypes::canIndex($user, $type)) {
+        if ($requested !== '') {
+            $type = AdminCategoryTypes::resolveManagedType($requested);
+            abort_unless(AdminCategoryTypes::canIndex($user, $type), 403);
+
             return $type;
         }
 
@@ -239,6 +242,11 @@ class CategoryController extends Controller
 
     private function uniqueCategorySlug(string $slug, ?int $ignoreId = null): string
     {
+        $slug = SeoSlug::normalize($slug);
+        if ($slug === '') {
+            $slug = 'category';
+        }
+
         $baseSlug = $slug;
         $counter = 1;
 

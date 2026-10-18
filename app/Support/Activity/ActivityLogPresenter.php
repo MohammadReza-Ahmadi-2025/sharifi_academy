@@ -28,6 +28,7 @@ class ActivityLogPresenter
             'catalog' => 'کاتالوگ',
             'courses' => 'دوره‌ها',
             'blog' => 'وبلاگ',
+            'pages' => 'صفحات ثابت',
             'comments' => 'نظرات',
             'social' => 'شبکه‌های اجتماعی',
             'settings' => 'تنظیمات',

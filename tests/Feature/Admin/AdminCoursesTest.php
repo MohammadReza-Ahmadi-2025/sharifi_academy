@@ -33,11 +33,19 @@ class AdminCoursesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component('Admin/Courses/Index'));
 
+        $category = Category::query()->create([
+            'title' => 'آموزش',
+            'slug' => 'edu-admin',
+            'type' => Category::TYPE_COURSE,
+            'status' => 1,
+        ]);
+
         $this->actingAs($admin)
             ->post('/admin/courses', [
                 'title' => 'دوره تست ادمین',
                 'status' => CourseStatus::Draft->value,
                 'is_featured' => false,
+                'category_ids' => [$category->id],
                 'gallery' => [
                     0 => ['file' => UploadedFile::fake()->image('course.jpg')],
                 ],
@@ -53,19 +61,15 @@ class AdminCoursesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component('Admin/Courses/Show'));
 
-        $category = Category::query()->create([
-            'title' => 'آموزش',
-            'slug' => 'edu-admin',
-            'type' => Category::TYPE_COURSE,
-            'status' => 1,
-        ]);
-
         $this->actingAs($admin)
             ->put('/admin/courses/'.$course->id, [
                 'title' => 'دوره تست ادمین',
                 'status' => CourseStatus::Published->value,
                 'is_featured' => true,
                 'category_ids' => [$category->id],
+                'meta_title' => 'عنوان سئو دوره',
+                'meta_description' => 'توضیح متا برای دوره تست',
+                'meta_keywords' => 'دوره, تست',
                 'gallery' => [
                     0 => ['id' => $galleryFileId],
                 ],
@@ -73,7 +77,11 @@ class AdminCoursesTest extends TestCase
             ->assertRedirect(route('admin.courses.show', $course))
             ->assertSessionHasNoErrors();
 
-        $this->assertTrue($course->fresh()->categories()->whereKey($category->id)->exists());
+        $course->refresh();
+        $this->assertTrue($course->categories()->whereKey($category->id)->exists());
+        $this->assertSame('عنوان سئو دوره', $course->meta_title);
+        $this->assertSame('توضیح متا برای دوره تست', $course->meta_description);
+        $this->assertSame('دوره, تست', $course->meta_keywords);
 
         $this->actingAs($admin)
             ->post('/admin/courses/'.$course->id.'/classes', [

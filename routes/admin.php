@@ -16,12 +16,15 @@ use App\Modules\Comments\Http\Controllers\Admin\CommentController;
 use App\Modules\Courses\Http\Controllers\Admin\ClassSessionController;
 use App\Modules\Courses\Http\Controllers\Admin\CourseClassController;
 use App\Modules\Courses\Http\Controllers\Admin\CourseController;
+use App\Modules\Courses\Http\Controllers\Admin\CourseEnrollmentAdminController;
 use App\Modules\Courses\Http\Controllers\Admin\EnrollmentController;
 use App\Modules\Courses\Http\Controllers\Admin\SessionAttendanceController;
 use App\Modules\Files\Http\Controllers\Admin\FileController;
 use App\Modules\Home\Http\Controllers\Admin\HomeSectionController;
 use App\Modules\Locations\Http\Controllers\Admin\ProvinceCityController;
 use App\Modules\Menu\Http\Controllers\Admin\MenuController;
+use App\Modules\Pages\Http\Controllers\Admin\PageController;
+use App\Modules\Profile\Http\Controllers\Admin\InstructorModerationController;
 use App\Modules\Profile\Http\Controllers\Admin\SkillController;
 use App\Modules\Profile\Http\Controllers\ProfileController;
 use App\Modules\Roles\Http\Controllers\RoleController;
@@ -100,6 +103,24 @@ Route::prefix('admin')
             Route::delete('courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
         });
 
+        Route::middleware('permission:instructor-moderation-index')->group(function () {
+            Route::get('instructor-moderation', [InstructorModerationController::class, 'index'])
+                ->name('instructor-moderation.index');
+            Route::get('instructor-moderation/resumes/{user}', [InstructorModerationController::class, 'showResume'])
+                ->name('instructor-moderation.resumes.show');
+        });
+
+        Route::middleware('permission:instructor-moderation-update')->group(function () {
+            Route::post('instructor-moderation/courses/{course}/approve', [InstructorModerationController::class, 'approveCourse'])
+                ->name('instructor-moderation.courses.approve');
+            Route::post('instructor-moderation/courses/{course}/reject', [InstructorModerationController::class, 'rejectCourse'])
+                ->name('instructor-moderation.courses.reject');
+            Route::post('instructor-moderation/resumes/{user}/approve', [InstructorModerationController::class, 'approveResume'])
+                ->name('instructor-moderation.resumes.approve');
+            Route::post('instructor-moderation/resumes/{user}/reject', [InstructorModerationController::class, 'rejectResume'])
+                ->name('instructor-moderation.resumes.reject');
+        });
+
         Route::middleware('permission:course-classes-index')->group(function () {
             Route::get('courses/{course}/classes', [CourseClassController::class, 'index'])->name('courses.classes.index');
         });
@@ -118,7 +139,13 @@ Route::prefix('admin')
             Route::delete('courses/{course}/classes/{courseClass}', [CourseClassController::class, 'destroy'])->name('courses.classes.destroy');
         });
 
+        Route::middleware('permission:enrollments-index')->group(function () {
+            Route::get('course-enrollments', [CourseEnrollmentAdminController::class, 'index'])->name('course-enrollments.index');
+        });
+
         Route::middleware('permission:enrollments-create')->group(function () {
+            Route::get('course-enrollments/create', [CourseEnrollmentAdminController::class, 'create'])->name('course-enrollments.create');
+            Route::post('course-enrollments', [CourseEnrollmentAdminController::class, 'store'])->name('course-enrollments.store');
             Route::post('courses/{course}/classes/{courseClass}/enrollments', [EnrollmentController::class, 'store'])->name('courses.classes.enrollments.store');
         });
 
@@ -346,6 +373,24 @@ Route::prefix('admin')
 
         Route::middleware('permission:blog-posts-delete')->group(function () {
             Route::delete('posts/{post}', [BlogPostController::class, 'destroy'])->name('posts.destroy');
+        });
+
+        Route::middleware('permission:pages-index')->group(function () {
+            Route::get('pages', [PageController::class, 'index'])->name('pages.index');
+        });
+
+        Route::middleware('permission:pages-create')->group(function () {
+            Route::get('pages/create', [PageController::class, 'create'])->name('pages.create');
+            Route::post('pages', [PageController::class, 'store'])->name('pages.store');
+        });
+
+        Route::middleware('permission:pages-update')->group(function () {
+            Route::get('pages/{page}/edit', [PageController::class, 'edit'])->name('pages.edit');
+            Route::put('pages/{page}', [PageController::class, 'update'])->name('pages.update');
+        });
+
+        Route::middleware('permission:pages-delete')->group(function () {
+            Route::delete('pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
         });
 
         Route::middleware('permission:stories-index')->group(function () {

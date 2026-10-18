@@ -1,19 +1,26 @@
 import { CategoryFormFields } from '@/Components/Admin/Catalog/CategoryFormFields';
+import type { CategoryTypeOption } from '@/Components/Admin/Catalog/CategoryTypeFilter';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { GalleryImagesField, useGalleryUploadState } from '@/Components/Admin/shared/GalleryImagesField';
 import { withGalleryPayload } from '@/Components/shared/gallery-form-payload';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
     categoryType: string;
     categoryTypeLabel: string;
+    creatableTypeOptions: CategoryTypeOption[];
     parentOptions: { value: number; label: string }[];
 };
 
-export default function CategoriesCreate({ categoryType, categoryTypeLabel, parentOptions }: Props) {
+export default function CategoriesCreate({
+    categoryType,
+    categoryTypeLabel,
+    creatableTypeOptions,
+    parentOptions,
+}: Props) {
     const [image, setImage] = useGalleryUploadState();
     const form = useForm({
         type: categoryType,
@@ -31,15 +38,25 @@ export default function CategoriesCreate({ categoryType, categoryTypeLabel, pare
 
     const indexUrl = `/admin/categories?type=${categoryType}`;
 
+    const handleTypeChange = (nextType: string) => {
+        if (nextType === form.data.type) {
+            return;
+        }
+
+        router.get('/admin/categories/create', { type: nextType }, { preserveState: false });
+    };
+
     return (
         <AdminLayout>
-            <Head title={`ایجاد دسته ${categoryTypeLabel}`} />
-            <PageHeader title={`ایجاد دسته ${categoryTypeLabel}`} backHref={indexUrl} />
-            <AdminFormPage onSubmit={(e) => {
+            <Head title="ایجاد دسته‌بندی" />
+            <PageHeader title="ایجاد دسته‌بندی" description={`نوع: ${categoryTypeLabel}`} backHref={indexUrl} />
+            <AdminFormPage
+                onSubmit={(e) => {
                     e.preventDefault();
                     form.transform((data) => withGalleryPayload(data, image, { field: 'image' }));
-                    form.post(`/admin/categories?type=${categoryType}`, { forceFormData: true });
-                }}>
+                    form.post('/admin/categories', { forceFormData: true });
+                }}
+            >
                 <GalleryImagesField
                     title="تصویر دسته"
                     description="فقط یک تصویر برای نمایش در فروشگاه."
@@ -53,14 +70,15 @@ export default function CategoriesCreate({ categoryType, categoryTypeLabel, pare
                     data={form.data}
                     errors={form.errors}
                     parentOptions={parentOptions}
+                    typeOptions={creatableTypeOptions}
                     processing={form.processing}
                     onChange={(k, v) => form.setData(k, v as never)}
+                    onTypeChange={handleTypeChange}
                 />
                 <AdminFormActions>
-
                     <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
                 </AdminFormActions>
-</AdminFormPage>
+            </AdminFormPage>
         </AdminLayout>
     );
 }

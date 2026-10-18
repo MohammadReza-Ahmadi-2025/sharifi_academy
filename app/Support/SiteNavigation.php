@@ -12,6 +12,6 @@ class SiteNavigation
      */
     public static function forUser(?User $user): array
     {
-        return app(SiteHeaderNavigationService::class)->build();
+        return app(SiteHeaderNavigationService::class)->build($user);
     }
 }

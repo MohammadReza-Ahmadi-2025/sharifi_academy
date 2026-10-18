@@ -19,7 +19,7 @@ class ProductCatalogPresenter
         return [
             'id' => $product->id,
             'title' => $product->title,
-            'slug' => $product->slug,
+            'slug' => $product->publicSlug(),
             'description' => $product->short_description,
             'brand_title' => $product->brand?->title,
             'price' => is_numeric($price) && (int) $price > 0 ? (int) $price : null,

@@ -29,10 +29,13 @@ class StoreHomeSectionRequest extends FormRequest
             'settings.section_template' => ['nullable', Rule::in(array_keys(AdminHomeEnumOptions::sectionTemplates()))],
             'settings.layout' => ['nullable', 'string', 'max:50'],
             'settings.banner_layout' => ['nullable', 'string', 'max:50'],
+            'settings.catalog_slides_per_view' => ['nullable', 'integer', 'min:2', 'max:6'],
             'settings.features' => ['nullable', 'array'],
             'settings.features.*.label' => ['nullable', 'string', 'max:255'],
             'settings.features.*.text' => ['nullable', 'string', 'max:500'],
             'settings.features.*.image_url' => ['nullable', 'string', 'max:500'],
+            'settings.features.*.image_alt' => ['nullable', 'string', 'max:255'],
+            'settings.features.*.image_title' => ['nullable', 'string', 'max:255'],
             'settings.show_live_badge' => ['nullable', 'boolean'],
             'settings.promo' => ['nullable', 'array'],
             'settings.promo.title' => ['nullable', 'string', 'max:255'],
@@ -78,6 +81,20 @@ class StoreHomeSectionRequest extends FormRequest
                         $validator->errors()->add(
                             "tabs.$index.content_type",
                             'در گرید سه‌تایی هر تب باید نوع «گرید سه‌تایی» باشد.',
+                        );
+                    }
+                }
+            }
+
+            if ($template === 'testimonials') {
+                foreach ($this->input('tabs', []) as $index => $tab) {
+                    if (! ($tab['is_active'] ?? true)) {
+                        continue;
+                    }
+                    if (($tab['content_type'] ?? '') !== 'testimonials') {
+                        $validator->errors()->add(
+                            "tabs.$index.content_type",
+                            'در سکشن نظر کاربران هر تب باید نوع «نظر کاربران» باشد.',
                         );
                     }
                 }

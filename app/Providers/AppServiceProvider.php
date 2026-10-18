@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\User;
+use App\Support\EnsureViteBuildOrHot;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
@@ -15,7 +16,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        EnsureViteBuildOrHot::reconcile();
     }
 
     /**

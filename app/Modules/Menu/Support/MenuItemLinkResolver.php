@@ -5,6 +5,7 @@ namespace App\Modules\Menu\Support;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Menu\Enums\MenuItemType;
 use App\Modules\Menu\Models\MenuItem;
+use App\Modules\Pages\Models\Page;
 
 class MenuItemLinkResolver
 {
@@ -15,6 +16,7 @@ class MenuItemLinkResolver
         return match ($type) {
             MenuItemType::CategoryProduct => self::categoryLink($item, '/categories/'),
             MenuItemType::CategoryCourse => self::categoryLink($item, '/categories/'),
+            MenuItemType::Page => self::pageLink($item),
             MenuItemType::Internal => $item->url ?: '#',
             MenuItemType::External => $item->url ?: '#',
             default => $item->url ?: '#',
@@ -28,6 +30,19 @@ class MenuItemLinkResolver
 
             if ($slug) {
                 return $prefix.$slug;
+            }
+        }
+
+        return $item->url ?: '#';
+    }
+
+    private static function pageLink(MenuItem $item): string
+    {
+        if ($item->reference_id) {
+            $page = Page::query()->active()->find($item->reference_id);
+
+            if ($page !== null) {
+                return route('pages.show', ['page' => $page->publicSlug()]);
             }
         }
 

@@ -14,6 +14,7 @@ import { reorderById } from '@/Components/shared/reorder-list';
 import { cn } from '@/lib/utils';
 import { router, useForm } from '@inertiajs/react';
 import { GripVertical, Package, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 export type VariantRow = {
@@ -75,6 +76,7 @@ export function ProductVariantPanel({
     displayModeOptions,
     canManage,
 }: Props) {
+    const confirmToast = useConfirmToast();
     const baseUrl = `/admin/catalog/products/${productId}/variants`;
     const [dialogMode, setDialogMode] = useState<DialogMode>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -85,7 +87,7 @@ export function ProductVariantPanel({
     const form = useForm<VariantFormValues>({ ...emptyVariantFormValues });
 
     useEffect(() => {
-        setOrderedIds(variants.map((v) => v.id));
+        setOrderedIds(variants.map((v) => v.id);
     }, [variants]);
 
     const orderedVariants = useMemo(
@@ -172,10 +174,9 @@ export function ProductVariantPanel({
     };
 
     const removeVariant = (row: VariantRow) => {
-        if (!window.confirm(`تنوع «${row.label}» حذف شود؟`)) {
-            return;
-        }
+        confirmToast(`تنوع «${row.label}» حذف شود؟`, () => {
         router.delete(`${baseUrl}/${row.id}`, { preserveScroll: true });
+    });
     };
 
     const dialogTitle = dialogMode === 'create' ? 'افزودن تنوع جدید' : 'ویرایش تنوع';

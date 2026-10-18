@@ -14,9 +14,11 @@ import {
     TableHeader,
     TableRow,
 } from '@/Components/Admin/shared/ui/table';
+import { formatAdminDateDisplay } from '@/Components/Admin/shared/lib/format-persian-datetime';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Pencil, Plus } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent, useState } from 'react';
 
 type Row = {
@@ -46,6 +48,7 @@ type Props = {
 };
 
 export default function StoriesIndex({ stories, filters, statusOptions, abilities }: Props) {
+    const confirmToast = useConfirmToast();
     const [search, setSearch] = useState(filters.search);
     const [status, setStatus] = useState(filters.status);
 
@@ -74,10 +77,9 @@ export default function StoriesIndex({ stories, filters, statusOptions, abilitie
     };
 
     const removeStory = (row: Row) => {
-        if (!window.confirm('این استوری به‌عنوان حذف‌شده ثبت شود؟')) {
-            return;
-        }
+        confirmToast('این استوری به‌عنوان حذف‌شده ثبت شود؟', () => {
         router.post(`/admin/stories/${row.id}/remove`, {}, { preserveScroll: true });
+    });
     };
 
     return (
@@ -86,16 +88,12 @@ export default function StoriesIndex({ stories, filters, statusOptions, abilitie
             <PageHeader
                 title="استوری‌ها"
                 actions={
-                    abilities.create
-                        ? (
-                              <AdminButton asChild>
-                                  <Link href="/admin/stories/create">
-                                      <Plus className="size-4" />
-                                      استوری جدید
-                                  </Link>
-                              </AdminButton>
-                          )
-                        : undefined
+                    abilities.create ? (
+                        <AdminButton href="/admin/stories/create" className="gap-2">
+                            <Plus className="size-4" />
+                            استوری جدید
+                        </AdminButton>
+                    ) : undefined
                 }
             />
             <AdminListFilters
@@ -140,16 +138,23 @@ export default function StoriesIndex({ stories, filters, statusOptions, abilitie
                                             {row.status_label}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-xs text-slate-500">{row.published_at ?? '—'}</TableCell>
-                                    <TableCell className="text-xs text-slate-500">{row.expires_at ?? '—'}</TableCell>
+                                    <TableCell className="text-xs text-slate-500">
+                                        {formatAdminDateDisplay(row.published_at)}
+                                    </TableCell>
+                                    <TableCell className="text-xs text-slate-500">
+                                        {formatAdminDateDisplay(row.expires_at)}
+                                    </TableCell>
                                     <TableCell>
                                         <div className="flex items-center justify-end gap-1">
                                             {abilities.update && (
-                                                <AdminButton variant="ghost" size="sm" asChild>
-                                                    <Link href={`/admin/stories/${row.id}/edit`}>
-                                                        <Pencil className="size-4" />
-                                                        ویرایش
-                                                    </Link>
+                                                <AdminButton
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    href={`/admin/stories/${row.id}/edit`}
+                                                    className="gap-1.5"
+                                                >
+                                                    <Pencil className="size-4" />
+                                                    ویرایش
                                                 </AdminButton>
                                             )}
                                             {abilities.moderate && row.status !== 'removed' ? (

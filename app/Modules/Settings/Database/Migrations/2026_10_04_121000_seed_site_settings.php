@@ -29,6 +29,26 @@ return new class extends Migration
                 $default = "آموزش و دوره‌های {$siteName}";
             }
 
+            if ($key === 'blogs_meta_title' && $default === null) {
+                $default = "وبلاگ | {$siteName}";
+            }
+
+            if ($key === 'blogs_meta_description' && $default === null) {
+                $default = "مقالات، آموزش‌ها و اخبار {$siteName}";
+            }
+
+            if ($key === 'blogs_meta_keywords' && $default === null) {
+                $default = 'وبلاگ, مقاله, آموزش, مهندسی';
+            }
+
+            if ($key === 'blogs_header_title' && $default === null) {
+                $default = 'وبلاگ';
+            }
+
+            if ($key === 'blogs_subheader_title' && $default === null) {
+                $default = "مطالب آموزشی و تخصصی {$siteName}";
+            }
+
             SiteSetting::query()->firstOrCreate(
                 ['key' => $key],
                 [

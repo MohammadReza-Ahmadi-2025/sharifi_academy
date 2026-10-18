@@ -1,62 +1,135 @@
+import { HomeCatalogCard } from '@/Components/Home/HomeCatalogCard';
 import type { HomeCatalogItem } from '@/Components/Home/types';
-import { Link } from '@inertiajs/react';
+import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRef } from 'react';
-import { Navigation, Pagination } from 'swiper/modules';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+const DESKTOP_NAV_MEDIA = '(min-width: 1024px)';
+
+function useDesktopSwiperNav(): boolean {
+    const [enabled, setEnabled] = useState(() => {
+        if (typeof window === 'undefined') {
+            return false;
+        }
+
+        return window.matchMedia(DESKTOP_NAV_MEDIA).matches;
+    });
+
+    useEffect(() => {
+        const media = window.matchMedia(DESKTOP_NAV_MEDIA);
+        const onChange = () => setEnabled(media.matches);
+        onChange();
+        media.addEventListener('change', onChange);
+
+        return () => media.removeEventListener('change', onChange);
+    }, []);
+
+    return enabled;
+}
+import { Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import type { Swiper as SwiperInstance } from 'swiper';
 import 'swiper/css';
-import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 type Props = {
     items: HomeCatalogItem[];
     hrefPrefix: string;
     showPrice: boolean;
+    contentType: string;
+    slidesPerViewDesktop: number;
 };
 
-export function HomeCatalogSwiper({ items, hrefPrefix, showPrice }: Props) {
+type NavState = {
+    show: boolean;
+    prev: boolean;
+    next: boolean;
+};
+
+function readNavState(swiper: SwiperInstance): NavState {
+    return {
+        show: !swiper.isLocked,
+        prev: !swiper.isBeginning,
+        next: !swiper.isEnd,
+    };
+}
+
+export function HomeCatalogSwiper({
+    items,
+    hrefPrefix,
+    showPrice,
+    contentType,
+    slidesPerViewDesktop,
+}: Props) {
     const swiperRef = useRef<SwiperInstance | null>(null);
+    const showDesktopNav = useDesktopSwiperNav();
+    const [nav, setNav] = useState<NavState>({ show: false, prev: false, next: false });
+
+    const syncNav = useCallback((swiper: SwiperInstance) => {
+        setNav(readNavState(swiper));
+    }, []);
+
+    const breakpoints = useMemo(
+        () => ({
+            480: { slidesPerView: 1.65, spaceBetween: 16 },
+            768: { slidesPerView: Math.min(2.35, slidesPerViewDesktop), spaceBetween: 18 },
+            1024: {
+                slidesPerView: slidesPerViewDesktop,
+                spaceBetween: 18,
+            },
+        }),
+        [slidesPerViewDesktop],
+    );
+
     if (items.length === 0) {
         return null;
     }
 
+    const navButtonClass =
+        'home-catalog-swiper__nav absolute top-[32%] z-40 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-secondary/60 bg-neutral-white text-primary shadow-sm transition hover:border-primary/30 hover:shadow-md';
+
     return (
-        <div className="home-catalog-swiper relative min-w-0 md:px-12">
-            <button
-                type="button"
-                aria-label="قبلی"
-                onClick={() => swiperRef.current?.slidePrev()}
-                className="home-catalog-swiper__nav absolute top-[38%] z-40 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-secondary bg-neutral-white shadow-md transition hover:bg-primary/5 md:flex ltr:left-0 rtl:right-0"
-            >
-                <ChevronRight className="size-5 text-primary" />
-            </button>
-            <button
-                type="button"
-                aria-label="بعدی"
-                onClick={() => swiperRef.current?.slideNext()}
-                className="home-catalog-swiper__nav absolute top-[38%] z-40 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-secondary bg-neutral-white shadow-md transition hover:bg-primary/5 md:flex ltr:right-0 rtl:left-0"
-            >
-                <ChevronLeft className="size-5 text-primary" />
-            </button>
+        <div className="home-catalog-swiper relative min-w-0">
+            {showDesktopNav && nav.show && nav.prev ? (
+                <button
+                    type="button"
+                    aria-label="قبلی"
+                    onClick={() => swiperRef.current?.slidePrev()}
+                    className={cn(navButtonClass, 'ltr:left-0 rtl:right-0')}
+                >
+                    <ChevronRight className="size-5" />
+                </button>
+            ) : null}
+            {showDesktopNav && nav.show && nav.next ? (
+                <button
+                    type="button"
+                    aria-label="بعدی"
+                    onClick={() => swiperRef.current?.slideNext()}
+                    className={cn(navButtonClass, 'ltr:right-0 rtl:left-0')}
+                >
+                    <ChevronLeft className="size-5" />
+                </button>
+            ) : null}
 
             <Swiper
-                key={items.map((item) => item.id).join('-')}
-                modules={[Navigation, Pagination]}
+                key={`${items.map((item) => item.id).join('-')}-${slidesPerViewDesktop}`}
+                modules={[Pagination]}
                 onSwiper={(swiper) => {
                     swiperRef.current = swiper;
+                    syncNav(swiper);
                 }}
+                onSlideChange={syncNav}
+                onResize={syncNav}
+                onBreakpoint={syncNav}
+                onReachBeginning={syncNav}
+                onReachEnd={syncNav}
+                onFromEdge={syncNav}
                 dir="rtl"
                 grabCursor
                 watchOverflow
-                spaceBetween={20}
+                spaceBetween={16}
                 slidesPerView={1.08}
-                breakpoints={{
-                    480: { slidesPerView: 1.65, spaceBetween: 20 },
-                    768: { slidesPerView: 2.35, spaceBetween: 22 },
-                    1024: { slidesPerView: 3.15, spaceBetween: 24 },
-                    1280: { slidesPerView: 4, spaceBetween: 24 },
-                }}
+                breakpoints={breakpoints}
                 pagination={{
                     clickable: true,
                     dynamicBullets: items.length > 5,
@@ -65,50 +138,16 @@ export function HomeCatalogSwiper({ items, hrefPrefix, showPrice }: Props) {
             >
                 {items.map((item) => (
                     <SwiperSlide key={item.id} className="home-catalog-swiper__slide !h-auto">
-                        <CatalogCard item={item} hrefPrefix={hrefPrefix} showPrice={showPrice} />
+                        <HomeCatalogCard
+                            item={item}
+                            hrefPrefix={hrefPrefix}
+                            showPrice={showPrice}
+                            contentType={contentType}
+                            className="home-catalog-swiper__card h-full"
+                        />
                     </SwiperSlide>
                 ))}
             </Swiper>
         </div>
-    );
-}
-
-function CatalogCard({
-    item,
-    hrefPrefix,
-    showPrice,
-}: {
-    item: HomeCatalogItem;
-    hrefPrefix: string;
-    showPrice: boolean;
-}) {
-    const href = item.slug ? `${hrefPrefix}${item.slug}` : hrefPrefix;
-
-    return (
-        <Link
-            href={href}
-            className="home-catalog-swiper__card group relative z-0 flex h-full flex-col rounded-xl border border-secondary/80 bg-neutral-white p-2.5 shadow-md ring-1 ring-black/5 transition duration-300 hover:z-20 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-xl sm:p-3"
-        >
-            <div className="aspect-[5/4] overflow-hidden rounded-lg bg-primary/10">
-                <img
-                    src={item.image_url ?? '/banner.png'}
-                    alt={item.title}
-                    className="size-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                />
-            </div>
-            <div className="flex flex-1 flex-col px-1.5 pb-1 pt-3.5 sm:px-2 sm:pt-4">
-                <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-neutral-black sm:text-lg">
-                    {item.title}
-                </h3>
-                {item.description && (
-                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-neutral-black/65">{item.description}</p>
-                )}
-                {showPrice && typeof item.price === 'number' && (
-                    <p className="mt-auto pt-3 text-base font-extrabold text-primary">
-                        {item.price.toLocaleString('fa-IR')} ریال
-                    </p>
-                )}
-            </div>
-        </Link>
     );
 }

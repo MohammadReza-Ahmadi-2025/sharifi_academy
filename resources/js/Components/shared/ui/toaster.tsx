@@ -63,7 +63,8 @@ export function Toaster() {
                     return (
                         <div
                             key={toast.id}
-                            role="status"
+                            role={toast.actions?.length ? 'alertdialog' : 'status'}
+                            aria-labelledby={`toast-title-${toast.id}`}
                             className={cn(
                                 'pointer-events-auto overflow-hidden rounded-2xl border shadow-[0_18px_50px_-20px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:shadow-[0_18px_50px_-18px_rgba(0,0,0,0.65)]',
                                 styles.container,
@@ -81,7 +82,10 @@ export function Toaster() {
                                 </div>
 
                                 <div className="toast-content min-w-0 flex-1 pt-0.5">
-                                    <p className="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+                                    <p
+                                        id={`toast-title-${toast.id}`}
+                                        className="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-50"
+                                    >
                                         {toast.title}
                                     </p>
                                     {toast.description ? (
@@ -101,9 +105,32 @@ export function Toaster() {
                                 </button>
                             </div>
 
-                            <div className="h-0.5 w-full bg-slate-100/80 dark:bg-slate-800/80">
-                                <div className={cn('toast-progress h-full origin-right', styles.progress)} />
-                            </div>
+                            {toast.actions && toast.actions.length > 0 ? (
+                                <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-4 py-3 dark:border-slate-800">
+                                    {toast.actions.map((action, index) => (
+                                        <button
+                                            key={index}
+                                            type="button"
+                                            onClick={action.onClick}
+                                            className={cn(
+                                                'rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+                                                action.variant === 'danger' &&
+                                                    'bg-rose-600 text-white hover:bg-rose-700',
+                                                action.variant === 'primary' &&
+                                                    'bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900',
+                                                (!action.variant || action.variant === 'ghost') &&
+                                                    'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
+                                            )}
+                                        >
+                                            {action.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="h-0.5 w-full bg-slate-100/80 dark:bg-slate-800/80">
+                                    <div className={cn('toast-progress h-full origin-right', styles.progress)} />
+                                </div>
+                            )}
                         </div>
                     );
                 })}

@@ -35,7 +35,7 @@ export function SiteProductCategoryBar() {
             className="relative hidden border-b border-secondary bg-neutral-white text-neutral-black lg:block"
             onMouseLeave={() => setOpen(false)}
         >
-            <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-2 text-sm">
+            <div className="mx-auto flex max-w-7xl items-center gap-6 px-4 py-2 text-sm">
                 <button
                     type="button"
                     className="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 font-semibold text-primary hover:bg-primary/5"
@@ -68,7 +68,7 @@ export function SiteProductCategoryBar() {
                     className="absolute inset-x-0 top-full z-40 border-t border-secondary bg-neutral-white shadow-xl"
                     onMouseEnter={() => setOpen(true)}
                 >
-                    <div className="mx-auto grid max-w-6xl gap-0 lg:grid-cols-[260px_minmax(0,1fr)]">
+                    <div className="mx-auto grid max-w-7xl gap-0 lg:grid-cols-[260px_minmax(0,1fr)]">
                         <ul className="border-l border-secondary bg-surface-muted/60 py-2">
                             {categories.map((category) => (
                                 <li key={category.id}>

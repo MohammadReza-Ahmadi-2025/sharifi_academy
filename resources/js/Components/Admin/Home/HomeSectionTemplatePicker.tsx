@@ -43,6 +43,32 @@ function TemplateWireframe({ id }: { id: HomeSectionTemplateId }) {
         );
     }
 
+    if (id === 'testimonials') {
+        return (
+            <div className="grid h-20 grid-cols-2 gap-1 rounded-md border border-slate-200 bg-slate-50 p-1.5 dark:border-slate-600 dark:bg-slate-900">
+                {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="rounded bg-white p-1 shadow-sm dark:bg-slate-800">
+                        <div className="h-1 w-2/3 rounded bg-primary/40" />
+                        <div className="mt-1 h-2 rounded bg-slate-200 dark:bg-slate-700" />
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    if (id === 'instructors') {
+        return (
+            <div className="flex h-20 gap-1 rounded-md border border-slate-200 bg-slate-50 p-1.5 dark:border-slate-600 dark:bg-slate-900">
+                {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="flex min-w-0 flex-1 flex-col items-center rounded bg-white p-1 shadow-sm dark:bg-slate-800">
+                        <div className="size-6 rounded-full bg-primary/25" />
+                        <div className="mt-1 h-1 w-full rounded bg-slate-200 dark:bg-slate-700" />
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
     if (id === 'banners') {
         return (
             <div className="flex h-20 items-center justify-center rounded-md border border-slate-200 bg-primary/10 dark:border-slate-600">

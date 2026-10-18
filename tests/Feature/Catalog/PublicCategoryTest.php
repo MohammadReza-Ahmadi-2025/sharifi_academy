@@ -13,6 +13,20 @@ class PublicCategoryTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_category_slug_with_spaces_redirects_to_canonical_hyphenated_url(): void
+    {
+        $category = Category::query()->create([
+            'type' => Category::TYPE_COURSE,
+            'title' => 'Training in Mechanical Engineering Software',
+            'slug' => 'Training in Mechanical Engineering Software',
+            'status' => true,
+            'sort' => 1,
+        ]);
+
+        $response = $this->get('/categories/Training%20in%20Mechanical%20Engineering%20Software');
+        $response->assertRedirect(route('categories.show', ['category' => 'training-in-mechanical-engineering-software']));
+    }
+
     public function test_course_category_show_lists_published_courses(): void
     {
         $category = Category::query()->create([

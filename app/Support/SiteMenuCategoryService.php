@@ -167,7 +167,7 @@ class SiteMenuCategoryService
             if ($links === []) {
                 $links[] = [
                     'label' => $root->title,
-                    'url' => $linkPrefix.$root->slug,
+                    'url' => $linkPrefix.SeoSlug::forUrl((string) $root->slug),
                     'description' => $root->description,
                 ];
             }
@@ -212,7 +212,7 @@ class SiteMenuCategoryService
             'featured' => [
                 'title' => $featuredRoot?->title ?? $featuredFallbackTitle,
                 'description' => $featuredRoot?->description ?? $featuredFallbackDescription,
-                'url' => $featuredRoot ? $linkPrefix.$featuredRoot->slug : $featuredUrl,
+                'url' => $featuredRoot ? $linkPrefix.SeoSlug::forUrl((string) $featuredRoot->slug) : $featuredUrl,
                 'image' => $featuredRoot?->image?->publicUrl() ?? $featuredImage,
             ],
             'columns' => $columns,
@@ -230,14 +230,14 @@ class SiteMenuCategoryService
         foreach ($children as $child) {
             $links[] = [
                 'label' => $child->title,
-                'url' => $linkPrefix.$child->slug,
+                'url' => $linkPrefix.SeoSlug::forUrl((string) $child->slug),
                 'description' => $child->description,
             ];
 
             foreach ($child->childrenRecursive ?? [] as $grandchild) {
                 $links[] = [
                     'label' => $grandchild->title,
-                    'url' => $linkPrefix.$grandchild->slug,
+                    'url' => $linkPrefix.SeoSlug::forUrl((string) $grandchild->slug),
                     'description' => $grandchild->description,
                 ];
             }
@@ -305,14 +305,14 @@ class SiteMenuCategoryService
             ->map(fn (Category $child) => [
                 'id' => $child->id,
                 'title' => $child->title,
-                'slug' => $child->slug,
-                'url' => '/categories/'.$child->slug,
+                'slug' => SeoSlug::forUrl((string) $child->slug),
+                'url' => '/categories/'.SeoSlug::forUrl((string) $child->slug),
                 'children' => collect($child->childrenRecursive ?? [])
                     ->map(fn (Category $grandchild) => [
                         'id' => $grandchild->id,
                         'title' => $grandchild->title,
-                        'slug' => $grandchild->slug,
-                        'url' => '/categories/'.$grandchild->slug,
+                        'slug' => SeoSlug::forUrl((string) $grandchild->slug),
+                        'url' => '/categories/'.SeoSlug::forUrl((string) $grandchild->slug),
                     ])
                     ->values()
                     ->all(),
@@ -323,8 +323,8 @@ class SiteMenuCategoryService
         return [
             'id' => $category->id,
             'title' => $category->title,
-            'slug' => $category->slug,
-            'url' => '/categories/'.$category->slug,
+            'slug' => SeoSlug::forUrl((string) $category->slug),
+            'url' => '/categories/'.SeoSlug::forUrl((string) $category->slug),
             'image_url' => $category->image?->publicUrl(),
             'children' => $children,
             'brands' => $this->brandsForMenu(collect([$category]))

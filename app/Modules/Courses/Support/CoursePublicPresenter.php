@@ -2,10 +2,9 @@
 
 namespace App\Modules\Courses\Support;
 
-use App\Modules\Comments\Enums\CommentStatus;
-use App\Modules\Comments\Models\Comment;
-use App\Modules\Comments\Support\CommentPresenter;
+use App\Modules\Comments\Support\PublicCommentThreads;
 use App\Modules\Courses\Enums\CourseStatus;
+use App\Models\User;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
 use Illuminate\Support\Collection;
@@ -15,7 +14,7 @@ class CoursePublicPresenter
     /**
      * @return array<string, mixed>
      */
-    public static function forPage(Course $course): array
+    public static function forPage(Course $course, ?User $viewer = null): array
     {
         $course->loadMissing([
             'mainImage',
@@ -34,15 +33,15 @@ class CoursePublicPresenter
         $imageUrl = $course->mainImage?->publicUrl();
         $canonical = filled($course->canonical)
             ? (string) $course->canonical
-            : url('/courses/'.$course->slug);
+            : url('/courses/'.$course->publicSlug());
 
         $instructors = self::uniqueInstructors($publicClasses);
-        $comments = self::approvedCommentsFor($course);
+        $comments = PublicCommentThreads::approvedFor($course);
 
         return [
             'id' => $course->id,
             'title' => $course->title,
-            'slug' => $course->slug,
+            'slug' => $course->publicSlug(),
             'short_description' => $course->short_description,
             'description' => $course->description,
             'level' => $course->level?->value,
@@ -86,6 +85,7 @@ class CoursePublicPresenter
             'seo' => CourseSeo::metaForCourse($course),
             'comments' => $comments['items'],
             'comments_summary' => $comments['summary'],
+            'enrollment' => CourseEnrollmentUiPresenter::forCourse($course, $viewer),
         ];
     }
 
@@ -113,40 +113,6 @@ class CoursePublicPresenter
         }
 
         return $list;
-    }
-
-    /**
-     * @return array{items: list<array<string, mixed>>, summary: array<string, mixed>}
-     */
-    private static function approvedCommentsFor(Course $course): array
-    {
-        $roots = Comment::query()
-            ->where('commentable_type', $course->getMorphClass())
-            ->where('commentable_id', $course->id)
-            ->where('status', CommentStatus::Approved)
-            ->roots()
-            ->with([
-                'user',
-                'children' => fn ($query) => $query
-                    ->where('status', CommentStatus::Approved)
-                    ->with(['user', 'children' => fn ($nested) => $nested
-                        ->where('status', CommentStatus::Approved)
-                        ->with('user')]),
-            ])
-            ->orderByDesc('created_at')
-            ->get();
-
-        $ratings = $roots->pluck('rating')->filter(fn ($rating) => is_numeric($rating) && $rating > 0);
-
-        return [
-            'items' => $roots->map(fn (Comment $comment) => CommentPresenter::forPublic($comment))->values()->all(),
-            'summary' => [
-                'count' => $roots->count(),
-                'average_rating' => $ratings->isNotEmpty()
-                    ? round($ratings->avg(), 1)
-                    : null,
-            ],
-        ];
     }
 
     public static function formatDuration(?int $minutes): ?string

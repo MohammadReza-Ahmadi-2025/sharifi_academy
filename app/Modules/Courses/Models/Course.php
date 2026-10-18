@@ -5,11 +5,13 @@ namespace App\Modules\Courses\Models;
 use App\Models\User;
 use App\Modules\AdobeConnect\Models\AdobeRoom;
 use App\Modules\Catalog\Models\Category;
+use App\Modules\Comments\Models\Comment;
 use App\Modules\Courses\Enums\CourseLevel;
 use App\Modules\Courses\Enums\CourseStatus;
-use App\Modules\Comments\Models\Comment;
 use App\Modules\Files\Models\File;
 use App\Modules\Visits\Concerns\HasVisits;
+use App\Support\Concerns\ResolvesSeoSlugRouteBinding;
+use App\Support\SeoSlug;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 #[Fillable([
     'title',
@@ -27,6 +30,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'code',
     'short_description',
     'description',
+    'meta_title',
+    'meta_description',
+    'meta_keywords',
+    'canonical',
     'level',
     'duration_minutes',
     'status',
@@ -38,7 +45,36 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Course extends Model
 {
     use HasVisits;
+    use ResolvesSeoSlugRouteBinding;
+    use Searchable;
     use SoftDeletes;
+
+    public function publicSlug(): string
+    {
+        return SeoSlug::forUrl((string) $this->slug);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'slug' => $this->slug,
+            'code' => $this->code,
+            'short_description' => strip_tags((string) $this->short_description),
+            'description' => strip_tags((string) $this->description),
+            'level' => $this->level?->value,
+            'status' => $this->status?->value,
+        ];
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return $this->status === CourseStatus::Published;
+    }
 
     /**
      * @return list<string>

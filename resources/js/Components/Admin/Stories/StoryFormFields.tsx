@@ -6,6 +6,7 @@ import { Switch } from '@/Components/Admin/shared/ui/switch';
 import { Textarea } from '@/Components/Admin/shared/ui/textarea';
 import { Card } from '@/Components/Admin/shared/ui/card';
 import { Badge } from '@/Components/Admin/shared/ui/badge';
+import { formatAdminDateDisplay } from '@/Components/Admin/shared/lib/format-persian-datetime';
 import { PersianDatePicker } from '@/Components/Admin/shared/ui/persian-date-picker';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -88,8 +89,8 @@ export function StoryFormFields({
                 <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
                     <span>وضعیت فعلی:</span>
                     <Badge variant="secondary">{statusLabel}</Badge>
-                    {publishedAt && <span>انتشار: {publishedAt}</span>}
-                    {expiresAt && <span>انقضا: {expiresAt}</span>}
+                    {publishedAt && <span>انتشار: {formatAdminDateDisplay(publishedAt)}</span>}
+                    {expiresAt && <span>انقضا: {formatAdminDateDisplay(expiresAt)}</span>}
                 </div>
             )}
 

@@ -5,10 +5,23 @@ namespace App\Modules\Courses\Support;
 use App\Modules\Courses\Models\ClassSession;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 trait EnsuresNestedCourseAccess
 {
+    protected function authorizeManagedCourse(Request $request, Course $course, string $ability = 'view'): void
+    {
+        abort_unless($request->user()?->can($ability, $course), 403);
+    }
+
+    protected function nestedCourseRoutePrefix(Request $request): string
+    {
+        $name = (string) $request->route()?->getName();
+
+        return str_starts_with($name, 'instructor.') ? 'instructor' : 'admin';
+    }
+
     protected function courseOrFail(int|string $courseId): Course
     {
         return Course::query()->findOrFail($courseId);

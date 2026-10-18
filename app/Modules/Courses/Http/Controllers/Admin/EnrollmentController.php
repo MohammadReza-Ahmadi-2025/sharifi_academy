@@ -9,27 +9,25 @@ use App\Modules\Courses\Http\Requests\Admin\UpdateEnrollmentRequest;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
 use App\Modules\Courses\Models\Enrollment;
+use App\Modules\Courses\Services\AdminEnrollmentService;
 use App\Modules\Courses\Support\EnsuresNestedCourseAccess;
+use App\Support\Notifications\InstructorModerationNotifier;
 use Illuminate\Http\RedirectResponse;
 
 class EnrollmentController extends Controller
 {
     use EnsuresNestedCourseAccess;
 
-    public function store(StoreEnrollmentRequest $request, Course $course, CourseClass $courseClass): RedirectResponse
-    {
+    public function store(
+        StoreEnrollmentRequest $request,
+        Course $course,
+        CourseClass $courseClass,
+        AdminEnrollmentService $enrollmentService,
+    ): RedirectResponse {
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
         $data = $request->validated();
 
-        $enrollment = Enrollment::query()->create([
-            'course_class_id' => $courseClass->id,
-            'user_id' => $data['user_id'],
-            'status' => $data['status'],
-            'price_amount' => $data['price_amount'] ?? $courseClass->price ?? 0,
-            'admin_note' => $data['admin_note'] ?? null,
-            'confirmed_at' => $data['status'] === EnrollmentStatus::Confirmed->value ? now() : null,
-            'cancelled_at' => $data['status'] === EnrollmentStatus::Cancelled->value ? now() : null,
-        ]);
+        $enrollment = $enrollmentService->createForClass($courseClass, $data);
 
         return redirect()
             ->route('admin.courses.classes.edit', [$course, $courseClass])
@@ -45,6 +43,7 @@ class EnrollmentController extends Controller
         }
 
         $data = $request->validated();
+        $wasConfirmed = $enrollment->isConfirmed();
 
         $enrollment->update([
             'status' => $data['status'],
@@ -57,6 +56,12 @@ class EnrollmentController extends Controller
                 ? ($enrollment->cancelled_at ?? now())
                 : null,
         ]);
+
+        $enrollment->refresh();
+
+        if (! $wasConfirmed && $enrollment->isConfirmed()) {
+            InstructorModerationNotifier::enrollmentConfirmed($enrollment);
+        }
 
         return redirect()
             ->route('admin.courses.classes.edit', [$course, $courseClass])

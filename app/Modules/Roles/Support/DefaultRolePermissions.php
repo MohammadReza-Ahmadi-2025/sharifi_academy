@@ -40,6 +40,23 @@ class DefaultRolePermissions
                 $all,
                 static fn (string $name): bool => ! in_array($name, ['roles-delete', 'users-delete'], true),
             )),
+            'instructor' => [
+                'instructor-panel-access',
+                'instructor-resume-manage',
+                'courses-index',
+                'courses-create',
+                'courses-update',
+                'course-classes-index',
+                'course-classes-create',
+                'course-classes-update',
+                'class-sessions-index',
+                'class-sessions-create',
+                'class-sessions-update',
+                'class-sessions-delete',
+            ],
+            'student' => [
+                'student-panel-access',
+            ],
         ];
     }
 }

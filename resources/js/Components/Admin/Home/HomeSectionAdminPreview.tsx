@@ -74,6 +74,19 @@ export function HomeSectionAdminPreview({ data }: Props) {
                     </div>
                 )}
 
+                {template === 'testimonials' && (
+                    <div className="grid grid-cols-2 gap-2">
+                        {((data.tabs[0]?.settings?.testimonials ?? []) as { name?: string; quote?: string }[])
+                            .slice(0, 4)
+                            .map((t, i) => (
+                                <div key={i} className="rounded-lg border border-slate-100 p-2 dark:border-slate-800">
+                                    <p className="text-[9px] text-slate-600 line-clamp-3">{t.quote || 'متن نظر'}</p>
+                                    <p className="mt-1 text-[10px] font-bold">{t.name || 'کاربر'}</p>
+                                </div>
+                            ))}
+                    </div>
+                )}
+
                 {template === 'features' && (
                     <div className="grid grid-cols-3 gap-2">
                         {(data.tabs[0]?.settings?.features ?? []).slice(0, 3).map((f, i) => (

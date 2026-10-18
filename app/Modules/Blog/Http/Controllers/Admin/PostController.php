@@ -11,9 +11,9 @@ use App\Modules\Blog\Support\AdminBlogEnumOptions;
 use App\Modules\Blog\Support\PostPresenter;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Files\Http\Concerns\SyncsMorphFilesFromRequest;
+use App\Support\SeoSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -89,7 +89,7 @@ class PostController extends Controller
     public function store(StorePostRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $slug = $this->uniquePostSlug($data['slug'] ?? Str::slug($data['title']));
+        $slug = $this->uniquePostSlug($data['slug'] ?? $data['title']);
         $status = PostStatus::from($data['status']);
 
         $post = Post::query()->create([
@@ -194,6 +194,11 @@ class PostController extends Controller
 
     private function uniquePostSlug(string $slug, ?int $ignoreId = null): string
     {
+        $slug = SeoSlug::normalize($slug);
+        if ($slug === '') {
+            $slug = 'post';
+        }
+
         $baseSlug = $slug;
         $counter = 1;
 

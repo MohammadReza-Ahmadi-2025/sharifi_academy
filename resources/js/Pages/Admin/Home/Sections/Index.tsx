@@ -8,6 +8,7 @@ import { reorderById } from '@/Components/shared/reorder-list';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent, useEffect, useState } from 'react';
 
 type Row = {
@@ -28,6 +29,7 @@ type Props = {
 };
 
 export default function HomeSectionsIndex({ sections, filters, abilities }: Props) {
+    const confirmToast = useConfirmToast();
     const [search, setSearch] = useState(filters.search);
     const [ordered, setOrdered] = useState(sections);
     const [dragId, setDragId] = useState<number | null>(null);
@@ -178,9 +180,9 @@ export default function HomeSectionsIndex({ sections, filters, abilities }: Prop
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => {
-                                                if (window.confirm('این سکشن حذف شود؟')) {
-                                                    router.delete(`/admin/home-sections/${row.id}`);
-                                                }
+                                                confirmToast('این سکشن حذف شود؟', () => {
+        router.delete(`/admin/home-sections/${row.id}`);
+    });;
                                             }}
                                         >
                                             <Trash2 className="size-4 text-red-600" />

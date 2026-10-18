@@ -586,6 +586,38 @@ body {
     word-wrap: break-word;
 }
 
+.site-rich-html.site-rich-html--blog {
+    width: 100%;
+    max-width: none;
+}
+
+.site-rich-html.site-rich-html--blog img,
+.site-rich-html.site-rich-html--blog table {
+    max-width: 100%;
+}
+
+.site-rich-html.site-rich-html--card-preview {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    font-size: 0.8125rem;
+    line-height: 1.65;
+    color: rgb(0 0 0 / 0.58);
+}
+
+.site-rich-html.site-rich-html--card-preview p {
+    margin-bottom: 0.5rem;
+}
+
+.site-rich-html.site-rich-html--card-preview p:last-child {
+    margin-bottom: 0;
+}
+
+.site-rich-html.site-rich-html--card-preview img {
+    display: none;
+}
+
 .site-rich-html p {
     margin-bottom: 1rem;
 }
@@ -669,6 +701,12 @@ body {
     pointer-events: auto;
 }
 
+@media (max-width: 1023px) {
+    .home-catalog-swiper .home-catalog-swiper__nav {
+        display: none !important;
+    }
+}
+
 .home-catalog-swiper .home-catalog-swiper__root {
     position: relative;
     z-index: 1;
@@ -713,4 +751,44 @@ body {
 
 .home-catalog-swiper .swiper-pagination-bullet-active {
     background: var(--color-primary);
+}
+
+/* سکشن نظر کاربران — Swiper */
+.home-testimonials-swiper {
+    overflow: visible;
+}
+
+.home-testimonials-swiper .home-testimonials-swiper__root {
+    overflow-x: clip;
+    overflow-y: visible;
+}
+
+.home-testimonials-swiper .swiper-pagination {
+    position: relative;
+    margin-top: 0.75rem;
+}
+
+.home-testimonials-swiper .swiper-pagination-bullet {
+    background: rgb(var(--color-primary-rgb) / 0.35);
+    opacity: 1;
+}
+
+.home-testimonials-swiper .swiper-pagination-bullet-active {
+    background: var(--color-primary);
+}
+
+/* ——— صفحهٔ اصلی: پس‌زمینه نرم و ریتم سکشن‌ها ——— */
+.home-page {
+    position: relative;
+    isolation: isolate;
+    background-color: var(--color-neutral-white);
+}
+
+.home-sections-flow > .home-section-wrap + .home-section-wrap {
+    border-top: 1px solid rgb(var(--color-secondary-rgb) / 0.45);
+    background: linear-gradient(
+        180deg,
+        rgb(var(--color-primary-rgb) / 0.025) 0%,
+        transparent 3.5rem
+    );
 }

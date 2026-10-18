@@ -7,9 +7,11 @@ import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import { SimpleTablePagination } from '@/Components/Admin/shared/ui/simple-table-pagination';
 import { FormField } from '@/Components/Admin/shared/ui/form-field';
 import { Textarea } from '@/Components/Admin/shared/ui/textarea';
+import { formatPersianDateTime } from '@/Components/Admin/shared/lib/format-persian-datetime';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import { MessageSquarePlus, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent, useState } from 'react';
 
 type ChildComment = {
@@ -119,6 +121,7 @@ function ReplyForm({ commentId }: { commentId: number }) {
 }
 
 export default function CommentsIndex({ comments, filters, statusOptions, abilities }: Props) {
+    const confirmToast = useConfirmToast();
     const [search, setSearch] = useState(filters.search);
     const [status, setStatus] = useState(filters.status);
 
@@ -196,6 +199,11 @@ export default function CommentsIndex({ comments, filters, statusOptions, abilit
                                     <div className="text-xs text-slate-500">
                                         {row.commentable_type_label}
                                         {row.commentable_title ? ` — ${row.commentable_title}` : ''}
+                                        {row.created_at ? (
+                                            <span className="mt-0.5 block">
+                                                {formatPersianDateTime(row.created_at, 'table')}
+                                            </span>
+                                        ) : null}
                                     </div>
                                 </div>
                                 <Badge variant={statusVariant(row.status)}>{row.status_label}</Badge>
@@ -233,10 +241,9 @@ export default function CommentsIndex({ comments, filters, statusOptions, abilit
                                         variant="ghost"
                                         size="sm"
                                         onClick={() =>
-                                            window.confirm('نظر و پاسخ‌ها حذف شوند؟') &&
-                                            router.delete(`/admin/comments/${row.id}`)
-                                        }
-                                    >
+                                            confirmToast('نظر و پاسخ‌ها حذف شوند؟', () => router.delete(`/admin/comments/${row.id}`))
+                                    }>
+                                    
                                         <Trash2 className="size-4 text-red-600" />
                                     </AdminButton>
                                 )}
@@ -259,4 +266,4 @@ export default function CommentsIndex({ comments, filters, statusOptions, abilit
             />
         </AdminLayout>
     );
-}
+    }

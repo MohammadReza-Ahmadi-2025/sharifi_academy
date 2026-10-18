@@ -12,6 +12,8 @@ class CoursePresenter
      */
     public static function forList(Course $course): array
     {
+        $creator = $course->relationLoaded('creator') ? $course->creator : null;
+
         return [
             'id' => $course->id,
             'title' => $course->title,
@@ -19,6 +21,9 @@ class CoursePresenter
             'code' => $course->code,
             'status' => $course->status?->value,
             'status_label' => $course->status?->label(),
+            'creator_name' => $creator
+                ? trim(($creator->name ?? '').' '.($creator->family ?? ''))
+                : null,
             'level' => $course->level?->value,
             'level_label' => $course->level?->label(),
             'is_featured' => $course->is_featured,

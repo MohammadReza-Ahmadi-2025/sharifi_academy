@@ -3,6 +3,7 @@
 namespace App\Modules\Courses\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Admin\Services\InstructorModerationQueue;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Courses\Enums\CourseLevel;
 use App\Modules\Courses\Enums\CourseStatus;
@@ -10,11 +11,12 @@ use App\Modules\Courses\Http\Requests\Admin\StoreCourseRequest;
 use App\Modules\Courses\Http\Requests\Admin\UpdateCourseRequest;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Support\AdminEnumOptions;
+use App\Modules\Courses\Support\CourseOwnership;
 use App\Modules\Courses\Support\CoursePresenter;
 use App\Modules\Files\Http\Concerns\SyncsMorphFilesFromRequest;
+use App\Support\SeoSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,7 +26,10 @@ class CourseController extends Controller
 
     public function index(Request $request): Response
     {
-        abort_unless($request->user()?->can('courses-index'), 403);
+        $this->authorize('viewAny', Course::class);
+
+        $user = $request->user();
+        abort_if($user === null, 403);
 
         $search = trim((string) $request->query('search', ''));
         $status = trim((string) $request->query('status', ''));
@@ -32,7 +37,8 @@ class CourseController extends Controller
             ? (int) $request->query('per_page', 25)
             : 25;
 
-        $query = Course::query()
+        $query = CourseOwnership::scopeForManager(Course::query(), $user)
+            ->with('creator')
             ->withCount('courseClasses')
             ->orderBy('display_order')
             ->orderByDesc('created_at');
@@ -64,30 +70,31 @@ class CourseController extends Controller
             ],
             'statusOptions' => AdminEnumOptions::fromEnum(CourseStatus::class),
             'abilities' => [
-                'create' => $actor?->can('courses-create') ?? false,
+                'create' => $actor?->can('create', Course::class) ?? false,
                 'update' => $actor?->can('courses-update') ?? false,
                 'delete' => $actor?->can('courses-delete') ?? false,
+                'moderate' => $actor?->can('instructor-moderation-update') ?? false,
             ],
+            'pendingReviewCount' => $actor?->can('instructor-moderation-index')
+                ? InstructorModerationQueue::counts()['courses_pending']
+                : 0,
         ]);
     }
 
     public function create(Request $request): Response
     {
-        abort_unless($request->user()?->can('courses-create'), 403);
+        $this->authorize('create', Course::class);
 
         return Inertia::render('Admin/Courses/Create', $this->formOptions());
     }
 
     public function store(StoreCourseRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-        $slug = $data['slug'] ?? Str::slug($data['title']);
-        $baseSlug = $slug;
-        $counter = 1;
+        $this->authorize('create', Course::class);
 
-        while (Course::query()->where('slug', $slug)->exists()) {
-            $slug = $baseSlug.'-'.$counter++;
-        }
+        $data = $request->validated();
+        $data = $this->normalizePrivilegedCourseFields($request, $data);
+        $slug = $this->uniqueCourseSlug($data['slug'] ?? $data['title']);
 
         $course = Course::query()->create([
             'title' => $data['title'],
@@ -118,7 +125,7 @@ class CourseController extends Controller
 
     public function show(Request $request, Course $course): Response
     {
-        abort_unless($request->user()?->can('courses-index'), 403);
+        $this->authorize('view', $course);
 
         $course->load(['categories', 'creator'])->loadCount('courseClasses');
 
@@ -127,16 +134,16 @@ class CourseController extends Controller
         return Inertia::render('Admin/Courses/Show', [
             'course' => CoursePresenter::forShow($course),
             'abilities' => [
-                'update' => $actor?->can('courses-update') ?? false,
-                'delete' => $actor?->can('courses-delete') ?? false,
-                'classes' => $actor?->can('course-classes-index') ?? false,
+                'update' => $actor?->can('update', $course) ?? false,
+                'delete' => $actor?->can('delete', $course) ?? false,
+                'classes' => ($actor?->can('view', $course) && $actor->can('course-classes-index')) ?? false,
             ],
         ]);
     }
 
     public function edit(Request $request, Course $course): Response
     {
-        abort_unless($request->user()?->can('courses-update'), 403);
+        $this->authorize('update', $course);
 
         $course->load('categories');
 
@@ -148,15 +155,19 @@ class CourseController extends Controller
 
     public function update(UpdateCourseRequest $request, Course $course): RedirectResponse
     {
-        $data = $request->validated();
+        $this->authorize('update', $course);
 
-        if (empty($data['slug'])) {
-            $data['slug'] = $course->slug ?: Str::slug($data['title']);
-        }
+        $data = $request->validated();
+        $data = $this->normalizePrivilegedCourseFields($request, $data, $course);
+
+        $slugSource = filled($data['slug'] ?? null)
+            ? (string) $data['slug']
+            : ($course->slug ?: $data['title']);
+        $slug = $this->uniqueCourseSlug($slugSource, $course->id);
 
         $course->update([
             'title' => $data['title'],
-            'slug' => $data['slug'],
+            'slug' => $slug,
             'code' => $data['code'] ?? null,
             'short_description' => $data['short_description'] ?? null,
             'description' => $data['description'] ?? null,
@@ -182,7 +193,7 @@ class CourseController extends Controller
 
     public function destroy(Request $request, Course $course): RedirectResponse
     {
-        abort_unless($request->user()?->can('courses-delete'), 403);
+        $this->authorize('delete', $course);
 
         $course->delete();
 
@@ -194,6 +205,47 @@ class CourseController extends Controller
     /**
      * @return array<string, mixed>
      */
+    private function uniqueCourseSlug(string $slug, ?int $ignoreId = null): string
+    {
+        $slug = SeoSlug::normalize($slug);
+        if ($slug === '') {
+            $slug = 'course';
+        }
+
+        $baseSlug = $slug;
+        $counter = 1;
+
+        while (Course::query()
+            ->when($ignoreId !== null, fn ($query) => $query->whereKeyNot($ignoreId))
+            ->where('slug', $slug)
+            ->exists()) {
+            $slug = $baseSlug.'-'.$counter++;
+        }
+
+        return $slug;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function normalizePrivilegedCourseFields(Request $request, array $data, ?Course $course = null): array
+    {
+        $user = $request->user();
+
+        if ($user !== null && ! CourseOwnership::managesAllCourses($user)) {
+            $data['is_featured'] = $course?->is_featured ?? false;
+            if (! array_key_exists('display_order', $data)) {
+                $data['display_order'] = $course?->display_order ?? 0;
+            }
+        }
+
+        return $data;
+    }
+
     private function formOptions(): array
     {
         $categories = Category::query()

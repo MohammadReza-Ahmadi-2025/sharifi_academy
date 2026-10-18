@@ -181,6 +181,15 @@ export function getAdminBreadcrumbs(urlOrPath: string): BreadcrumbItem[] {
         return items;
     }
 
+    if (first === 'course-enrollments') {
+        pushCrumb(items, 'ثبت‌نام در دوره', '/admin/course-enrollments');
+        if (second === 'create') {
+            pushCrumb(items, 'ثبت‌نام جدید');
+        }
+
+        return items;
+    }
+
     if (first === 'courses') {
         pushCrumb(items, 'دوره‌ها', '/admin/courses');
 
@@ -260,6 +269,17 @@ export function getAdminBreadcrumbs(urlOrPath: string): BreadcrumbItem[] {
         return items;
     }
 
+    if (first === 'pages') {
+        pushCrumb(items, 'صفحات ثابت', '/admin/pages');
+        if (second === 'create') {
+            pushCrumb(items, 'ایجاد صفحه');
+        } else if (second && third === 'edit') {
+            pushCrumb(items, 'ویرایش صفحه');
+        }
+
+        return items;
+    }
+
     if (first === 'menus') {
         pushCrumb(items, 'منوهای سایت', '/admin/menus');
         if (second === 'create') {
@@ -283,6 +303,17 @@ export function getAdminBreadcrumbs(urlOrPath: string): BreadcrumbItem[] {
             pushCrumb(items, 'ایجاد استوری');
         } else if (second && third === 'edit') {
             pushCrumb(items, 'ویرایش استوری');
+        }
+
+        return items;
+    }
+
+    if (first === 'home-sections') {
+        pushCrumb(items, 'سکشن‌های صفحه اصلی', '/admin/home-sections');
+        if (second === 'create') {
+            pushCrumb(items, 'ایجاد سکشن');
+        } else if (second && third === 'edit') {
+            pushCrumb(items, 'ویرایش سکشن');
         }
 
         return items;

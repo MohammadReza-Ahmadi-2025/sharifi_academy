@@ -7,6 +7,7 @@ use App\Modules\Courses\Enums\CourseLevel;
 use App\Modules\Courses\Enums\CourseStatus;
 use App\Modules\Courses\Http\Requests\Admin\Concerns\NormalizesCourseInput;
 use App\Modules\Courses\Http\Requests\Admin\Concerns\NormalizesCourseSeoInput;
+use App\Modules\Courses\Models\Course;
 use App\Modules\Files\Http\Requests\Concerns\ValidatesGalleryUploads;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -20,7 +21,7 @@ class StoreCourseRequest extends FormRequest
 
     public function authorize(): bool
     {
-        return $this->user()?->can('courses-create') ?? false;
+        return $this->user()?->can('create', Course::class) ?? false;
     }
 
     /**
@@ -40,7 +41,7 @@ class StoreCourseRequest extends FormRequest
             'is_featured' => ['boolean'],
             'display_order' => ['nullable', 'integer', 'min:0'],
             'published_at' => ['nullable', 'date'],
-            'category_ids' => ['nullable', 'array'],
+            'category_ids' => ['required', 'array', 'min:1'],
             'category_ids.*' => [
                 'integer',
                 Rule::exists('categories', 'id')->where('type', Category::TYPE_COURSE),

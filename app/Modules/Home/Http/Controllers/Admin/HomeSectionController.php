@@ -3,11 +3,9 @@
 namespace App\Modules\Home\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Blog\Models\Post;
+use App\Models\User;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
-use App\Modules\Catalog\Models\Product;
-use App\Modules\Courses\Models\Course;
 use App\Modules\Home\Http\Requests\Admin\ReorderHomeSectionsRequest;
 use App\Modules\Home\Http\Requests\Admin\StoreHomeSectionRequest;
 use App\Modules\Home\Http\Requests\Admin\UpdateHomeSectionRequest;
@@ -17,6 +15,7 @@ use App\Modules\Home\Models\HomeSectionTab;
 use App\Modules\Home\Services\HomeCacheInvalidator;
 use App\Modules\Home\Services\HomeSectionBannerSync;
 use App\Modules\Home\Services\HomeSectionFeatureGridSync;
+use App\Modules\Home\Services\HomeSectionManualItemSearch;
 use App\Modules\Home\Services\HomeSectionSyncService;
 use App\Modules\Home\Support\AdminHomeEnumOptions;
 use App\Modules\Home\Support\HomeSectionPresenter;
@@ -34,6 +33,7 @@ class HomeSectionController extends Controller
         private readonly HomeSectionSyncService $sync,
         private readonly HomeSectionBannerSync $bannerSync,
         private readonly HomeSectionFeatureGridSync $featureGridSync,
+        private readonly HomeSectionManualItemSearch $manualItemSearch,
     ) {}
 
     public function index(Request $request): Response
@@ -112,6 +112,7 @@ class HomeSectionController extends Controller
             'tabs.items' => fn ($q) => $q->orderBy('sort_order'),
             'tabs.items.item' => fn ($morph) => $morph->morphWith([
                 Banner::class => ['file'],
+                User::class => [],
             ]),
         ]);
 
@@ -180,55 +181,7 @@ class HomeSectionController extends Controller
         $type = (string) $request->query('type', '');
         $q = trim((string) $request->query('q', ''));
 
-        if ($q === '' || mb_strlen($q) < 2) {
-            return response()->json([]);
-        }
-
-        $items = match ($type) {
-            'product' => Product::query()
-                ->active()
-                ->visible()
-                ->select('id', 'title', 'slug')
-                ->where(fn ($query) => $query->where('title', 'like', "%{$q}%")->orWhere('slug', 'like', "%{$q}%"))
-                ->orderBy('title')
-                ->limit(15)
-                ->get(),
-
-            'course' => Course::query()
-                ->published()
-                ->select('id', 'title', 'slug')
-                ->where(fn ($query) => $query->where('title', 'like', "%{$q}%")->orWhere('slug', 'like', "%{$q}%"))
-                ->orderBy('title')
-                ->limit(15)
-                ->get(),
-
-            'post' => Post::query()
-                ->published()
-                ->select('id', 'title', 'slug')
-                ->where(fn ($query) => $query->where('title', 'like', "%{$q}%")->orWhere('slug', 'like', "%{$q}%"))
-                ->orderByDesc('published_at')
-                ->limit(15)
-                ->get(),
-
-            'brand' => Brand::query()
-                ->where('status', true)
-                ->select('id', 'title', 'slug')
-                ->where(fn ($query) => $query->where('title', 'like', "%{$q}%")->orWhere('slug', 'like', "%{$q}%"))
-                ->orderBy('title')
-                ->limit(15)
-                ->get(),
-
-            'category' => Category::query()
-                ->active()
-                ->product()
-                ->select('id', 'title', 'slug')
-                ->where(fn ($query) => $query->where('title', 'like', "%{$q}%")->orWhere('slug', 'like', "%{$q}%"))
-                ->orderBy('title')
-                ->limit(15)
-                ->get(),
-
-            default => collect(),
-        };
+        $items = $this->manualItemSearch->search($type, $q);
 
         return response()->json(
             $items->map(fn ($item) => [
@@ -263,7 +216,7 @@ class HomeSectionController extends Controller
                 'content_type' => $tabData['content_type'],
                 'source_type' => match ($tabData['content_type']) {
                     'banner' => 'manual',
-                    'features' => 'section',
+                    'features', 'testimonials' => 'section',
                     default => $tabData['source_type'],
                 },
                 'limit' => (int) ($tabData['limit'] ?? 8),
@@ -287,7 +240,7 @@ class HomeSectionController extends Controller
             if ($tab->content_type === 'banner') {
                 $bannerRows = $request->input("tabs.$index.banners", $tabData['banners'] ?? []);
                 $this->bannerSync->syncTab($tab, is_array($bannerRows) ? $bannerRows : [], $request, $index);
-            } elseif ($tab->content_type === 'features') {
+            } elseif (in_array($tab->content_type, ['features', 'testimonials'], true)) {
                 $this->sync->clearItems($tab);
             } elseif ($tab->source_type === 'manual') {
                 $this->sync->syncManualItems($tab, $tab->content_type, $tabData['manual_item_ids'] ?? []);

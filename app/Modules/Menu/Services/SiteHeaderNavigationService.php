@@ -2,6 +2,7 @@
 
 namespace App\Modules\Menu\Services;
 
+use App\Models\User;
 use App\Modules\Menu\Enums\MenuLocation;
 
 class SiteHeaderNavigationService
@@ -13,7 +14,7 @@ class SiteHeaderNavigationService
     /**
      * @return array{items: list<array<string, mixed>>, cta: null}
      */
-    public function build(): array
+    public function build(?User $user = null): array
     {
         $menus = $this->menuService->forLocation(MenuLocation::Header->value);
         $items = [];
@@ -26,9 +27,38 @@ class SiteHeaderNavigationService
         }
 
         return [
-            'items' => $items,
+            'items' => $this->applyAuthNav($items, $user),
             'cta' => null,
         ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $items
+     * @return list<array<string, mixed>>
+     */
+    private function applyAuthNav(array $items, ?User $user): array
+    {
+        if ($user === null) {
+            return $items;
+        }
+
+        return array_values(array_filter(
+            $items,
+            fn (array $item): bool => ! $this->isGuestAuthNavItem($item),
+        ));
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     */
+    private function isGuestAuthNavItem(array $item): bool
+    {
+        $url = trim((string) ($item['url'] ?? ''));
+        if ($url === '/login' || $url === '/register') {
+            return true;
+        }
+
+        return str_starts_with($url, '/login?') || str_starts_with($url, '/register?');
     }
 
     /**

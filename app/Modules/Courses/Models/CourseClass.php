@@ -128,6 +128,11 @@ class CourseClass extends Model
             ->withTimestamps();
     }
 
+    public function isTaughtBy(User $user): bool
+    {
+        return $this->instructors()->whereKey($user->id)->exists();
+    }
+
     /**
      * @return HasOne<ClassInstructor, $this>
      */

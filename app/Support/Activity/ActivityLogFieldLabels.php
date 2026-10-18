@@ -2,6 +2,8 @@
 
 namespace App\Support\Activity;
 
+use App\Support\PersianDate;
+
 class ActivityLogFieldLabels
 {
     /**
@@ -54,6 +56,8 @@ class ActivityLogFieldLabels
             'ends_at' => 'پایان نمایش',
             'display_order' => 'ترتیب نمایش',
             'show_in_menu' => 'نمایش در منو',
+            'is_active' => 'فعال',
+            'canonical' => 'آدرس کاننیکال',
         ];
     }
 
@@ -64,18 +68,6 @@ class ActivityLogFieldLabels
 
     public static function formatValue(mixed $value): string
     {
-        if ($value === null) {
-            return '—';
-        }
-
-        if (is_bool($value)) {
-            return $value ? 'بله' : 'خیر';
-        }
-
-        if (is_array($value)) {
-            return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '';
-        }
-
-        return (string) $value;
+        return PersianDate::formatDisplayValue($value);
     }
 }

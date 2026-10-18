@@ -2,7 +2,9 @@
 
 namespace App\Modules\Catalog;
 
+use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Price;
+use App\Modules\Catalog\Observers\CategoryObserver;
 use App\Modules\Catalog\Observers\PriceObserver;
 use App\Modules\Catalog\Services\InventoryService;
 use App\Modules\Catalog\Services\VariantPriceService;
@@ -20,5 +22,6 @@ class CatalogServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/Database/Migrations');
         Price::observe(PriceObserver::class);
+        Category::observe(CategoryObserver::class);
     }
 }

@@ -17,7 +17,7 @@ class CategorySeo
     {
         $canonical = filled($category->canonical)
             ? (string) $category->canonical
-            : url('/categories/'.$category->slug);
+            : url('/categories/'.$category->publicSlug());
 
         $image = $category->image?->publicUrl();
         $ogImage = $image !== '' ? PublicStorageUrl::normalize($image) : null;
@@ -78,7 +78,7 @@ class CategorySeo
      */
     public static function breadcrumbJsonLd(Category $category): array
     {
-        $showUrl = url('/categories/'.$category->slug);
+        $showUrl = url('/categories/'.$category->publicSlug());
 
         return [
             '@context' => 'https://schema.org',

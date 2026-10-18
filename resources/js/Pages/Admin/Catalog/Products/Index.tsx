@@ -17,6 +17,7 @@ import {
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent, useState } from 'react';
 
 type Row = {
@@ -43,6 +44,7 @@ type Props = {
 };
 
 export default function ProductsIndex({ products, filters, abilities }: Props) {
+    const confirmToast = useConfirmToast();
     const [search, setSearch] = useState(filters.search);
     const [status, setStatus] = useState(filters.status);
     const [visible, setVisible] = useState(filters.visible);
@@ -155,10 +157,9 @@ export default function ProductsIndex({ products, filters, abilities }: Props) {
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() =>
-                                                        window.confirm('محصول حذف شود؟') &&
-                                                        router.delete(`/admin/catalog/products/${row.id}`)
-                                                    }
-                                                >
+                                                        confirmToast('محصول حذف شود؟', () => router.delete(`/admin/catalog/products/${row.id}`))
+                                                }>
+                                                
                                                     <Trash2 className="size-4 text-red-600" />
                                                 </AdminButton>
                                             )}
@@ -184,4 +185,4 @@ export default function ProductsIndex({ products, filters, abilities }: Props) {
             </Card>
         </AdminLayout>
     );
-}
+    }

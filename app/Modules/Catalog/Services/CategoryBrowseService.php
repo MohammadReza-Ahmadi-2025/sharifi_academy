@@ -184,7 +184,7 @@ class CategoryBrowseService
             ->map(fn (Category $child) => [
                 'id' => $child->id,
                 'title' => $child->title,
-                'slug' => $child->slug,
+                'slug' => $child->publicSlug(),
                 'items_count' => (int) $child->items_count,
             ])
             ->values()

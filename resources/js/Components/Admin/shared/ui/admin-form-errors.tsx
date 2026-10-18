@@ -1,5 +1,5 @@
 const FIELD_LABELS: Record<string, string> = {
-    title: 'عنوان',
+    title: 'عنوان سکشن',
     thumbnail: 'پیش‌نمایش',
     media: 'فایل رسانه',
     content: 'متن',
@@ -14,6 +14,23 @@ type Props = {
     errors: Record<string, string | undefined>;
     title?: string;
 };
+
+function humanizeFieldKey(field: string): string {
+    if (field.startsWith('tabs.') && field.includes('.settings.features')) {
+        return 'گرید سه‌تایی';
+    }
+    if (field.startsWith('tabs.') && field.includes('.banners')) {
+        return 'اسلایدهای بنر';
+    }
+    if (field.startsWith('tabs.') && field.endsWith('.limit')) {
+        return 'حداکثر آیتم تب';
+    }
+    if (field.startsWith('settings.hero.')) {
+        return 'تنظیمات هیرو';
+    }
+
+    return field;
+}
 
 export function AdminFormErrors({ errors, title = 'خطا در ذخیره فرم' }: Props) {
     const messages = Object.entries(errors).filter(
@@ -34,7 +51,7 @@ export function AdminFormErrors({ errors, title = 'خطا در ذخیره فرم
                 {messages.map(([field, message]) => (
                     <li key={field}>
                         <span className="font-medium text-red-800/80 dark:text-red-200/80">
-                            {FIELD_LABELS[field] ?? field}:
+                            {FIELD_LABELS[field] ?? humanizeFieldKey(field)}:
                         </span>{' '}
                         {message}
                     </li>

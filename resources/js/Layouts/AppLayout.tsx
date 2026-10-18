@@ -5,6 +5,7 @@ import { SiteHeader } from '@/Components/SiteHeader';
 import { siteSettingsFromPage } from '@/lib/site-settings';
 import { PageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
+import { cn } from '@/lib/utils';
 import { PropsWithChildren } from 'react';
 
 type SiteMenuGroup = {
@@ -16,9 +17,10 @@ type SiteMenuGroup = {
 
 type Props = PropsWithChildren<{
     fullWidth?: boolean;
+    mainClassName?: string;
 }>;
 
-export default function AppLayout({ children, fullWidth = false }: Props) {
+export default function AppLayout({ children, fullWidth = false, mainClassName }: Props) {
     const pageProps = usePage<PageProps>().props;
     const { app, siteMenus } = pageProps;
     const settings = siteSettingsFromPage(pageProps);
@@ -34,15 +36,17 @@ export default function AppLayout({ children, fullWidth = false }: Props) {
             <SiteHeader />
 
             <main
-                className={`flex flex-1 flex-col items-stretch ${
-                    fullWidth ? 'w-full' : 'mx-auto w-full max-w-6xl px-4 py-8'
-                }`}
+                className={cn(
+                    'flex flex-1 flex-col items-stretch pb-[7.5rem] lg:pb-0',
+                    fullWidth ? 'w-full' : 'mx-auto w-full max-w-7xl px-4 py-8',
+                    mainClassName,
+                )}
             >
                 {children}
             </main>
 
             <footer className="mt-auto border-t border-secondary bg-primary text-on-primary">
-                <div className="mx-auto max-w-6xl px-4 py-10">
+                <div className="mx-auto max-w-7xl px-4 py-10">
                     <div className="flex flex-col gap-10 pb-10 lg:flex-row lg:items-end lg:justify-between">
                         {hasFooterMenus ? (
                             <div className="grid flex-1 gap-8 text-sm grid-cols-2 md:grid-cols-3">

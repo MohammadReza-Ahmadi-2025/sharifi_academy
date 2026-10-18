@@ -27,12 +27,22 @@ export function contentTypesForTemplate(
         return all.features ? { features: all.features } : {};
     }
 
+    if (template === 'testimonials') {
+        return all.testimonials ? { testimonials: all.testimonials } : {};
+    }
+
+    if (template === 'instructors') {
+        return all.instructor ? { instructor: all.instructor } : {};
+    }
+
     return all;
 }
 
 const SOURCE_KEYS_BY_CONTENT_TYPE: Record<string, string[]> = {
     banner: ['manual'],
     features: ['section'],
+    testimonials: ['section'],
+    instructor: ['latest', 'manual'],
     product: ['latest', 'oldest', 'best_selling', 'most_viewed', 'manual', 'by_category', 'by_brand'],
     course: ['latest', 'oldest', 'most_viewed', 'manual', 'by_category'],
     post: ['latest', 'oldest', 'most_viewed', 'manual'],
@@ -62,7 +72,7 @@ export function defaultSourceTypeForContentType(contentType: string): string {
     if (contentType === 'banner') {
         return 'manual';
     }
-    if (contentType === 'features') {
+    if (contentType === 'features' || contentType === 'testimonials') {
         return 'section';
     }
 

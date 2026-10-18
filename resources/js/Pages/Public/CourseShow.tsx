@@ -8,7 +8,7 @@ import { SiteRichHtml } from '@/Components/Site/SiteRichHtml';
 import AppLayout from '@/Layouts/AppLayout';
 import { siteSettingsFromPage } from '@/lib/site-settings';
 import type { PageProps } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, useForm, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import {
     ArrowLeft,
@@ -62,6 +62,16 @@ type Props = {
         };
         comments: PublicCourseComment[];
         comments_summary: { count: number; average_rating: number | null };
+        enrollment: {
+            authenticated: boolean;
+            profile_complete: boolean;
+            profile_url: string;
+            login_url: string | null;
+            state: 'guest' | 'none' | 'pending' | 'confirmed';
+            course_class_id: number | null;
+            student_dashboard_url: string | null;
+            requestable_class_ids: number[];
+        };
     };
     structuredData: {
         breadcrumb: Record<string, unknown>;
@@ -105,6 +115,17 @@ function scheduleBadgeClass(status: CourseClassRow['schedule_status']): string {
 
 export default function CourseShow({ course, structuredData }: Props) {
     const pageProps = usePage<PageProps>().props;
+    const enrollment = course.enrollment;
+    const requestableIds = enrollment.requestable_class_ids;
+    const defaultClassId =
+        requestableIds.length === 1
+            ? requestableIds[0]
+            : course.classes.find((c) => requestableIds.includes(c.id))?.id ?? requestableIds[0] ?? '';
+
+    const enrollForm = useForm({
+        course_class_id: defaultClassId === '' ? '' : String(defaultClassId),
+    });
+
     const settings = siteSettingsFromPage(pageProps);
     const phone = settings.contact_phone?.trim() ?? '';
     const email = settings.contact_email?.trim() ?? '';
@@ -217,7 +238,7 @@ export default function CourseShow({ course, structuredData }: Props) {
                 </div>
             </section>
 
-            <div className="mx-auto max-w-[88rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+            <div className="mx-auto w-[88rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
                 <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-12">
                     <div className="min-w-0 space-y-12">
                         {bodyHtml && (
@@ -321,9 +342,96 @@ export default function CourseShow({ course, structuredData }: Props) {
                                 </p>
                             </div>
                             <div className="space-y-4 px-5 py-5">
-                                <p className="text-sm leading-relaxed opacity-90">
-                                    ثبت‌نام آنلاین فعلاً غیرفعال است. برای رزرو ظرفیت با پشتیبانی آموزش تماس بگیرید.
-                                </p>
+                                {enrollment.state === 'guest' && (
+                                    <p className="text-sm leading-relaxed opacity-90">
+                                        برای درخواست ثبت‌نام ابتدا وارد حساب کاربری شوید.
+                                    </p>
+                                )}
+                                {enrollment.state === 'guest' && enrollment.login_url && (
+                                    <Link
+                                        href={enrollment.login_url}
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-white px-4 py-3 text-sm font-extrabold text-primary shadow-md transition hover:bg-secondary hover:text-neutral-black"
+                                    >
+                                        ورود / ثبت‌نام
+                                    </Link>
+                                )}
+                                {enrollment.authenticated && !enrollment.profile_complete && (
+                                    <>
+                                        <p className="text-sm leading-relaxed opacity-90">
+                                            برای ثبت‌نام، نام، نام خانوادگی و شهر را در پروفایل تکمیل کنید.
+                                        </p>
+                                        <Link
+                                            href={enrollment.profile_url}
+                                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-white px-4 py-3 text-sm font-extrabold text-primary shadow-md transition hover:bg-secondary hover:text-neutral-black"
+                                        >
+                                            تکمیل پروفایل
+                                        </Link>
+                                    </>
+                                )}
+                                {enrollment.state === 'pending' && (
+                                    <p className="rounded-xl bg-white/10 px-3 py-3 text-sm leading-relaxed">
+                                        درخواست ثبت‌نام شما در انتظار تأیید آموزش است.
+                                    </p>
+                                )}
+                                {enrollment.state === 'confirmed' && enrollment.student_dashboard_url && (
+                                    <Link
+                                        href={enrollment.student_dashboard_url}
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-white px-4 py-3 text-sm font-extrabold text-primary shadow-md transition hover:bg-secondary hover:text-neutral-black"
+                                    >
+                                        ورود به پنل دانشجو
+                                    </Link>
+                                )}
+                                {enrollment.state === 'none' &&
+                                    enrollment.profile_complete &&
+                                    requestableIds.length > 0 && (
+                                        <form
+                                            onSubmit={(e) => {
+                                                e.preventDefault();
+                                                enrollForm.post(`/courses/${course.slug}/enrollments`, {
+                                                    preserveScroll: true,
+                                                });
+                                            }}
+                                            className="space-y-3"
+                                        >
+                                            {requestableIds.length > 1 && (
+                                                <label className="block text-sm">
+                                                    <span className="mb-1 block opacity-90">انتخاب کلاس</span>
+                                                    <select
+                                                        value={enrollForm.data.course_class_id}
+                                                        onChange={(e) =>
+                                                            enrollForm.setData('course_class_id', e.target.value)
+                                                        }
+                                                        className="w-full rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-sm text-on-primary"
+                                                    >
+                                                        {course.classes
+                                                            .filter((c) => requestableIds.includes(c.id))
+                                                            .map((c) => (
+                                                                <option key={c.id} value={c.id} className="text-neutral-black">
+                                                                    {c.name}
+                                                                </option>
+                                                            ))}
+                                                    </select>
+                                                </label>
+                                            )}
+                                            {enrollForm.errors.course_class_id && (
+                                                <p className="text-xs text-red-200">{enrollForm.errors.course_class_id}</p>
+                                            )}
+                                            <button
+                                                type="submit"
+                                                disabled={enrollForm.processing || !enrollForm.data.course_class_id}
+                                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-white px-4 py-3 text-sm font-extrabold text-primary shadow-md transition hover:bg-secondary hover:text-neutral-black disabled:opacity-60"
+                                            >
+                                                درخواست ثبت‌نام
+                                            </button>
+                                        </form>
+                                    )}
+                                {enrollment.state === 'none' &&
+                                    enrollment.profile_complete &&
+                                    requestableIds.length === 0 && (
+                                        <p className="text-sm leading-relaxed opacity-90">
+                                            در حال حاضر کلاسی برای ثبت‌نام آنلاین باز نیست. با پشتیبانی آموزش تماس بگیرید.
+                                        </p>
+                                    )}
                                 {contactHref ? (
                                     <a
                                         href={contactHref}

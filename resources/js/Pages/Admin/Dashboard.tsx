@@ -1,52 +1,41 @@
 import { DashboardChartsGrid, type DashboardCharts } from '@/Components/Admin/dashboard/dashboard-charts-grid';
-import { DashboardFilters } from '@/Components/Admin/dashboard/dashboard-filters';
-import { DashboardPageHeader } from '@/Components/Admin/dashboard/dashboard-page-header';
+import { DashboardHero } from '@/Components/Admin/dashboard/dashboard-hero';
+import {
+    DashboardModerationAlerts,
+    type ModerationQueue,
+} from '@/Components/Admin/dashboard/dashboard-moderation-alerts';
 import { QuickActions } from '@/Components/Admin/dashboard/quick-actions';
-import { StatsGrid, type DashboardStat } from '@/Components/Admin/dashboard/stats-grid';
+import { StatsGrid, type DashboardStatGroup } from '@/Components/Admin/dashboard/stats-grid';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head } from '@inertiajs/react';
 
 type Props = {
-    stats: DashboardStat[];
+    statGroups: DashboardStatGroup[];
     charts: DashboardCharts;
+    moderation: ModerationQueue | null;
 };
 
-export default function Dashboard({ stats, charts }: Props) {
+export default function Dashboard({ statGroups, charts, moderation }: Props) {
     return (
         <AdminLayout>
             <Head title="داشبورد ادمین" />
 
             <div className="space-y-6">
-                <DashboardPageHeader />
+                <DashboardHero />
 
-                <DashboardFilters />
+                {moderation ? <DashboardModerationAlerts moderation={moderation} /> : null}
 
-                <StatsGrid stats={stats} />
-
-                <DashboardChartsGrid charts={charts} />
-
-                <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-                    <CardWelcome className="xl:col-span-2" />
-                    <div className="xl:col-span-1">
-                        <QuickActions />
+                <div className="grid gap-6 xl:grid-cols-[1fr_minmax(17rem,22rem)] xl:items-start">
+                    <div className="min-w-0 space-y-6">
+                        <StatsGrid groups={statGroups} />
+                        <DashboardChartsGrid charts={charts} />
                     </div>
+
+                    <aside className="xl:sticky xl:top-4">
+                        <QuickActions moderation={moderation} />
+                    </aside>
                 </div>
             </div>
         </AdminLayout>
-    );
-}
-
-function CardWelcome({ className }: { className?: string }) {
-    return (
-        <div
-            className={`kpi-glow rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 ${className ?? ''}`}
-        >
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">به پنل مدیریت خوش آمدید</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                کامپوننت‌های shared Nexin (DatePicker، Table، Select، نمودار Recharts) در این پروژه در مسیر
-                <code className="mx-1 rounded bg-slate-100 px-1.5 py-0.5 text-xs dark:bg-slate-800">Components/Admin/shared</code>
-                آماده استفاده در ماژول‌های بعدی هستند.
-            </p>
-        </div>
     );
 }

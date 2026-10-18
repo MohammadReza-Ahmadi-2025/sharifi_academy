@@ -11,12 +11,14 @@ class AdminHomeEnumOptions
     {
         return [
             'features' => 'گرید سه‌تایی',
+            'testimonials' => 'نظر کاربران',
             'product' => 'محصول',
             'course' => 'دوره',
             'post' => 'وبلاگ',
             'brand' => 'برند',
             'category' => 'دسته‌بندی',
             'banner' => 'بنر',
+            'instructor' => 'استاد',
         ];
     }
 
@@ -59,8 +61,12 @@ class AdminHomeEnumOptions
             return ['manual' => 'انتخاب دستی (از لیست بنرها)'];
         }
 
-        if ($contentType === 'features') {
+        if ($contentType === 'features' || $contentType === 'testimonials') {
             return ['section' => 'تعریف در تنظیمات سکشن'];
+        }
+
+        if ($contentType === 'instructor') {
+            return array_intersect_key($all, array_flip(['latest', 'manual']));
         }
 
         $keys = match ($contentType) {
@@ -85,6 +91,8 @@ class AdminHomeEnumOptions
             'catalog' => 'لیست کارت (اسلایدر ۵تایی)',
             'features' => 'گرید سه‌تایی',
             'banners' => 'اسلایدر بنر',
+            'testimonials' => 'نظر کاربران',
+            'instructors' => 'اساتید (رزومه)',
         ];
     }
 

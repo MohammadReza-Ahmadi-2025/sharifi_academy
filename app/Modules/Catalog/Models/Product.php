@@ -8,6 +8,8 @@ use App\Modules\Comments\Models\Comment;
 use App\Modules\Files\Models\File;
 use App\Modules\Files\Services\MorphFileSyncService;
 use App\Modules\Visits\Concerns\HasVisits;
+use App\Support\Concerns\ResolvesSeoSlugRouteBinding;
+use App\Support\SeoSlug;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 #[Fillable([
     'title',
@@ -47,7 +50,41 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Product extends Model
 {
     use HasVisits;
+    use ResolvesSeoSlugRouteBinding;
+    use Searchable;
     use SoftDeletes;
+
+    public function publicSlug(): string
+    {
+        return SeoSlug::forUrl((string) $this->slug);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        $this->loadMissing(['brand', 'categories']);
+
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'slug' => $this->slug,
+            'sku' => $this->sku,
+            'short_description' => strip_tags((string) $this->short_description),
+            'description' => strip_tags((string) $this->description),
+            'brand' => $this->brand?->title,
+            'categories' => $this->categories->pluck('title')->all(),
+            'model' => $this->model,
+            'status' => $this->status,
+            'is_visible' => $this->is_visible,
+        ];
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return (bool) $this->status && (bool) $this->is_visible;
+    }
 
     protected function casts(): array
     {

@@ -3,7 +3,10 @@ import '../css/app.css';
 import { InertiaFlashToasts } from '@/Components/InertiaFlashToasts';
 import { ToastProvider } from '@/Components/shared/contexts/toast-context';
 import { Toaster } from '@/Components/shared/ui/toaster';
+import { config } from '@inertiajs/core';
 import { createInertiaApp } from '@inertiajs/react';
+
+config.set('form.forceIndicesArrayFormatInFormData', true);
 import { createRoot } from 'react-dom/client';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 

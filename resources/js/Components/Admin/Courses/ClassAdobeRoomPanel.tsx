@@ -16,6 +16,7 @@ import {
 } from '@/Components/Admin/shared/ui/table';
 import { router, useForm } from '@inertiajs/react';
 import { Plus, Trash2 } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent } from 'react';
 
 type AdobeRoomRow = {
@@ -44,6 +45,7 @@ export function ClassAdobeRoomPanel({
     canCreate,
     canDelete,
 }: Props) {
+    const confirmToast = useConfirmToast();
     if (!canCreate && rooms.length === 0) {
         return null;
     }
@@ -70,10 +72,9 @@ export function ClassAdobeRoomPanel({
     };
 
     const removeRoom = (room: AdobeRoomRow) => {
-        if (!window.confirm(`اتاق «${room.sco_id}» حذف شود؟`)) {
-            return;
-        }
+        confirmToast(`اتاق «${room.sco_id}» حذف شود؟`, () => {
         router.delete(`${baseUrl}/${room.id}`, { preserveScroll: true });
+    });
     };
 
     return (

@@ -10,6 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/Components/Admin/shared/ui/table';
+import { PersianDateTimeText } from '@/Components/Admin/shared/ui/persian-datetime-text';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head } from '@inertiajs/react';
 
@@ -72,6 +73,12 @@ export default function ActivityLogShow({ log }: Props) {
                         <Badge>{log.action_label}</Badge>
                         <Badge variant="secondary">{log.module_label}</Badge>
                     </div>
+                    {log.created_at && (
+                        <p className="text-sm text-slate-600 dark:text-slate-300">
+                            <span className="text-slate-500">زمان: </span>
+                            <PersianDateTimeText value={log.created_at} style="table" />
+                        </p>
+                    )}
                     {log.user && (
                         <p className="text-sm">
                             <span className="text-slate-500">کاربر: </span>

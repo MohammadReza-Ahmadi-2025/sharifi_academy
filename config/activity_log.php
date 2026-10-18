@@ -23,6 +23,7 @@ use App\Modules\Home\Models\HomeSectionTab;
 use App\Modules\Locations\Models\ProvinceCity;
 use App\Modules\Menu\Models\Menu;
 use App\Modules\Menu\Models\MenuItem;
+use App\Modules\Pages\Models\Page;
 use App\Modules\Profile\Models\Skill;
 use App\Modules\Roles\Models\Permission;
 use App\Modules\Roles\Models\Role;
@@ -53,6 +54,7 @@ return [
         ClassSession::class,
         Enrollment::class,
         Post::class,
+        Page::class,
         Comment::class,
         Social::class,
         SiteSetting::class,

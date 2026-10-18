@@ -18,6 +18,7 @@ import {
 import { Textarea } from '@/Components/Admin/shared/ui/textarea';
 import { router, useForm } from '@inertiajs/react';
 import { UserPlus } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent } from 'react';
 
 type EnrollmentRow = {
@@ -51,6 +52,7 @@ export function ClassEnrollmentPanel({
     canUpdate,
     canDelete,
 }: Props) {
+    const confirmToast = useConfirmToast();
     if (!canCreate && enrollments.length === 0) {
         return null;
     }
@@ -80,17 +82,21 @@ export function ClassEnrollmentPanel({
     };
 
     const removeEnrollment = (row: EnrollmentRow) => {
-        if (!window.confirm(`ثبت‌نام «${row.user_label}» حذف شود؟`)) {
-            return;
-        }
+        confirmToast(`ثبت‌نام «${row.user_label}» حذف شود؟`, () => {
         router.delete(`${baseUrl}/${row.id}`, { preserveScroll: true });
+    });
     };
 
     return (
         <Card className="mt-8 space-y-6 p-6">
             <div>
                 <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">ثبت‌نام‌ها</h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">ثبت‌نام دستی دانشجو در این کلاس</p>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    ثبت‌نام دستی — کاربر باید نام، نام خانوادگی و شهر داشته باشد.{' '}
+                    <a href="/admin/course-enrollments/create" className="text-indigo-600 hover:underline">
+                        ثبت‌نام از بخش مرکزی
+                    </a>
+                </p>
             </div>
 
             {canCreate ? (
@@ -102,8 +108,11 @@ export function ClassEnrollmentPanel({
                     <div className="grid gap-4 md:grid-cols-2">
                         <FormField label="کاربر" required error={form.errors.user_id}>
                             <Select
-                                isDisabled={form.processing}
+                                isDisabled={form.processing || userSelectOptions.length === 0}
                                 options={userSelectOptions}
+                                placeholder={
+                                    userSelectOptions.length === 0 ? 'کاربر واجد شرایطی نیست' : undefined
+                                }
                                 value={findSelectOption(userSelectOptions, form.data.user_id)}
                                 onChange={(option) => form.setData('user_id', Number(option?.value ?? 0))}
                             />

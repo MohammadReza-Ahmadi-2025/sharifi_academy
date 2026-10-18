@@ -15,10 +15,12 @@ export default function Home({ sections, storyGroups }: Props) {
     const { auth } = usePage<PageProps>().props;
 
     return (
-        <AppLayout fullWidth>
+        <AppLayout fullWidth mainClassName="bg-neutral-white">
             <Head title="خانه" />
             <HomeStoriesBar initialGroups={storyGroups ?? []} isAuthenticated={auth.user !== null} />
-            <HomeDynamicSections sections={sections} />
+            <div className="home-page min-h-full">
+                <HomeDynamicSections sections={sections} />
+            </div>
         </AppLayout>
     );
 }

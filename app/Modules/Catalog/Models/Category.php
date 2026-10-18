@@ -6,8 +6,10 @@ use App\Modules\Blog\Models\Post;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Files\Models\File;
 use App\Modules\Files\Services\MorphFileSyncService;
-use App\Modules\Visits\Concerns\HasVisits;
 use App\Modules\Profile\Models\Skill;
+use App\Modules\Visits\Concerns\HasVisits;
+use App\Support\Concerns\ResolvesSeoSlugRouteBinding;
+use App\Support\SeoSlug;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 #[Fillable([
     'parent_id',
@@ -36,7 +39,35 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Category extends Model
 {
     use HasVisits;
+    use ResolvesSeoSlugRouteBinding;
+    use Searchable;
     use SoftDeletes;
+
+    public function publicSlug(): string
+    {
+        return SeoSlug::forUrl((string) $this->slug);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'slug' => $this->slug,
+            'type' => $this->type,
+            'description' => strip_tags((string) $this->description),
+            'status' => $this->status,
+        ];
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return (bool) $this->status
+            && in_array($this->type, [self::TYPE_PRODUCT, self::TYPE_COURSE, self::TYPE_BLOG], true);
+    }
 
     public const TYPE_PRODUCT = 'product';
 

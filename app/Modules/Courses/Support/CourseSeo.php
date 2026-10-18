@@ -19,7 +19,7 @@ class CourseSeo
 
         $canonical = filled($course->canonical)
             ? (string) $course->canonical
-            : url('/courses/'.$course->slug);
+            : url('/courses/'.$course->publicSlug());
 
         $description = filled($course->meta_description)
             ? (string) $course->meta_description
@@ -48,7 +48,7 @@ class CourseSeo
      */
     public static function breadcrumbJsonLd(Course $course): array
     {
-        $courseUrl = url('/courses/'.$course->slug);
+        $courseUrl = url('/courses/'.$course->publicSlug());
         $category = $course->relationLoaded('categories')
             ? $course->categories->first()
             : null;
@@ -103,7 +103,7 @@ class CourseSeo
     ): array {
         $canonical = filled($course->canonical)
             ? (string) $course->canonical
-            : url('/courses/'.$course->slug);
+            : url('/courses/'.$course->publicSlug());
 
         $imageUrl = $course->relationLoaded('mainImage') && $course->mainImage
             ? $course->mainImage->publicUrl()
@@ -168,7 +168,7 @@ class CourseSeo
     {
         $canonical = filled($course->canonical)
             ? (string) $course->canonical
-            : url('/courses/'.$course->slug);
+            : url('/courses/'.$course->publicSlug());
 
         $title = filled($course->meta_title) ? $course->meta_title : $course->title;
 

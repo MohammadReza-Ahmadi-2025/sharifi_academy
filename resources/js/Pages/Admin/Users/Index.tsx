@@ -18,6 +18,7 @@ import { SimpleTablePagination } from '@/Components/Admin/shared/ui/simple-table
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2, UserRound } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent, useState } from 'react';
 
 export type AdminUserListItem = {
@@ -67,6 +68,7 @@ const emptyPaginated: PaginatedUsers = {
 };
 
 export default function UsersIndex({ users, filters, roleFilters, abilities }: Props) {
+    const confirmToast = useConfirmToast();
     const page = users ?? emptyPaginated;
     const rows = page.data ?? [];
     const [search, setSearch] = useState(filters.search);
@@ -100,11 +102,9 @@ export default function UsersIndex({ users, filters, roleFilters, abilities }: P
     };
 
     const handleDelete = (user: AdminUserListItem) => {
-        if (!window.confirm(`کاربر «${user.fullName}» حذف شود؟`)) {
-            return;
-        }
-
+        confirmToast(`کاربر «${user.fullName}» حذف شود؟`, () => {
         router.delete(`/admin/users/${user.id}`, { preserveScroll: true });
+    });
     };
 
     return (

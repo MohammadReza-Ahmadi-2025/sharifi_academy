@@ -7,6 +7,8 @@ use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Services\CategoryBrowseService;
 use App\Modules\Catalog\Support\CategoryPublicPresenter;
 use App\Modules\Catalog\Support\CategorySeo;
+use App\Support\Http\CanonicalSeoSlugRedirect;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,8 +17,31 @@ class CategoryController extends Controller
 {
     public function __construct(private readonly CategoryBrowseService $browse) {}
 
-    public function show(Request $request, Category $category): Response
+    public function show(Request $request, Category $category): Response|RedirectResponse
     {
+        $redirect = CanonicalSeoSlugRedirect::awayIfMismatched(
+            $request,
+            $category,
+            'categories.show',
+            'category',
+            2,
+        );
+        if ($redirect !== null) {
+            return $redirect;
+        }
+
+        $canonicalSlug = $category->publicSlug();
+        $requestedSlug = rawurldecode((string) $request->segment(2));
+        if ($requestedSlug !== '' && $requestedSlug !== $canonicalSlug) {
+            $url = route('categories.show', ['category' => $canonicalSlug]);
+            $query = $request->getQueryString();
+            if ($query !== null && $query !== '') {
+                $url .= '?'.$query;
+            }
+
+            return redirect()->to($url, 301);
+        }
+
         if ($this->shouldReturnItemsOnly($request)) {
             return Inertia::render('Public/Categories/Show', [
                 'items' => $this->browse->paginateItemsOnly($category, $request)['items'],

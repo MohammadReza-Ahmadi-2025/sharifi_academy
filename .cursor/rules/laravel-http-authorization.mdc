@@ -1,0 +1,15 @@
+---
+description: Policy, Gate, and Form Request for new HTTP features (student/instructor/site)
+alwaysApply: true
+---
+
+# Laravel HTTP authorization and validation
+
+When adding or extending a feature phase (student panel, instructor, site actions, admin):
+
+1. **Mutating routes** (`POST`, `PUT`, `PATCH`, `DELETE`): use a **Form Request** (`authorize()` + `rules()`). Do not validate only in the controller.
+2. **Authorization**: use **Policies** on domain models (`$this->authorize('view', $model)`). Register policies in the module `ServiceProvider`. Use **Gates** only for cross-cutting checks without a natural model.
+3. **Middleware** stays for route groups (auth, panel access). Controllers should still **authorize** the specific action (defense in depth).
+4. **Services** assume the caller already authorized; they do not call `Gate` unless shared from multiple entry points.
+
+Match naming and structure of existing modules (e.g. `CoursePolicy`, `StoreEnrollmentRequest`).

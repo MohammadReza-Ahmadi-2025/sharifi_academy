@@ -1,3 +1,4 @@
+import { formatAdminDateDisplay } from '@/Components/Admin/shared/lib/format-persian-datetime';
 import { Card } from '@/Components/Admin/shared/ui/card';
 import { PersianDatePicker } from '@/Components/Admin/shared/ui/persian-date-picker';
 import { useState } from 'react';
@@ -10,9 +11,7 @@ export function DashboardFilters() {
         <Card className="p-5">
             <div className="mb-4">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">فیلتر بازه زمانی</h3>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    همان DatePicker شمسی Nexin — برای گزارش‌ها و فیلتر لیست‌ها
-                </p>
+     
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -22,7 +21,7 @@ export function DashboardFilters() {
 
             {(from || to) && (
                 <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-                    بازه انتخابی (میلادی برای API): {from || '—'} تا {to || '—'}
+                    بازه انتخابی: {formatAdminDateDisplay(from, 'short')} تا {formatAdminDateDisplay(to, 'short')}
                 </p>
             )}
         </Card>

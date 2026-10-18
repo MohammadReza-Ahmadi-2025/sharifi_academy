@@ -18,7 +18,7 @@ class CategoryPublicPresenter
         return [
             'id' => $category->id,
             'title' => $category->title,
-            'slug' => $category->slug,
+            'slug' => $category->publicSlug(),
             'description' => $category->description,
             'image_url' => $imageUrl !== '' ? $imageUrl : null,
             'seo' => CategorySeo::forCategoryShow($category),

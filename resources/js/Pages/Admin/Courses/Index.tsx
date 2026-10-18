@@ -16,17 +16,20 @@ import {
 } from '@/Components/Admin/shared/ui/table';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { BookOpen, Eye, Pencil, Plus, Trash2 } from 'lucide-react';
+import { BookOpen, Eye, Pencil, Plus, Trash2, Check, X } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent, useState } from 'react';
 
 type CourseRow = {
     id: number;
     title: string;
     slug: string;
+    status?: string;
     status_label: string;
     level_label: string | null;
     is_featured: boolean;
     classes_count: number;
+    creator_name?: string | null;
 };
 
 type PaginatedCourses = {
@@ -43,8 +46,20 @@ type Props = {
     courses: PaginatedCourses;
     filters: { search: string; status: string; per_page: number };
     statusOptions: { value: string; label: string }[];
-    abilities: { create: boolean; update: boolean; delete: boolean };
+    abilities: { create: boolean; update: boolean; delete: boolean; moderate: boolean };
+    pendingReviewCount: number;
 };
+
+function statusBadgeVariant(status?: string): 'info' | 'warning' | 'secondary' {
+    if (status === 'pending_review') {
+        return 'warning';
+    }
+    if (status === 'published') {
+        return 'info';
+    }
+
+    return 'secondary';
+}
 
 const emptyPaginated: PaginatedCourses = {
     data: [],
@@ -56,7 +71,8 @@ const emptyPaginated: PaginatedCourses = {
     to: null,
 };
 
-export default function CoursesIndex({ courses, filters, statusOptions, abilities }: Props) {
+export default function CoursesIndex({ courses, filters, statusOptions, abilities, pendingReviewCount }: Props) {
+    const confirmToast = useConfirmToast();
     const page = courses ?? emptyPaginated;
     const rows = page.data ?? [];
     const [search, setSearch] = useState(filters.search);
@@ -87,10 +103,9 @@ export default function CoursesIndex({ courses, filters, statusOptions, abilitie
     };
 
     const handleDelete = (course: CourseRow) => {
-        if (!window.confirm(`دوره «${course.title}» حذف شود؟`)) {
-            return;
-        }
+        confirmToast(`دوره «${course.title}» حذف شود؟`, () => {
         router.delete(`/admin/courses/${course.id}`, { preserveScroll: true });
+    });
     };
 
     return (
@@ -109,6 +124,32 @@ export default function CoursesIndex({ courses, filters, statusOptions, abilitie
                     ) : null
                 }
             />
+
+            {pendingReviewCount > 0 ? (
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+                    <p>
+                        <span className="font-semibold">{pendingReviewCount.toLocaleString('fa-IR')}</span>
+                        {' '}
+                        دوره در انتظار تایید انتشار است.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                        <AdminButton
+                            type="button"
+                            size="sm"
+                            variant={filters.status === 'pending_review' ? 'default' : 'outline'}
+                            onClick={() => {
+                                setStatus('pending_review');
+                                applyFilters({ status: 'pending_review', page: 1 });
+                            }}
+                        >
+                            فقط در انتظار تایید
+                        </AdminButton>
+                        <AdminButton href="/admin/instructor-moderation" size="sm" variant="outline">
+                            صف تایید اساتید
+                        </AdminButton>
+                    </div>
+                </div>
+            ) : null}
 
             <AdminListFilters
                 search={search}
@@ -165,12 +206,15 @@ export default function CoursesIndex({ courses, filters, statusOptions, abilitie
                                             {course.title}
                                         </div>
                                         <div className="text-xs text-slate-500" dir="ltr">{course.slug}</div>
+                                        {course.creator_name ? (
+                                            <div className="mt-0.5 text-xs text-slate-500">استاد: {course.creator_name}</div>
+                                        ) : null}
                                         {course.is_featured ? (
                                             <Badge variant="secondary" className="mt-1">ویژه</Badge>
                                         ) : null}
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant="info">{course.status_label}</Badge>
+                                        <Badge variant={statusBadgeVariant(course.status)}>{course.status_label}</Badge>
                                     </TableCell>
                                     <TableCell className="text-sm text-slate-600 dark:text-slate-300">
                                         {course.level_label ?? '—'}
@@ -178,6 +222,38 @@ export default function CoursesIndex({ courses, filters, statusOptions, abilitie
                                     <TableCell>{course.classes_count.toLocaleString('fa-IR')}</TableCell>
                                     <TableCell>
                                         <div className="flex items-center justify-end gap-1">
+                                            {abilities.moderate && course.status === 'pending_review' ? (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        title="تایید انتشار"
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+                                                        onClick={() =>
+                                                            router.post(
+                                                                `/admin/instructor-moderation/courses/${course.id}/approve`,
+                                                                {},
+                                                                { preserveScroll: true },
+                                                            )
+                                                        }
+                                                    >
+                                                        <Check className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        title="رد"
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                                                        onClick={() =>
+                                                            router.post(
+                                                                `/admin/instructor-moderation/courses/${course.id}/reject`,
+                                                                {},
+                                                                { preserveScroll: true },
+                                                            )
+                                                        }
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </button>
+                                                </>
+                                            ) : null}
                                             <Link
                                                 href={`/admin/courses/${course.id}`}
                                                 className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"

@@ -3,13 +3,13 @@
 namespace App\Modules\Menu\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Menu\Enums\MenuLocation;
 use App\Modules\Menu\Http\Requests\Admin\StoreMenuRequest;
 use App\Modules\Menu\Http\Requests\Admin\UpdateMenuRequest;
 use App\Modules\Menu\Models\Menu;
 use App\Modules\Menu\Services\MenuSyncService;
 use App\Modules\Menu\Support\AdminMenuEnumOptions;
 use App\Modules\Menu\Support\MenuPresenter;
+use App\Modules\Pages\Support\AdminPageOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -72,6 +72,7 @@ class MenuController extends Controller
         return Inertia::render('Admin/Menus/Create', [
             'locationOptions' => AdminMenuEnumOptions::locations(),
             'itemTypeOptions' => AdminMenuEnumOptions::itemTypes(),
+            'pageOptions' => AdminPageOptions::forSelect(),
         ]);
     }
 
@@ -103,6 +104,7 @@ class MenuController extends Controller
             'menu' => MenuPresenter::forForm($menu),
             'locationOptions' => AdminMenuEnumOptions::locations(),
             'itemTypeOptions' => AdminMenuEnumOptions::itemTypes(),
+            'pageOptions' => AdminPageOptions::forSelect(),
         ]);
     }
 

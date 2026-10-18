@@ -4,6 +4,7 @@ import {
     type HomeSectionFormData,
 } from '@/Components/Admin/Home/HomeSectionFormFields';
 import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
+import { AdminFormErrors } from '@/Components/Admin/shared/ui/admin-form-errors';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -34,17 +35,25 @@ export default function HomeSectionsCreate({ options, lookups }: Props) {
             <AdminFormPage
                 onSubmit={(e) => {
                     e.preventDefault();
-                    form.transform((data) => prepareHomeSectionFormPayload(data));
-                    form.post('/admin/home-sections', { forceFormData: true });
+                    const payload = prepareHomeSectionFormPayload(form.data);
+                    form.transform(() => payload as HomeSectionFormData);
+                    form.post('/admin/home-sections', {
+                        forceFormData: true,
+                        preserveScroll: true,
+                        onError: () => {
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        },
+                    });
                 }}
             >
+                <AdminFormErrors errors={form.errors} />
                 <HomeSectionFormFields
                     data={form.data}
                     errors={form.errors}
                     options={options}
                     lookups={lookups}
                     processing={form.processing}
-                    onChange={(patch) => form.setData({ ...form.data, ...patch })}
+                    onChange={(patch) => form.setData((prev) => ({ ...prev, ...patch }))}
                     onTabsChange={(tabs) => form.setData('tabs', tabs)}
                 />
                 <AdminFormActions>

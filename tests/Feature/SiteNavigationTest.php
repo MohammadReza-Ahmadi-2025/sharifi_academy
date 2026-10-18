@@ -24,6 +24,7 @@ class SiteNavigationTest extends TestCase
 
         $this->assertContains('خانه', $labels);
         $this->assertContains('دوره‌ها', $labels);
+        $this->assertContains('ورود / ثبت‌نام', $labels);
         $this->assertNull($nav['cta']);
     }
 
@@ -81,5 +82,60 @@ class SiteNavigationTest extends TestCase
 
         $nav = SiteNavigation::forUser(User::factory()->create());
         $this->assertContains('تست منو', collect($nav['items'])->pluck('label')->all());
+    }
+
+    public function test_authenticated_user_does_not_see_login_menu_item(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $user = User::factory()->create([
+            'name' => 'علی',
+            'family' => 'رضایی',
+        ]);
+        $user->syncRoles(['student']);
+
+        $nav = SiteNavigation::forUser($user);
+        $labels = collect($nav['items'])->pluck('label')->all();
+
+        $this->assertNotContains('ورود / ثبت‌نام', $labels);
+    }
+
+    public function test_mobile_menus_are_exposed_in_site_menus(): void
+    {
+        Menu::query()->create([
+            'title' => 'تب موبایل تست',
+            'url' => '/test-mobile-tab',
+            'icon' => 'shop',
+            'location' => MenuLocation::Mobile,
+            'sort' => 99,
+            'status' => true,
+        ]);
+
+        SiteMenuService::flush();
+
+        $mobile = app(SiteMenuService::class)->forLocation(MenuLocation::Mobile->value);
+        $tab = collect($mobile)->firstWhere('title', 'تب موبایل تست');
+
+        $this->assertNotNull($tab);
+        $this->assertSame('/test-mobile-tab', $tab['url']);
+        $this->assertSame('shop', $tab['icon']);
+    }
+
+    public function test_site_account_menu_is_shared_when_authenticated(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $user = User::factory()->create(['name' => 'مدیر', 'family' => 'سیستم']);
+        $user->syncRoles(['super-admin']);
+
+        $this->actingAs($user)
+            ->get('/')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('auth.account.display_name', 'مدیر سیستم')
+                ->where('auth.account.role_label', 'مدیر سیستم')
+                ->where('auth.account.panel.label', 'ورود به پنل ادمین')
+                ->where('auth.account.panel.url', '/admin')
+            );
     }
 }

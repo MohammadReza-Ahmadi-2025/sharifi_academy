@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Modules\Courses\Policies;
+
+use App\Models\User;
+use App\Modules\Courses\Models\ClassSession;
+use App\Modules\Courses\Models\Enrollment;
+class ClassSessionPolicy
+{
+    /**
+     * ورود به کلاس مجازی Adobe برای جلسهٔ کلاسی که دانشجو در آن ثبت‌نام قطعی دارد.
+     */
+    public function joinAdobe(User $user, ClassSession $classSession): bool
+    {
+        if ($user->hasRole('super-admin')) {
+            return true;
+        }
+
+        if (! $user->hasRole('student') || ! $user->can('student-panel-access')) {
+            return false;
+        }
+
+        return Enrollment::query()
+            ->confirmed()
+            ->where('user_id', $user->id)
+            ->where('course_class_id', $classSession->course_class_id)
+            ->exists();
+    }
+
+    /**
+     * مشاهدهٔ حضور و غیاب فقط برای استادی که در class_instructors همان کلاس ثبت شده است.
+     */
+    public function viewAttendance(User $user, ClassSession $classSession): bool
+    {
+        if ($user->hasRole('super-admin')) {
+            return true;
+        }
+
+        if (! $user->hasRole('instructor') || ! $user->can('instructor-panel-access')) {
+            return false;
+        }
+
+        $courseClass = $classSession->courseClass;
+
+        return $courseClass !== null && $courseClass->isTaughtBy($user);
+    }
+}

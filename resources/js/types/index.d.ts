@@ -15,6 +15,28 @@ export interface User {
     permissions: string[];
 }
 
+export type SiteAccountMenu = {
+    display_name: string;
+    role: string;
+    role_label: string;
+    profile_url: string;
+    panel: { label: string; url: string } | null;
+};
+
+export type UserNotificationItem = {
+    id: string;
+    title: string;
+    message: string;
+    created_at: string | null;
+    read: boolean;
+    url: string | null;
+};
+
+export type UserNotificationsPayload = {
+    unread_count: number;
+    items: UserNotificationItem[];
+};
+
 export type NavMegaLink = {
     label: string;
     url: string;
@@ -52,9 +74,19 @@ export type AdminPanelNavItem = {
     icon?: string;
 };
 
+export type CourseCategoryNavNode = {
+    id: number;
+    title: string;
+    slug: string;
+    url: string;
+    children: CourseCategoryNavNode[];
+};
+
 export type PageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
     auth: {
         user: User | null;
+        account: SiteAccountMenu | null;
+        notifications: UserNotificationsPayload | null;
     };
     flash: {
         success?: string;
@@ -89,5 +121,6 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
         label: string;
         target_blank: boolean;
     }>;
+    courseCategoryNav: CourseCategoryNavNode[];
     url: string;
 };

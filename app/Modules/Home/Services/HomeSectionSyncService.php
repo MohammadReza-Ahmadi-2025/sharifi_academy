@@ -2,6 +2,7 @@
 
 namespace App\Modules\Home\Services;
 
+use App\Models\User;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
@@ -20,6 +21,7 @@ class HomeSectionSyncService
             'post' => Post::class,
             'brand' => Brand::class,
             'category' => Category::class,
+            'instructor' => User::class,
             default => null,
         };
     }
@@ -141,6 +143,26 @@ class HomeSectionSyncService
 
         if (isset($settings['features']) && is_array($settings['features'])) {
             $normalized['features'] = array_values($settings['features']);
+        }
+
+        if (isset($settings['testimonials']) && is_array($settings['testimonials'])) {
+            $normalized['testimonials'] = array_values(array_map(function ($row) {
+                if (! is_array($row)) {
+                    return ['name' => '', 'role' => '', 'quote' => ''];
+                }
+
+                $rating = (int) ($row['rating'] ?? 5);
+                if ($rating < 1 || $rating > 5) {
+                    $rating = 5;
+                }
+
+                return [
+                    'name' => trim((string) ($row['name'] ?? '')),
+                    'role' => trim((string) ($row['role'] ?? '')),
+                    'quote' => trim((string) ($row['quote'] ?? '')),
+                    'rating' => $rating,
+                ];
+            }, $settings['testimonials']));
         }
 
         return $normalized;

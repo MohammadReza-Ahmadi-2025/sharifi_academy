@@ -12,10 +12,12 @@ import {
     SectionTabFeaturesGridField,
     type FeatureGridRow,
 } from '@/Components/Admin/Home/SectionTabFeaturesGridField';
+import { SectionTabTestimonialsField } from '@/Components/Admin/Home/SectionTabTestimonialsField';
 import {
     CATALOG_SWIPER_SLIDES_PER_VIEW_LG,
     defaultFeatureGridRows,
     defaultFeaturesTab,
+    defaultTestimonialsTab,
     defaultHeroSettings,
     formStateForTemplate,
     sectionTemplateId,
@@ -79,6 +81,7 @@ export type HomeSectionFormData = {
         section_template?: HomeSectionTemplateId;
         layout?: string;
         banner_layout?: string;
+        catalog_slides_per_view?: number;
         show_live_badge?: boolean;
         promo?: { title: string; text: string; link: string; image_url?: string | null };
         hero?: HomeHeroSettingsForm;
@@ -132,7 +135,7 @@ export function HomeSectionFormFields({ data, errors, options, lookups, processi
     const [tabDragIndex, setTabDragIndex] = useState<number | null>(null);
     const [tabDropIndex, setTabDropIndex] = useState<number | null>(null);
     const template = sectionTemplateId(data.settings as Record<string, unknown>, data.tabs);
-    const canManageTabs = template === 'catalog' || template === 'features';
+    const canManageTabs = template === 'catalog' || template === 'features' || template === 'testimonials';
     const showContentTypeSelect = template === 'catalog';
     const hero = { ...defaultHeroSettings(), ...(data.settings.hero ?? {}) };
     const settingsErrors = errors as Record<string, string>;
@@ -180,7 +183,12 @@ export function HomeSectionFormFields({ data, errors, options, lookups, processi
         if (patch.content_type === 'banner' || next.content_type === 'banner') {
             next.source_type = 'manual';
         }
-        if (patch.content_type === 'features' || next.content_type === 'features') {
+        if (
+            patch.content_type === 'features' ||
+            next.content_type === 'features' ||
+            patch.content_type === 'testimonials' ||
+            next.content_type === 'testimonials'
+        ) {
             next.source_type = 'section';
         }
 
@@ -227,10 +235,38 @@ export function HomeSectionFormFields({ data, errors, options, lookups, processi
                         />
                     </FormField>
                     {template === 'catalog' && (
-                        <p className="md:col-span-2 text-sm text-slate-600 dark:text-slate-400">
-                            نمایش به‌صورت اسلایدر (Swiper) — در دسکتاپ هم‌زمان حدود {CATALOG_SWIPER_SLIDES_PER_VIEW_LG} کارت دیده می‌شود؛
-                            تعداد آیتم هر تب را با «حداکثر آیتم» یا انتخاب دستی تنظیم کنید (تا ۵۰).
-                        </p>
+                        <>
+                            <FormField label="تعداد کارت در دسکتاپ (اسلایدر)" className="md:col-span-2">
+                                <Select
+                                    options={[2, 3, 4, 5, 6].map((n) => ({
+                                        value: String(n),
+                                        label: `${n} کارت هم‌زمان`,
+                                    }))}
+                                    value={findSelectOption(
+                                        [2, 3, 4, 5, 6].map((n) => ({
+                                            value: String(n),
+                                            label: `${n} کارت هم‌زمان`,
+                                        })),
+                                        String(data.settings.catalog_slides_per_view ?? CATALOG_SWIPER_SLIDES_PER_VIEW_LG),
+                                    )}
+                                    onChange={(opt) =>
+                                        onChange({
+                                            settings: {
+                                                ...data.settings,
+                                                catalog_slides_per_view: opt
+                                                    ? Number.parseInt(opt.value, 10)
+                                                    : CATALOG_SWIPER_SLIDES_PER_VIEW_LG,
+                                            },
+                                        })
+                                    }
+                                    isDisabled={processing}
+                                    isSearchable={false}
+                                />
+                            </FormField>
+                            <p className="md:col-span-2 text-sm text-slate-600 dark:text-slate-400">
+                                نمایش به‌صورت اسلایدر (Swiper)؛ تعداد آیتم هر تب را با «حداکثر آیتم» یا انتخاب دستی تنظیم کنید (تا ۵۰).
+                            </p>
+                        </>
                     )}
                     {template === 'banners' && (
                         <FormField label="چیدمان بنر" className="md:col-span-2">
@@ -249,6 +285,46 @@ export function HomeSectionFormFields({ data, errors, options, lookups, processi
                         <p className="md:col-span-2 text-sm text-slate-600 dark:text-slate-400">
                             هر تب یک گرید سه‌تایی جداگانه است؛ از بخش «تب‌های سکشن» تب اضافه کنید.
                         </p>
+                    )}
+                    {template === 'testimonials' && (
+                        <p className="md:col-span-2 text-sm text-slate-600 dark:text-slate-400">
+                            نام، نقش و متن هر نظر را در تب‌ها تعریف کنید (تا ۱۲ نظر در هر تب).
+                        </p>
+                    )}
+                    {template === 'instructors' && (
+                        <>
+                            <FormField label="تعداد کارت در دسکتاپ (اسلایدر)" className="md:col-span-2">
+                                <Select
+                                    options={[2, 3, 4, 5, 6].map((n) => ({
+                                        value: String(n),
+                                        label: `${n} کارت هم‌زمان`,
+                                    }))}
+                                    value={findSelectOption(
+                                        [2, 3, 4, 5, 6].map((n) => ({
+                                            value: String(n),
+                                            label: `${n} کارت هم‌زمان`,
+                                        })),
+                                        String(data.settings.catalog_slides_per_view ?? CATALOG_SWIPER_SLIDES_PER_VIEW_LG),
+                                    )}
+                                    onChange={(opt) =>
+                                        onChange({
+                                            settings: {
+                                                ...data.settings,
+                                                catalog_slides_per_view: opt
+                                                    ? Number.parseInt(opt.value, 10)
+                                                    : CATALOG_SWIPER_SLIDES_PER_VIEW_LG,
+                                            },
+                                        })
+                                    }
+                                    isDisabled={processing}
+                                    isSearchable={false}
+                                />
+                            </FormField>
+                            <p className="md:col-span-2 text-sm text-slate-600 dark:text-slate-400">
+                                کاربران با نقش «استاد» و وضعیت فعال. در حالت خودکار جدیدترین‌ها نمایش داده می‌شوند؛ با
+                                کلیک بازدیدکننده، رزومه عمومی استاد باز می‌شود.
+                            </p>
+                        </>
                     )}
                 </div>
             </Card>
@@ -384,7 +460,9 @@ export function HomeSectionFormFields({ data, errors, options, lookups, processi
                                 ...data.tabs,
                                 template === 'features'
                                     ? { ...defaultFeaturesTab(), sort_order: data.tabs.length }
-                                    : {
+                                    : template === 'testimonials'
+                                      ? { ...defaultTestimonialsTab(), sort_order: data.tabs.length }
+                                      : {
                                           ...defaultTab(),
                                           sort_order: data.tabs.length,
                                           limit: 12,
@@ -503,7 +581,7 @@ export function HomeSectionFormFields({ data, errors, options, lookups, processi
                                     />
                                 </FormField>
                             )}
-                            {!['banner', 'features'].includes(tab.content_type) && (
+                            {!['banner', 'features', 'testimonials'].includes(tab.content_type) && (
                                 <FormField label="روش نمایش">
                                     <Select
                                         options={sourceOptions}
@@ -519,11 +597,11 @@ export function HomeSectionFormFields({ data, errors, options, lookups, processi
                                     />
                                 </FormField>
                             )}
-                            {!['banner', 'features'].includes(tab.content_type) && (
+                            {!['banner', 'features', 'testimonials'].includes(tab.content_type) && (
                                 <FormField
                                     label="حداکثر آیتم"
                                     hint={
-                                        template === 'catalog'
+                                        template === 'catalog' || template === 'instructors'
                                             ? `در انتخاب دستی همه آیتم‌های انتخاب‌شده نمایش داده می‌شوند؛ در حالت خودکار تا این عدد`
                                             : undefined
                                     }
@@ -556,6 +634,15 @@ export function HomeSectionFormFields({ data, errors, options, lookups, processi
                                 <SectionTabFeaturesGridField
                                     tab={tab}
                                     disabled={processing}
+                                    error={tabErrors[`tabs.${index}.settings.features`]}
+                                    onChange={(settings) => updateTab(index, { settings })}
+                                />
+                            )}
+                            {template === 'testimonials' && tab.content_type === 'testimonials' && (
+                                <SectionTabTestimonialsField
+                                    tab={tab}
+                                    disabled={processing}
+                                    error={tabErrors[`tabs.${index}.settings.testimonials`]}
                                     onChange={(settings) => updateTab(index, { settings })}
                                 />
                             )}
@@ -705,6 +792,18 @@ export function sectionToFormData(section: {
             if (resolvedTemplate === 'features') {
                 content_type = 'features';
                 source_type = 'section';
+            }
+
+            if (resolvedTemplate === 'testimonials') {
+                content_type = 'testimonials';
+                source_type = 'section';
+            }
+
+            if (resolvedTemplate === 'instructors') {
+                content_type = 'instructor';
+                if (!allowedSourceTypeKeys('instructor').includes(source_type)) {
+                    source_type = defaultSourceTypeForContentType('instructor');
+                }
             }
 
             const tabSettings = { ...(tab.settings ?? {}) };

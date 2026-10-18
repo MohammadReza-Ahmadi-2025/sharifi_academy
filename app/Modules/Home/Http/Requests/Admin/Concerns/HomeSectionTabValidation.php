@@ -22,7 +22,7 @@ trait HomeSectionTabValidation
             'tabs.*.title' => ['nullable', 'string', 'max:255'],
             'tabs.*.content_type' => ['required', Rule::in($contentTypes)],
             'tabs.*.source_type' => ['required', Rule::in($sourceTypes)],
-            'tabs.*.limit' => ['nullable', 'integer', 'min:1', 'max:50'],
+            'tabs.*.limit' => ['nullable', 'integer', 'min:0', 'max:50'],
             'tabs.*.sort_order' => ['nullable', 'integer', 'min:0', 'max:999'],
             'tabs.*.is_active' => ['nullable', 'boolean'],
             'tabs.*.settings' => ['nullable', 'array'],
@@ -34,8 +34,17 @@ trait HomeSectionTabValidation
             'tabs.*.settings.features.*.label' => ['nullable', 'string', 'max:255'],
             'tabs.*.settings.features.*.text' => ['nullable', 'string', 'max:500'],
             'tabs.*.settings.features.*.image_url' => ['nullable', 'string', 'max:500'],
+            'tabs.*.settings.features.*.image_alt' => ['nullable', 'string', 'max:255'],
+            'tabs.*.settings.features.*.image_title' => ['nullable', 'string', 'max:255'],
             'tabs.*.settings.features.*.image' => ['nullable', 'array'],
             'tabs.*.settings.features.*.image.0.file' => ['nullable', 'image', 'max:5120'],
+            'tabs.*.settings.features.*.image.0.alt' => ['nullable', 'string', 'max:255'],
+            'tabs.*.settings.features.*.image.0.title' => ['nullable', 'string', 'max:255'],
+            'tabs.*.settings.testimonials' => ['nullable', 'array', 'max:12'],
+            'tabs.*.settings.testimonials.*.name' => ['nullable', 'string', 'max:120'],
+            'tabs.*.settings.testimonials.*.role' => ['nullable', 'string', 'max:160'],
+            'tabs.*.settings.testimonials.*.quote' => ['nullable', 'string', 'max:1200'],
+            'tabs.*.settings.testimonials.*.rating' => ['nullable', 'integer', 'min:1', 'max:5'],
             'tabs.*.manual_item_ids' => ['nullable', 'array'],
             'tabs.*.manual_item_ids.*' => ['integer', 'min:1'],
             'tabs.*.banners' => ['nullable', 'array'],
@@ -82,6 +91,37 @@ trait HomeSectionTabValidation
                     continue;
                 }
 
+                if ($contentType === 'testimonials') {
+                    if ($sourceType !== 'section') {
+                        $validator->errors()->add(
+                            "tabs.$index.source_type",
+                            'برای نظر کاربران، روش نمایش باید «تعریف در تنظیمات سکشن» باشد.',
+                        );
+                    }
+
+                    $rows = $tab['settings']['testimonials'] ?? [];
+                    $validCount = 0;
+                    if (is_array($rows)) {
+                        foreach ($rows as $row) {
+                            if (! is_array($row)) {
+                                continue;
+                            }
+                            if (filled($row['name'] ?? null) && filled($row['quote'] ?? null)) {
+                                $validCount++;
+                            }
+                        }
+                    }
+
+                    if ($validCount < 1) {
+                        $validator->errors()->add(
+                            "tabs.$index.settings.testimonials",
+                            'حداقل یک نظر با نام و متن کامل وارد کنید.',
+                        );
+                    }
+
+                    continue;
+                }
+
                 if ($contentType === 'features') {
                     if ($sourceType !== 'section') {
                         $validator->errors()->add(
@@ -98,6 +138,28 @@ trait HomeSectionTabValidation
                         );
                     }
 
+                    $hasImage = false;
+                    if (is_array($grid)) {
+                        foreach (array_values($grid) as $featureIndex => $feature) {
+                            if (! is_array($feature)) {
+                                continue;
+                            }
+
+                            $fileKey = "tabs.$index.settings.features.$featureIndex.image.0.file";
+                            if ($this->hasFile($fileKey) || filled($feature['image_url'] ?? null)) {
+                                $hasImage = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (! $hasImage) {
+                        $validator->errors()->add(
+                            "tabs.$index.settings.features",
+                            'حداقل یک تصویر برای گرید سه‌تایی بارگذاری کنید.',
+                        );
+                    }
+
                     continue;
                 }
 
@@ -107,6 +169,20 @@ trait HomeSectionTabValidation
                         "tabs.$index.source_type",
                         'روش نمایش انتخاب‌شده برای این نوع محتوا مجاز نیست.',
                     );
+                }
+
+                $limitedListTypes = array_merge(
+                    array_keys(AdminHomeEnumOptions::catalogTabContentTypes()),
+                    ['instructor'],
+                );
+                if (in_array($contentType, $limitedListTypes, true)) {
+                    $limit = (int) ($tab['limit'] ?? 0);
+                    if ($limit < 1) {
+                        $validator->errors()->add(
+                            "tabs.$index.limit",
+                            'حداکثر آیتم باید حداقل ۱ باشد.',
+                        );
+                    }
                 }
 
                 if ($sourceType !== 'manual') {

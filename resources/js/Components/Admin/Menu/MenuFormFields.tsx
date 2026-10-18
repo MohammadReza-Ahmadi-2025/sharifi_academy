@@ -32,11 +32,14 @@ export type MenuFormData = {
     items: MenuItemFormData[];
 };
 
+type PageOption = { value: number; label: string };
+
 type Props = {
     data: MenuFormData;
     errors: Record<string, string>;
     locationOptions: Option[];
     itemTypeOptions: Option[];
+    pageOptions: PageOption[];
     processing?: boolean;
     onChange: (key: keyof MenuFormData, value: unknown) => void;
     onItemsChange: (items: MenuItemFormData[]) => void;
@@ -47,6 +50,7 @@ export function MenuFormFields({
     errors,
     locationOptions,
     itemTypeOptions,
+    pageOptions,
     processing = false,
     onChange,
     onItemsChange,
@@ -55,6 +59,9 @@ export function MenuFormFields({
     const [itemDropIndex, setItemDropIndex] = useState<number | null>(null);
     const locationSelectOptions = mapToSelectOptions(locationOptions);
     const typeSelectOptions = mapToSelectOptions(itemTypeOptions);
+    const pageSelectOptions = mapToSelectOptions(
+        pageOptions.map((o) => ({ value: String(o.value), label: o.label })),
+    );
 
     const updateItem = (index: number, patch: Partial<MenuItemFormData>) => {
         const next = data.items.map((item, i) => (i === index ? { ...item, ...patch } : item));
@@ -84,6 +91,12 @@ export function MenuFormFields({
         <div className="space-y-6">
             <Card className="space-y-4 p-6">
                 <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">گروه منو</h2>
+                {data.location === 'mobile' && (
+                    <p className="text-sm text-slate-500">
+                        هر گروه با «لینک عنوان» یک تب در نوار پایین موبایل است؛ یا یک گروه با چند آیتم (بدون لینک عنوان)
+                        بسازید.
+                    </p>
+                )}
                 <div className="grid gap-4 md:grid-cols-2">
                     <FormField label="عنوان" required error={errors.title}>
                         <AdminInput
@@ -109,7 +122,15 @@ export function MenuFormFields({
                             onChange={(e) => onChange('url', e.target.value)}
                         />
                     </FormField>
-                    <FormField label="آیکن (کلاس یا نام)" error={errors.icon}>
+                    <FormField
+                        label="آیکن (کلاس یا نام)"
+                        error={errors.icon}
+                        hint={
+                            data.location === 'mobile'
+                                ? 'آیکن Lucide؛ برای باز شدن لیست دسته دوره‌ها در لینک عنوان بنویسید: #course-categories'
+                                : undefined
+                        }
+                    >
                         <AdminInput
                             value={data.icon}
                             disabled={processing}
@@ -245,6 +266,24 @@ export function MenuFormFields({
                                                         reference_id: e.target.value ? Number(e.target.value) : null,
                                                     })
                                                 }
+                                            />
+                                        </FormField>
+                                    )}
+                                    {item.type === 'page' && (
+                                        <FormField label="صفحه" required error={errors[`items.${index}.reference_id`]}>
+                                            <Select
+                                                isDisabled={processing}
+                                                options={pageSelectOptions}
+                                                value={findSelectOption(
+                                                    pageSelectOptions,
+                                                    item.reference_id ? String(item.reference_id) : '',
+                                                )}
+                                                onChange={(option) =>
+                                                    updateItem(index, {
+                                                        reference_id: option?.value ? Number(option.value) : null,
+                                                    })
+                                                }
+                                                placeholder="انتخاب صفحه"
                                             />
                                         </FormField>
                                     )}

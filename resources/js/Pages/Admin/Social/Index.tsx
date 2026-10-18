@@ -17,6 +17,7 @@ import {
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent, useState } from 'react';
 
 type Row = {
@@ -42,6 +43,7 @@ type Props = {
 };
 
 export default function SocialIndex({ socials, filters, abilities }: Props) {
+    const confirmToast = useConfirmToast();
     const [search, setSearch] = useState(filters.search);
     const [active, setActive] = useState(filters.active);
 
@@ -142,10 +144,9 @@ export default function SocialIndex({ socials, filters, abilities }: Props) {
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() =>
-                                                        window.confirm('حذف شود؟') &&
-                                                        router.delete(`/admin/socials/${row.id}`)
-                                                    }
-                                                >
+                                                        confirmToast('حذف شود؟', () => router.delete(`/admin/socials/${row.id}`))
+                                                }>
+                                                
                                                     <Trash2 className="size-4 text-red-600" />
                                                 </AdminButton>
                                             )}
@@ -171,4 +172,4 @@ export default function SocialIndex({ socials, filters, abilities }: Props) {
             </Card>
         </AdminLayout>
     );
-}
+    }

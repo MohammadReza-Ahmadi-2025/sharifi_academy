@@ -7,6 +7,7 @@ use App\Modules\Catalog\Http\Requests\Admin\StoreBrandRequest;
 use App\Modules\Catalog\Http\Requests\Admin\UpdateBrandRequest;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Support\BrandPresenter;
+use App\Support\SeoSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -69,7 +70,7 @@ class BrandController extends Controller
     public function store(StoreBrandRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $slug = $this->uniqueSlug($data['slug'] ?? Str::slug($data['title']));
+        $slug = $this->uniqueSlug($data['slug'] ?? $data['title']);
 
         $brand = Brand::query()->create([
             'title' => $data['title'],
@@ -150,7 +151,10 @@ class BrandController extends Controller
 
     private function uniqueSlug(string $base, ?int $ignoreId = null): string
     {
-        $slug = Str::slug($base) !== '' ? Str::slug($base) : Str::slug(Str::random(8));
+        $slug = SeoSlug::normalize($base);
+        if ($slug === '') {
+            $slug = SeoSlug::normalize(Str::random(8));
+        }
         $original = $slug;
         $counter = 1;
 

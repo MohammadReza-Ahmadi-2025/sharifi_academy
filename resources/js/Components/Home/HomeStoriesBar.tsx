@@ -1,3 +1,4 @@
+import { HomeHeroSectionShell } from '@/Components/Home/HomeHeroSectionShell';
 import { StoryViewer } from '@/Components/Home/StoryViewer';
 import type { StoryFeedGroup } from '@/Components/Home/stories-types';
 import { cn } from '@/lib/utils';
@@ -64,15 +65,16 @@ export function HomeStoriesBar({ initialGroups, isAuthenticated }: Props) {
 
     return (
         <>
-            <section className="border-b border-secondary/60 bg-neutral-white">
-                <div className="mx-auto max-w-6xl px-4 py-4">
-                    <div className="flex gap-4 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {sortedGroups.map((group, index) => (
-                            <StoryBubble key={group.user_id} group={group} onClick={() => openGroup(index)} />
-                        ))}
-                    </div>
+            <HomeHeroSectionShell compact>
+                <div
+                    className="flex gap-4 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    aria-label="استوری‌ها"
+                >
+                    {sortedGroups.map((group, index) => (
+                        <StoryBubble key={group.user_id} group={group} onClick={() => openGroup(index)} />
+                    ))}
                 </div>
-            </section>
+            </HomeHeroSectionShell>
 
             {activeGroup && (
                 <StoryViewer
@@ -88,16 +90,19 @@ export function HomeStoriesBar({ initialGroups, isAuthenticated }: Props) {
 }
 
 function StoryBubble({ group, onClick }: { group: StoryFeedGroup; onClick: () => void }) {
-    const ringClass = group.has_unseen
-        ? 'bg-gradient-to-tr from-primary via-amber-400 to-pink-500 p-[3px]'
-        : 'bg-neutral-black/15 p-[2px]';
-
     const ringImage = group.preview_url ?? group.user_avatar_url;
 
     return (
         <button type="button" onClick={onClick} className="flex w-[4.5rem] shrink-0 flex-col items-center gap-2">
-            <span className={cn('rounded-full', ringClass)}>
-                <span className="flex size-[4.25rem] items-center justify-center overflow-hidden rounded-full bg-neutral-white">
+            <span
+                className={cn(
+                    'box-border flex size-[4.5rem] shrink-0 items-center justify-center rounded-full p-[3px]',
+                    group.has_unseen
+                        ? 'bg-gradient-to-tr from-primary via-amber-400 to-pink-500'
+                        : 'bg-neutral-black/15',
+                )}
+            >
+                <span className="flex size-full items-center justify-center overflow-hidden rounded-full bg-neutral-white">
                     {ringImage ? (
                         <img src={ringImage} alt="" className="size-full object-cover" />
                     ) : (

@@ -8,6 +8,7 @@ enum MenuItemType: string
     case Internal = 'internal';
     case CategoryProduct = 'category_product';
     case CategoryCourse = 'category_course';
+    case Page = 'page';
 
     /**
      * @return array<string, string>
@@ -19,6 +20,7 @@ enum MenuItemType: string
             self::Internal->value => 'مسیر داخلی',
             self::CategoryProduct->value => 'دسته کتاب',
             self::CategoryCourse->value => 'دسته دوره',
+            self::Page->value => 'صفحه ثابت',
         ];
     }
 }

@@ -18,6 +18,7 @@ import {
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent, useState } from 'react';
 
 type Row = {
@@ -56,6 +57,7 @@ export default function BlogPostsIndex({
     statusOptions,
     abilities,
 }: Props) {
+    const confirmToast = useConfirmToast();
     const [search, setSearch] = useState(filters.search);
     const [status, setStatus] = useState(filters.status ?? '');
     const [categoryId, setCategoryId] = useState(filters.category_id ? String(filters.category_id) : '');
@@ -164,10 +166,9 @@ export default function BlogPostsIndex({
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() =>
-                                                        window.confirm('حذف شود؟') &&
-                                                        router.delete(`/admin/posts/${row.id}`)
-                                                    }
-                                                >
+                                                        confirmToast('حذف شود؟', () => router.delete(`/admin/posts/${row.id}`))
+                                                }>
+                                                
                                                     <Trash2 className="size-4 text-red-600" />
                                                 </AdminButton>
                                             )}
@@ -193,4 +194,4 @@ export default function BlogPostsIndex({
             </Card>
         </AdminLayout>
     );
-}
+    }

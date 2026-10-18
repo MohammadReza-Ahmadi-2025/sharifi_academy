@@ -13,6 +13,7 @@ import type { ExistingFilePayload } from '@/Components/shared/file-upload';
 import type { CatalogVariantAttribute } from '@/Components/Admin/Catalog/variant-attributes';
 import { Head, router, useForm } from '@inertiajs/react';
 import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { useMemo, useState } from 'react';
 
 type VariantRow = {
@@ -69,6 +70,7 @@ export default function ProductsEdit({
     variantAttributes,
     abilities,
 }: Props) {
+    const confirmToast = useConfirmToast();
     const [gallery, setGallery] = useGalleryUploadState(product.gallery ?? []);
     const initialVariantRows = useMemo(
         () => rowsFromServerVariants(variants, variantAttributes),
@@ -111,10 +113,12 @@ export default function ProductsEdit({
                         <AdminButton
                             variant="ghost"
                             onClick={() =>
-                                window.confirm('محصول حذف شود؟') &&
-                                router.delete(`/admin/catalog/products/${product.id}`)
+                                confirmToast('محصول حذف شود؟', () =>
+                                    router.delete(`/admin/catalog/products/${product.id}`),
+                                )
                             }
                         >
+                        
                             حذف محصول
                         </AdminButton>
                     ) : null

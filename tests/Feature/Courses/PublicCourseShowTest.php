@@ -14,6 +14,22 @@ class PublicCourseShowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_course_show_redirects_legacy_slug_with_spaces_to_canonical(): void
+    {
+        $course = Course::query()->create([
+            'title' => 'CATIA Training',
+            'slug' => 'CATIA Training',
+            'status' => CourseStatus::Published,
+            'published_at' => now(),
+        ]);
+
+        $this->get('/courses/CATIA%20Training')
+            ->assertRedirect('/courses/catia-training');
+
+        $this->get('/courses/catia-training')
+            ->assertOk();
+    }
+
     public function test_published_course_show_page_renders(): void
     {
         $course = Course::query()->create([

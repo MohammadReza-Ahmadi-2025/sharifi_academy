@@ -20,6 +20,7 @@ import {
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent, useState } from 'react';
 
 type Row = {
@@ -29,6 +30,7 @@ type Row = {
     parent_title: string | null;
     sort: number;
     status: number;
+    type: string;
     type_label: string;
 };
 
@@ -55,6 +57,7 @@ export default function CategoriesIndex({
     filters,
     abilities,
 }: Props) {
+    const confirmToast = useConfirmToast();
     const [search, setSearch] = useState(filters.search);
 
     const applyFilters = (overrides: Record<string, string | number | undefined> = {}) => {
@@ -94,7 +97,7 @@ export default function CategoriesIndex({
                     abilities.create ? (
                         <AdminButton href={`/admin/categories/create?type=${categoryType}`}>
                             <Plus className="size-4" />
-                            دسته {categoryTypeLabel}
+                            دسته جدید
                         </AdminButton>
                     ) : null
                 }
@@ -150,7 +153,7 @@ export default function CategoriesIndex({
                                                 <AdminButton
                                                     variant="ghost"
                                                     size="sm"
-                                                    href={`/admin/categories/${row.id}/edit?type=${categoryType}`}
+                                                    href={`/admin/categories/${row.id}/edit?type=${row.type}`}
                                                 >
                                                     <Pencil className="size-4" />
                                                 </AdminButton>
@@ -160,10 +163,11 @@ export default function CategoriesIndex({
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() =>
-                                                        window.confirm('حذف شود؟') &&
-                                                        router.delete(`/admin/categories/${row.id}`, {
-                                                            data: { type: categoryType },
-                                                        })
+                                                        confirmToast('اطمینان دارید که حذف شود؟', () =>
+                                                            router.delete(`/admin/categories/${row.id}`, {
+                                                                data: { type: categoryType },
+                                                            }),
+                                                        )
                                                     }
                                                 >
                                                     <Trash2 className="size-4 text-red-600" />
@@ -191,4 +195,4 @@ export default function CategoriesIndex({
             </Card>
         </AdminLayout>
     );
-}
+    }

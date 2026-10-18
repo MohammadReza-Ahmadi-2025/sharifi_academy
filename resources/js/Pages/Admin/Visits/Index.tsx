@@ -1,7 +1,7 @@
-import { formatPersianDateTime } from '@/Components/Admin/shared/lib/format-persian-datetime';
+import { formatGregorianApiDate, formatPersianDateTime } from '@/Components/Admin/shared/lib/format-persian-datetime';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { Card } from '@/Components/Admin/shared/ui/card';
-import { AdminInput } from '@/Components/Admin/shared/ui/input';
+import { PersianDatePicker } from '@/Components/Admin/shared/ui/persian-date-picker';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import { SimpleTablePagination } from '@/Components/Admin/shared/ui/simple-table-pagination';
 import {
@@ -160,14 +160,19 @@ export default function VisitsIndex({
                                 ))}
                             </select>
                         </div>
-                        <div>
-                            <label className="mb-1 block text-sm text-slate-600 dark:text-slate-400">از تاریخ</label>
-                            <AdminInput type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-                        </div>
-                        <div>
-                            <label className="mb-1 block text-sm text-slate-600 dark:text-slate-400">تا تاریخ</label>
-                            <AdminInput type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-                        </div>
+                        <PersianDatePicker
+                            label="از تاریخ"
+                            value={from}
+                            onChange={setFrom}
+                            placeholder="شروع بازه"
+                        />
+                        <PersianDatePicker
+                            label="تا تاریخ"
+                            value={to}
+                            onChange={setTo}
+                            min={from || undefined}
+                            placeholder="پایان بازه"
+                        />
                         <div className="flex items-end">
                             <AdminButton type="submit" className="w-full">اعمال فیلتر</AdminButton>
                         </div>
@@ -260,8 +265,8 @@ export default function VisitsIndex({
                             <div className="space-y-2">
                                 {dailyTrend.map((day) => (
                                     <div key={day.day} className="flex items-center gap-3 text-sm">
-                                        <span className="w-24 shrink-0 text-slate-500" dir="ltr">
-                                            {day.day}
+                                        <span className="w-28 shrink-0 text-slate-500">
+                                            {formatGregorianApiDate(day.day, 'short')}
                                         </span>
                                         <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                                             <div

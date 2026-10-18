@@ -3,6 +3,7 @@ export type HomeCatalogItem = {
     title: string;
     slug?: string;
     description?: string | null;
+    description_format?: 'plain' | 'html';
     subtitle?: string | null;
     price?: number;
     image_url?: string | null;
@@ -10,6 +11,8 @@ export type HomeCatalogItem = {
     published_at?: string | null;
     button_text?: string | null;
     button_link?: string | null;
+    resume_url?: string | null;
+    profile_url?: string | null;
 };
 
 export type HomeSectionTab = {
@@ -19,7 +22,19 @@ export type HomeSectionTab = {
     title_url?: string | null;
     view_all_url?: string | null;
     items: HomeCatalogItem[];
-    features?: { label: string; text: string; image_url?: string | null }[];
+    features?: {
+        label: string;
+        text: string;
+        image_url?: string | null;
+        image_alt?: string | null;
+        image_title?: string | null;
+    }[];
+    testimonials?: {
+        name: string;
+        role: string;
+        quote: string;
+        rating?: number;
+    }[];
 };
 
 export type HomeSection = {

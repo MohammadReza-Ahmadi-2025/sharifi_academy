@@ -19,12 +19,22 @@ export function withGalleryPayload(
 
     return {
         ...data,
-        [field]: items.map((item, index) => ({
-            id: item.existingFileId ?? null,
-            sort: index + 1,
-            alt: item.alt ?? '',
-            title: item.title ?? '',
-            file: item.file ?? null,
-        })),
+        [field]: items.map((item, index) => {
+            const entry: Record<string, unknown> = {
+                sort: index + 1,
+                alt: item.alt ?? '',
+                title: item.title ?? '',
+            };
+
+            if (item.existingFileId != null) {
+                entry.id = item.existingFileId;
+            }
+
+            if (item.file) {
+                entry.file = item.file;
+            }
+
+            return entry;
+        }),
     };
 }

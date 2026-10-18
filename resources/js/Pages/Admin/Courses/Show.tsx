@@ -7,6 +7,7 @@ import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import { Trash2 } from 'lucide-react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import type { ReactNode } from 'react';
 
 type Props = {
@@ -42,11 +43,11 @@ function MetaRow({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export default function CoursesShow({ course, abilities }: Props) {
+    const confirmToast = useConfirmToast();
     const handleDelete = () => {
-        if (!window.confirm(`دوره «${course.title}» حذف شود؟`)) {
-            return;
-        }
+        confirmToast(`دوره «${course.title}» حذف شود؟`, () => {
         router.delete(`/admin/courses/${course.id}`);
+    });
     };
 
     return (

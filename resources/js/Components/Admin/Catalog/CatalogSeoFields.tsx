@@ -56,6 +56,7 @@ export function CatalogSeoFields<T extends CatalogSeoFormData>({
                 </FormField>
                 <FormField label="توضیح متا (description)" className="md:col-span-2" error={errors.meta_description}>
                     <Textarea
+                        plain
                         rows={3}
                         value={data.meta_description}
                         disabled={processing}

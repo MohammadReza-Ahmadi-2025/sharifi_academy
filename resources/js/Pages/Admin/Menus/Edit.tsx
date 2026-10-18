@@ -18,9 +18,10 @@ type Props = {
     };
     locationOptions: { value: string; label: string }[];
     itemTypeOptions: { value: string; label: string }[];
+    pageOptions: { value: number; label: string }[];
 };
 
-export default function MenusEdit({ menu, locationOptions, itemTypeOptions }: Props) {
+export default function MenusEdit({ menu, locationOptions, itemTypeOptions, pageOptions }: Props) {
     const form = useForm({
         title: menu.title,
         url: menu.url,
@@ -43,6 +44,7 @@ export default function MenusEdit({ menu, locationOptions, itemTypeOptions }: Pr
                     errors={form.errors}
                     locationOptions={locationOptions}
                     itemTypeOptions={itemTypeOptions}
+                    pageOptions={pageOptions}
                     processing={form.processing}
                     onChange={(k, v) => form.setData(k, v as never)}
                     onItemsChange={(items) => form.setData('items', items)}

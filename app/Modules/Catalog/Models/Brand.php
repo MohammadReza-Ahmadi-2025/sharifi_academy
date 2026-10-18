@@ -2,11 +2,12 @@
 
 namespace App\Modules\Catalog\Models;
 
+use App\Modules\Visits\Concerns\HasVisits;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Modules\Visits\Concerns\HasVisits;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 #[Fillable([
     'title',
@@ -24,7 +25,27 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Brand extends Model
 {
     use HasVisits;
+    use Searchable;
     use SoftDeletes;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'slug' => $this->slug,
+            'description' => strip_tags((string) $this->description),
+            'status' => $this->status,
+        ];
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return (bool) $this->status;
+    }
 
     protected function casts(): array
     {

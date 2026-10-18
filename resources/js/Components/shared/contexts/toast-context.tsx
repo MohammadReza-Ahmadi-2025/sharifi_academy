@@ -7,7 +7,7 @@ import {
     useState,
     type ReactNode,
 } from 'react';
-import type { ShowToastInput, ToastItem, ToastVariant } from '@/types/toast';
+import type { ConfirmToastInput, ShowToastInput, ToastItem, ToastVariant } from '@/types/toast';
 
 type ToastInput = ShowToastInput | string;
 
@@ -19,6 +19,7 @@ type ToastContextValue = {
     error: (input: ToastInput) => void;
     info: (input: ToastInput) => void;
     warning: (input: ToastInput) => void;
+    confirm: (input: ConfirmToastInput) => void;
 };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -53,18 +54,59 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const show = useCallback(
-        (variant: ToastVariant, input: ShowToastInput) => {
+        (variant: ToastVariant, input: ShowToastInput, extra?: Partial<Pick<ToastItem, 'persistent' | 'actions'>>) => {
             const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
             setToasts((current) =>
-                [...current, { id, variant, exiting: false, ...input }].slice(-3),
+                [...current, { id, variant, exiting: false, ...input, ...extra }].slice(-3),
             );
 
-            const timerId = window.setTimeout(() => {
-                dismiss(id);
-            }, TOAST_DURATION_MS);
+            if (!extra?.persistent) {
+                const timerId = window.setTimeout(() => {
+                    dismiss(id);
+                }, TOAST_DURATION_MS);
 
-            timersRef.current.set(id, timerId);
+                timersRef.current.set(id, timerId);
+            }
+        },
+        [dismiss],
+    );
+
+    const confirm = useCallback(
+        (input: ConfirmToastInput) => {
+            const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const variant = input.variant ?? 'warning';
+
+            const runAndDismiss = (callback?: () => void) => {
+                dismiss(id);
+                callback?.();
+            };
+
+            setToasts((current) =>
+                [
+                    ...current,
+                    {
+                        id,
+                        variant,
+                        title: input.title,
+                        description: input.description,
+                        exiting: false,
+                        persistent: true,
+                        actions: [
+                            {
+                                label: input.cancelLabel ?? 'خیر',
+                                variant: 'ghost',
+                                onClick: () => runAndDismiss(input.onCancel),
+                            },
+                            {
+                                label: input.confirmLabel ?? 'بله',
+                                variant: 'danger',
+                                onClick: () => runAndDismiss(input.onConfirm),
+                            },
+                        ],
+                    },
+                ].slice(-3),
+            );
         },
         [dismiss],
     );
@@ -85,8 +127,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             error: createHandler('error'),
             info: createHandler('info'),
             warning: createHandler('warning'),
+            confirm,
         }),
-        [toasts, show, dismiss, createHandler],
+        [toasts, show, dismiss, createHandler, confirm],
     );
 
     return <ToastContext.Provider value={value}>{children}</ToastContext.Provider>;

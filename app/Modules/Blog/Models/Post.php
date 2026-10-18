@@ -9,6 +9,8 @@ use App\Modules\Comments\Models\Comment;
 use App\Modules\Files\Models\File;
 use App\Modules\Files\Services\MorphFileSyncService;
 use App\Modules\Visits\Concerns\HasVisits;
+use App\Support\Concerns\ResolvesSeoSlugRouteBinding;
+use App\Support\SeoSlug;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 #[Fillable([
     'author_id',
@@ -35,7 +38,42 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Post extends Model
 {
     use HasVisits;
+    use ResolvesSeoSlugRouteBinding;
+    use Searchable;
     use SoftDeletes;
+
+    public function publicSlug(): string
+    {
+        return SeoSlug::forUrl((string) $this->slug);
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'slug' => $this->slug,
+            'excerpt' => strip_tags((string) $this->excerpt),
+            'content' => strip_tags((string) $this->content),
+            'status' => $this->status?->value,
+            'published_at' => $this->published_at?->toIso8601String(),
+        ];
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return $this->status === PostStatus::Published
+            && $this->published_at !== null
+            && $this->published_at->lte(now());
+    }
 
     protected function casts(): array
     {

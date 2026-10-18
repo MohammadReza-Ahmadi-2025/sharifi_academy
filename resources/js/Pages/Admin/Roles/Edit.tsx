@@ -6,6 +6,7 @@ import { Card } from '@/Components/Admin/shared/ui/card';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router, useForm } from '@inertiajs/react';
+import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export default function RolesEdit({ role, permissionGroups, selectedPermissions, abilities }: Props) {
+    const confirmToast = useConfirmToast();
     const form = useForm({
         permissions: selectedPermissions,
     });
@@ -26,11 +28,12 @@ export default function RolesEdit({ role, permissionGroups, selectedPermissions,
     };
 
     const handleDelete = () => {
-        if (!abilities.delete || !window.confirm(`نقش «${role.label}» حذف شود؟`)) {
+        if (!abilities.delete) {
             return;
         }
-
+        confirmToast(`نقش «${role.label}» حذف شود؟`, () => {
         router.delete(`/admin/roles/${role.id}`);
+    });;
     };
 
     return (

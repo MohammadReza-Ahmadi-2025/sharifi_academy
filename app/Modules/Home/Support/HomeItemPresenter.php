@@ -2,6 +2,7 @@
 
 namespace App\Modules\Home\Support;
 
+use App\Models\User;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
@@ -9,6 +10,7 @@ use App\Modules\Catalog\Models\Product;
 use App\Modules\Courses\Enums\CourseClassStatus;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Home\Models\Banner;
+use App\Modules\Users\Support\UserAvatarMedia;
 use Illuminate\Support\Collection;
 
 class HomeItemPresenter
@@ -59,11 +61,14 @@ class HomeItemPresenter
         }
 
         if ($item instanceof Post) {
+            $intro = filled($item->excerpt) ? $item->excerpt : $item->content;
+
             return [
                 'id' => $item->id,
                 'title' => $item->title,
                 'slug' => $item->slug,
-                'description' => $item->excerpt,
+                'description' => $intro,
+                'description_format' => 'html',
                 'image_url' => $item->featuredImage?->publicUrl(),
                 'published_at' => $item->published_at?->toIso8601String(),
             ];
@@ -95,6 +100,20 @@ class HomeItemPresenter
                 'button_text' => $item->button_text,
                 'button_link' => $item->button_link,
                 'image_url' => $item->file?->publicUrl(),
+            ];
+        }
+
+        if ($item instanceof User) {
+            $fullName = trim(($item->name ?? '').' '.($item->family ?? '')) ?: 'استاد';
+            $avatar = UserAvatarMedia::payload($item);
+
+            return [
+                'id' => $item->id,
+                'title' => $fullName,
+                'subtitle' => $item->profile?->headline,
+                'image_url' => $avatar['url'] ?? null,
+                'resume_url' => route('instructors.resume', $item),
+                'profile_url' => route('instructors.show', $item),
             ];
         }
 

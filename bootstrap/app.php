@@ -3,6 +3,8 @@
 use App\Http\Middleware\EnsureSiteNotInMaintenance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\Admin\Http\Middleware\EnsureAdminPanelAccess;
+use App\Modules\Courses\Http\Middleware\EnsureInstructorPanelAccess;
+use App\Modules\Courses\Http\Middleware\EnsureStudentPanelAccess;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,6 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
         then: function () {
             Route::middleware('web')
                 ->group(base_path('routes/admin.php'));
+
+            Route::middleware('web')
+                ->group(base_path('routes/instructor.php'));
+
+            Route::middleware('web')
+                ->group(base_path('routes/student.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -31,6 +39,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin.panel' => EnsureAdminPanelAccess::class,
+            'instructor.panel' => EnsureInstructorPanelAccess::class,
+            'student.panel' => EnsureStudentPanelAccess::class,
             'permission' => PermissionMiddleware::class,
             'role' => RoleMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,

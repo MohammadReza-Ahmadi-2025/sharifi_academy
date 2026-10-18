@@ -14,9 +14,9 @@ use App\Modules\Catalog\Support\AdminCatalogEnumOptions;
 use App\Modules\Catalog\Support\ProductPresenter;
 use App\Modules\Catalog\Support\VariantAttributeCatalog;
 use App\Modules\Files\Http\Concerns\SyncsMorphFilesFromRequest;
+use App\Support\SeoSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -97,7 +97,7 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $slug = $this->uniqueProductSlug($data['slug'] ?? Str::slug($data['title']));
+        $slug = $this->uniqueProductSlug($data['slug'] ?? $data['title']);
 
         $product = Product::query()->create([
             ...$this->productPayload($data, $slug),
@@ -146,7 +146,7 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
         $data = $request->validated();
-        $slug = $data['slug'] ?? $product->slug;
+        $slug = SeoSlug::normalize((string) ($data['slug'] ?? $product->slug));
 
         if ($slug !== $product->slug) {
             $slug = $this->uniqueProductSlug($slug, $product->id);
@@ -241,6 +241,11 @@ class ProductController extends Controller
 
     private function uniqueProductSlug(string $slug, ?int $ignoreId = null): string
     {
+        $slug = SeoSlug::normalize($slug);
+        if ($slug === '') {
+            $slug = 'product';
+        }
+
         $baseSlug = $slug;
         $counter = 1;
 

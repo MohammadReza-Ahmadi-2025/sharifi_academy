@@ -14,9 +14,14 @@ export type PublicCourseComment = {
 };
 
 type Props = {
-    courseSlug: string;
+    courseSlug?: string;
+    submitUrl?: string;
     comments: PublicCourseComment[];
     summary: { count: number; average_rating: number | null };
+    sectionId?: string;
+    title?: string;
+    showRating?: boolean;
+    placeholder?: string;
 };
 
 function formatDate(iso: string | null) {
@@ -75,20 +80,24 @@ function CommentItem({ comment, depth = 0 }: { comment: PublicCourseComment; dep
 }
 
 function CommentForm({
-    courseSlug,
+    submitUrl,
     rating,
     setRating,
+    showRating,
+    placeholder,
 }: {
-    courseSlug: string;
+    submitUrl: string;
     rating: number | null;
     setRating: (value: number | null) => void;
+    showRating: boolean;
+    placeholder: string;
 }) {
     const form = useForm({ body: '', rating: null as number | null });
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         form.transform((data) => ({ ...data, rating }));
-        form.post(`/courses/${courseSlug}/comments`, {
+        form.post(submitUrl, {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();
@@ -100,31 +109,33 @@ function CommentForm({
     return (
         <form onSubmit={submit} className="rounded-2xl border border-secondary bg-neutral-white p-5 shadow-sm lg:p-6">
             <p className="mb-4 text-base font-extrabold text-neutral-black">ثبت نظر شما</p>
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-                <span className="text-xs text-neutral-black/60 sm:text-sm">امتیاز (اختیاری):</span>
-                {Array.from({ length: 5 }).map((_, index) => {
-                    const star = index + 1;
-                    const active = rating !== null && star <= rating;
+            {showRating ? (
+                <div className="mb-4 flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-neutral-black/60 sm:text-sm">امتیاز (اختیاری):</span>
+                    {Array.from({ length: 5 }).map((_, index) => {
+                        const star = index + 1;
+                        const active = rating !== null && star <= rating;
 
-                    return (
-                        <button
-                            key={star}
-                            type="button"
-                            aria-label={`امتیاز ${star}`}
-                            className="rounded p-0.5 text-amber-500 transition hover:scale-110"
-                            onClick={() => setRating(star)}
-                        >
-                            <Star className={`size-6 ${active ? 'fill-current' : 'fill-none opacity-35'}`} />
-                        </button>
-                    );
-                })}
-            </div>
+                        return (
+                            <button
+                                key={star}
+                                type="button"
+                                aria-label={`امتیاز ${star}`}
+                                className="rounded p-0.5 text-amber-500 transition hover:scale-110"
+                                onClick={() => setRating(star)}
+                            >
+                                <Star className={`size-6 ${active ? 'fill-current' : 'fill-none opacity-35'}`} />
+                            </button>
+                        );
+                    })}
+                </div>
+            ) : null}
             <Textarea
                 plain
                 rows={5}
                 value={form.data.body}
                 disabled={form.processing}
-                placeholder="تجربه خود از این دوره را بنویسید..."
+                placeholder={placeholder}
                 className="min-h-[8rem] text-base"
                 onChange={(e) => form.setData('body', e.target.value)}
             />
@@ -143,16 +154,26 @@ function CommentForm({
     );
 }
 
-export function CourseCommentsSection({ courseSlug, comments, summary }: Props) {
+export function CourseCommentsSection({
+    courseSlug,
+    submitUrl,
+    comments,
+    summary,
+    sectionId = 'course-comments',
+    title = 'نظرات شرکت‌کنندگان',
+    showRating = true,
+    placeholder = 'تجربه خود از این دوره را بنویسید...',
+}: Props) {
     const { auth } = usePage<PageProps>().props;
     const [rating, setRating] = useState<number | null>(null);
+    const postUrl = submitUrl ?? (courseSlug ? `/courses/${courseSlug}/comments` : '');
 
     return (
-        <section id="course-comments" className="scroll-mt-24">
+        <section id={sectionId} className="scroll-mt-24">
             <div className="mb-8">
                 <h2 className="flex items-center gap-2 text-xl font-extrabold text-neutral-black sm:text-2xl">
                     <MessageSquare className="size-6 text-primary" />
-                    نظرات شرکت‌کنندگان
+                    {title}
                 </h2>
                 {summary.count > 0 && (
                     <p className="mt-2 text-sm text-neutral-black/65 sm:text-base">
@@ -168,7 +189,13 @@ export function CourseCommentsSection({ courseSlug, comments, summary }: Props) 
                 {/* راست در RTL: فرم ثبت نظر */}
                 <aside className="order-2 lg:order-none lg:sticky lg:top-24">
                     {auth.user ? (
-                        <CommentForm courseSlug={courseSlug} rating={rating} setRating={setRating} />
+                        <CommentForm
+                            submitUrl={postUrl}
+                            rating={rating}
+                            setRating={setRating}
+                            showRating={showRating}
+                            placeholder={placeholder}
+                        />
                     ) : (
                         <p className="rounded-2xl border border-dashed border-secondary bg-neutral-white px-4 py-8 text-center text-sm text-neutral-black/70 sm:text-base">
                             برای ثبت نظر{' '}
