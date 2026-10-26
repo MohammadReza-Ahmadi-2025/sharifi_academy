@@ -146,11 +146,10 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
         $data = $request->validated();
-        $slug = SeoSlug::normalize((string) ($data['slug'] ?? $product->slug));
-
-        if ($slug !== $product->slug) {
-            $slug = $this->uniqueProductSlug($slug, $product->id);
-        }
+        $slug = $this->uniqueProductSlug(
+            (string) ($data['slug'] ?? $product->slug),
+            $product->id,
+        );
 
         $product->update([
             ...$this->productPayload($data, $slug),

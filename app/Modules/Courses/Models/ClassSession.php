@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'session_number',
     'title',
     'description',
+    'video_url',
     'status',
     'scheduled_start_at',
     'scheduled_end_at',

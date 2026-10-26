@@ -86,15 +86,18 @@ export function SiteHeaderAccountMenu({ className, onNavigate, variant = 'header
                 </div>
 
                 <div className="p-2">
-                    {account.panel && (
-                        <Link
-                            href={account.panel.url}
-                            onClick={close}
-                            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-neutral-black transition hover:bg-surface-muted"
-                        >
-                            <LayoutDashboard className="size-4 text-primary" />
-                            {account.panel.label}
-                        </Link>
+                    {(account.panels?.length ? account.panels : account.panel ? [account.panel] : []).map(
+                        (panel) => (
+                            <Link
+                                key={panel.url}
+                                href={panel.url}
+                                onClick={close}
+                                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-neutral-black transition hover:bg-surface-muted"
+                            >
+                                <LayoutDashboard className="size-4 text-primary" />
+                                {panel.label}
+                            </Link>
+                        ),
                     )}
 
                     <Link

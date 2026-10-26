@@ -15,7 +15,7 @@ import {
     TableRow,
 } from '@/Components/Admin/shared/ui/table';
 import { router, useForm } from '@inertiajs/react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent } from 'react';
 
@@ -23,26 +23,31 @@ type AdobeRoomRow = {
     id: number;
     sco_id: string;
     url_path: string;
+    meeting_url?: string | null;
     status_label: string;
 };
 
 type Props = {
+    routePrefix: string;
     courseId: number;
     classId: number;
     rooms: AdobeRoomRow[];
     adobeAccessOptions: { value: string; label: string }[];
     adobeStatusOptions: { value: string; label: string }[];
     canCreate: boolean;
+    canUpdate: boolean;
     canDelete: boolean;
 };
 
 export function ClassAdobeRoomPanel({
+    routePrefix,
     courseId,
     classId,
     rooms,
     adobeAccessOptions,
     adobeStatusOptions,
     canCreate,
+    canUpdate,
     canDelete,
 }: Props) {
     const confirmToast = useConfirmToast();
@@ -50,7 +55,7 @@ export function ClassAdobeRoomPanel({
         return null;
     }
 
-    const baseUrl = `/admin/courses/${courseId}/classes/${classId}/adobe-rooms`;
+    const baseUrl = `${routePrefix}/courses/${courseId}/classes/${classId}/adobe-rooms`;
     const accessOptions = mapToSelectOptions(adobeAccessOptions);
     const statusOptions = mapToSelectOptions(adobeStatusOptions);
 
@@ -97,7 +102,7 @@ export function ClassAdobeRoomPanel({
                                 onChange={(e) => form.setData('sco_id', e.target.value)}
                             />
                         </FormField>
-                        <FormField label="URL path" htmlFor="adobe-path" required error={form.errors.url_path}>
+                        <FormField label="URL path" htmlFor="adobe-path" hint="اختیاری؛ با sco-id از API دریافت می‌شود" error={form.errors.url_path}>
                             <AdminInput
                                 id="adobe-path"
                                 dir="ltr"
@@ -107,7 +112,7 @@ export function ClassAdobeRoomPanel({
                                 onChange={(e) => form.setData('url_path', e.target.value)}
                             />
                         </FormField>
-                        <FormField label="Meeting URL" htmlFor="adobe-meeting" required className="md:col-span-2" error={form.errors.meeting_url}>
+                        <FormField label="Meeting URL" htmlFor="adobe-meeting" hint="اختیاری؛ از API ساخته می‌شود" className="md:col-span-2" error={form.errors.meeting_url}>
                             <AdminInput
                                 id="adobe-meeting"
                                 dir="ltr"
@@ -155,12 +160,12 @@ export function ClassAdobeRoomPanel({
                         <TableHead>SCO ID</TableHead>
                         <TableHead>مسیر</TableHead>
                         <TableHead>وضعیت</TableHead>
-                        {canDelete ? <TableHead className="w-20 text-left">عملیات</TableHead> : null}
+                        {canUpdate || canDelete ? <TableHead className="w-32 text-left">عملیات</TableHead> : null}
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {rooms.length === 0 ? (
-                        <TableEmptyState colSpan={canDelete ? 4 : 3} title="اتاقی ثبت نشده" description="فرم بالا را پر کنید." />
+                        <TableEmptyState colSpan={canUpdate || canDelete ? 4 : 3} title="اتاقی ثبت نشده" description="فرم بالا را پر کنید." />
                     ) : (
                         rooms.map((room) => (
                             <TableRow key={room.id}>
@@ -169,8 +174,20 @@ export function ClassAdobeRoomPanel({
                                 <TableCell>
                                     <Badge variant="info">{room.status_label}</Badge>
                                 </TableCell>
-                                {canDelete ? (
-                                    <TableCell>
+                                {canUpdate || canDelete ? (
+                                    <TableCell className="flex gap-1">
+                                        {canUpdate ? (
+                                            <AdminButton
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                aria-label="سینک اتاق از Adobe"
+                                                onClick={() => router.post(`${baseUrl}/${room.id}/sync`, {}, { preserveScroll: true })}
+                                            >
+                                                <RefreshCw className="h-4 w-4 text-indigo-600" />
+                                            </AdminButton>
+                                        ) : null}
+                                        {canDelete ? (
                                         <AdminButton
                                             type="button"
                                             variant="ghost"
@@ -180,6 +197,7 @@ export function ClassAdobeRoomPanel({
                                         >
                                             <Trash2 className="h-4 w-4 text-rose-600" />
                                         </AdminButton>
+                                        ) : null}
                                     </TableCell>
                                 ) : null}
                             </TableRow>

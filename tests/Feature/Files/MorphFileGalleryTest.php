@@ -58,9 +58,17 @@ class MorphFileGalleryTest extends TestCase
         $product = Product::query()->where('title', 'محصول گالری')->firstOrFail();
         $this->assertSame(2, $product->gallery()->count());
 
+        $courseCategory = Category::query()->create([
+            'type' => Category::TYPE_COURSE,
+            'title' => 'دسته دوره',
+            'slug' => 'course-gallery-category',
+            'status' => true,
+        ]);
+
         $this->actingAs($admin)->post('/admin/courses', [
             'title' => 'دوره گالری',
             'status' => CourseStatus::Draft->value,
+            'category_ids' => [$courseCategory->id],
             'gallery' => [
                 0 => [
                     'file' => UploadedFile::fake()->image('c1.jpg'),

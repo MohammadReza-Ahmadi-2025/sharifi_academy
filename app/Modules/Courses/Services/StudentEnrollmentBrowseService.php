@@ -20,6 +20,10 @@ class StudentEnrollmentBrowseService
                 'courseClass.course',
                 'courseClass.classLevelAdobeRooms',
                 'courseClass.classSessions.adobeRooms',
+                'courseClass.classSessions.adobeRecordings' => fn ($query) => $query
+                    ->where('is_public', true)
+                    ->whereNotNull('playback_url')
+                    ->where('is_passcode_protected', false),
             ])
             ->orderByDesc('confirmed_at')
             ->orderByDesc('id')

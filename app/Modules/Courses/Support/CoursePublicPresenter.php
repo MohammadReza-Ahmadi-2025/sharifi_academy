@@ -2,9 +2,11 @@
 
 namespace App\Modules\Courses\Support;
 
-use App\Modules\Comments\Support\PublicCommentThreads;
-use App\Modules\Courses\Enums\CourseStatus;
 use App\Models\User;
+use App\Modules\Comments\Support\PublicCommentThreads;
+use App\Modules\Courses\Enums\CourseClassDeliveryType;
+use App\Modules\Courses\Enums\CourseClassOnlinePlatform;
+use App\Modules\Courses\Enums\CourseStatus;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
 use Illuminate\Support\Collection;
@@ -68,10 +70,19 @@ class CoursePublicPresenter
             'classes' => $publicClasses->map(function (CourseClass $class) {
                 $schedule = CourseClassPublicSchedule::forClass($class);
 
+                $deliveryType = $class->delivery_type;
+                $showOnlinePlatform = in_array($deliveryType, [
+                    CourseClassDeliveryType::Online,
+                    CourseClassDeliveryType::Hybrid,
+                ], true);
+
                 return [
                     'id' => $class->id,
                     'name' => $class->name,
                     'delivery_type_label' => $class->delivery_type_label,
+                    'online_platform_label' => $showOnlinePlatform
+                        ? ($class->online_platform?->label() ?? CourseClassOnlinePlatform::AdobeConnect->label())
+                        : null,
                     'price' => is_numeric($class->price) ? (int) $class->price : null,
                     'location' => $class->location,
                     'schedule_status' => $schedule['status'],

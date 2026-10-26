@@ -16,6 +16,8 @@ import {
 } from '@/Components/Admin/shared/ui/table';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
+import { Select } from '@/Components/Admin/shared/ui/select';
+import { mapToSelectOptions, findSelectOption } from '@/Components/Admin/shared/lib/select-options';
 import { FormEvent, useState } from 'react';
 
 type EnrollmentRow = {
@@ -39,17 +41,27 @@ type Props = {
         per_page: number;
         total: number;
     };
-    filters: { search: string; per_page: number };
+    filters: { search: string; status: string; per_page: number };
+    statusOptions: { value: string; label: string }[];
     abilities: { create: boolean };
 };
 
-export default function CourseEnrollmentsIndex({ enrollments, filters, abilities }: Props) {
+const ALL_STATUS = { value: 'all', label: 'همه وضعیت‌ها' };
+
+export default function CourseEnrollmentsIndex({ enrollments, filters, statusOptions, abilities }: Props) {
     const [search, setSearch] = useState(filters.search);
+    const [status, setStatus] = useState(filters.status);
+    const statusSelectOptions = mapToSelectOptions([ALL_STATUS, ...statusOptions]);
 
     const apply = (overrides: Record<string, string | number | undefined> = {}) => {
         router.get(
             '/admin/course-enrollments',
-            { search: search || undefined, per_page: filters.per_page, ...overrides },
+            {
+                search: search || undefined,
+                status: status || undefined,
+                per_page: filters.per_page,
+                ...overrides,
+            },
             { preserveState: true, replace: true },
         );
     };
@@ -80,10 +92,20 @@ export default function CourseEnrollmentsIndex({ enrollments, filters, abilities
                     }}
                     onClear={() => {
                         setSearch('');
-                        router.get('/admin/course-enrollments');
+                        setStatus('pending');
+                        router.get('/admin/course-enrollments', { status: 'pending', per_page: filters.per_page });
                     }}
                     searchPlaceholder="جستجو کاربر، دوره یا کلاس…"
-                />
+                >
+                    <div className="lg:col-span-3">
+                        <Select
+                            placeholder="وضعیت"
+                            options={statusSelectOptions}
+                            value={findSelectOption(statusSelectOptions, status)}
+                            onChange={(option) => setStatus(String(option?.value ?? 'pending'))}
+                        />
+                    </div>
+                </AdminListFilters>
 
                 <Table>
                     <TableHeader>
@@ -119,7 +141,15 @@ export default function CourseEnrollmentsIndex({ enrollments, filters, abilities
                                         ) : null}
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant={row.status === 'confirmed' ? 'success' : 'secondary'}>
+                                        <Badge
+                                            variant={
+                                                row.status === 'confirmed'
+                                                    ? 'success'
+                                                    : row.status === 'pending'
+                                                      ? 'secondary'
+                                                      : 'destructive'
+                                            }
+                                        >
                                             {row.status_label}
                                         </Badge>
                                     </TableCell>

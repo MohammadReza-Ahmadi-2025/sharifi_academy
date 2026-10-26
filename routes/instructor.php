@@ -1,5 +1,8 @@
 <?php
 
+use App\Modules\AdobeConnect\Http\Controllers\Admin\AdobeRecordingController;
+use App\Modules\AdobeConnect\Http\Controllers\Admin\AdobeRoomController;
+use App\Modules\AdobeConnect\Http\Controllers\Admin\AdobeSyncController;
 use App\Modules\Courses\Http\Controllers\Admin\ClassSessionController;
 use App\Modules\Courses\Http\Controllers\Admin\CourseClassController;
 use App\Modules\Courses\Http\Controllers\Instructor\CourseController;
@@ -78,6 +81,39 @@ Route::prefix('instructor')
         Route::middleware('permission:class-sessions-delete')->group(function () {
             Route::delete('courses/{course}/classes/{courseClass}/sessions/{classSession}', [ClassSessionController::class, 'destroy'])
                 ->name('courses.classes.sessions.destroy');
+        });
+
+        Route::middleware('permission:adobe-rooms-create')->group(function () {
+            Route::post('courses/{course}/classes/{courseClass}/adobe-rooms', [AdobeRoomController::class, 'storeForClass'])
+                ->name('courses.classes.adobe-rooms.store');
+            Route::post('courses/{course}/classes/{courseClass}/sessions/{classSession}/adobe-rooms', [AdobeRoomController::class, 'storeForSession'])
+                ->name('courses.classes.sessions.adobe-rooms.store');
+        });
+
+        Route::middleware('permission:adobe-rooms-update')->group(function () {
+            Route::post('courses/{course}/classes/{courseClass}/adobe-rooms/{adobeRoom}/sync', [AdobeSyncController::class, 'syncRoom'])
+                ->name('courses.classes.adobe-rooms.sync');
+            Route::post('courses/{course}/classes/{courseClass}/sessions/{classSession}/adobe-rooms/{adobeRoom}/sync', [AdobeSyncController::class, 'syncSessionRoom'])
+                ->name('courses.classes.sessions.adobe-rooms.sync');
+        });
+
+        Route::middleware('permission:adobe-rooms-delete')->group(function () {
+            Route::delete('courses/{course}/classes/{courseClass}/adobe-rooms/{adobeRoom}', [AdobeRoomController::class, 'destroyForClass'])
+                ->name('courses.classes.adobe-rooms.destroy');
+            Route::delete('courses/{course}/classes/{courseClass}/sessions/{classSession}/adobe-rooms/{adobeRoom}', [AdobeRoomController::class, 'destroyForSession'])
+                ->name('courses.classes.sessions.adobe-rooms.destroy');
+        });
+
+        Route::middleware('permission:adobe-recordings-create')->group(function () {
+            Route::post('courses/{course}/classes/{courseClass}/sessions/{classSession}/adobe-recordings', [AdobeRecordingController::class, 'store'])
+                ->name('courses.classes.sessions.adobe-recordings.store');
+            Route::post('courses/{course}/classes/{courseClass}/sessions/{classSession}/adobe-recordings/sync', [AdobeSyncController::class, 'syncSessionRecordings'])
+                ->name('courses.classes.sessions.adobe-recordings.sync');
+        });
+
+        Route::middleware('permission:adobe-recordings-delete')->group(function () {
+            Route::delete('courses/{course}/classes/{courseClass}/sessions/{classSession}/adobe-recordings/{adobeRecording}', [AdobeRecordingController::class, 'destroy'])
+                ->name('courses.classes.sessions.adobe-recordings.destroy');
         });
 
         Route::middleware('permission:class-sessions-index')->group(function () {

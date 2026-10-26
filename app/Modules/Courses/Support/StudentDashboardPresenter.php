@@ -2,7 +2,7 @@
 
 namespace App\Modules\Courses\Support;
 
-use App\Modules\AdobeConnect\Support\AdobeConnectJoinUrl;
+use App\Modules\Courses\Enums\CourseClassOnlinePlatform;
 use App\Modules\Courses\Models\ClassSession;
 use App\Modules\Courses\Models\CourseClass;
 use App\Modules\Courses\Models\Enrollment;
@@ -19,7 +19,10 @@ final class StudentDashboardPresenter
      *         id: int,
      *         title: string,
      *         starts_at: string|null,
-     *         adobe_connect_url: string|null
+     *         join_url: string|null,
+     *         join_label: string|null,
+     *         adobe_connect_url: string|null,
+     *         recordings: list<array{id: int, name: string, playback_url: string, download_url: string|null}>
      *     }>
      * }>
      */
@@ -43,19 +46,42 @@ final class StudentDashboardPresenter
                     'sessions' => $sessions
                         ->map(function (ClassSession $session) use ($courseClassModel): array {
                             $joinTarget = $courseClassModel !== null
-                                ? AdobeConnectJoinUrl::forSession($session, $courseClassModel)
+                                ? ClassSessionJoinUrl::externalTarget($session, $courseClassModel)
                                 : null;
+
+                            $platform = $courseClassModel?->online_platform ?? CourseClassOnlinePlatform::AdobeConnect;
+                            $internalJoinUrl = $joinTarget !== null && $courseClassModel !== null
+                                ? route('student.sessions.join', [
+                                    'courseClass' => $courseClassModel->id,
+                                    'classSession' => $session->id,
+                                ])
+                                : null;
+                            $joinLabel = $courseClassModel !== null && $joinTarget !== null
+                                ? ClassSessionJoinUrl::joinLabel($courseClassModel)
+                                : null;
+
+                            $recordings = $platform === CourseClassOnlinePlatform::VideoLink
+                                ? collect()
+                                : ($session->adobeRecordings ?? collect());
 
                             return [
                                 'id' => $session->id,
                                 'title' => (string) $session->title,
                                 'starts_at' => $session->scheduled_start_at?->toIso8601String(),
-                                'adobe_connect_url' => $joinTarget !== null && $courseClassModel !== null
-                                    ? route('student.sessions.adobe', [
-                                        'courseClass' => $courseClassModel->id,
-                                        'classSession' => $session->id,
+                                'join_url' => $internalJoinUrl,
+                                'join_label' => $joinLabel,
+                                'adobe_connect_url' => $internalJoinUrl,
+                                'recordings' => $recordings
+                                    ->map(fn ($recording) => [
+                                        'id' => $recording->id,
+                                        'name' => (string) ($recording->name ?: 'ضبط جلسه'),
+                                        'playback_url' => (string) $recording->playback_url,
+                                        'download_url' => $recording->download_url !== null
+                                            ? (string) $recording->download_url
+                                            : null,
                                     ])
-                                    : null,
+                                    ->values()
+                                    ->all(),
                             ];
                         })
                         ->values()

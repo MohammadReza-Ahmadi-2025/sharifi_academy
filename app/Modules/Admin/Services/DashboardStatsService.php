@@ -8,6 +8,7 @@ use App\Modules\Blog\Models\Post;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Comments\Enums\CommentStatus;
 use App\Modules\Comments\Models\Comment;
+use App\Modules\Courses\Enums\EnrollmentStatus;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
 use App\Modules\Courses\Models\Enrollment;
@@ -48,7 +49,8 @@ class DashboardStatsService
                 'stats' => [
                     $this->stat('courses', 'دوره‌های منتشرشده', Course::query()->published()->count(), 'دوره فعال در سایت', '/admin/courses'),
                     $this->stat('classes', 'کلاس‌ها', CourseClass::query()->count(), 'گروه‌های برگزاری دوره', '/admin/courses'),
-                    $this->stat('enrollments', 'ثبت‌نام تأیید‌شده', Enrollment::query()->confirmed()->count(), 'وضعیت confirmed', '/admin/course-enrollments'),
+                    $this->stat('enrollments_pending', 'ثبت‌نام در انتظار', Enrollment::query()->where('status', EnrollmentStatus::Pending)->count(), 'نیاز به بررسی ادمین', '/admin/course-enrollments?status=pending'),
+                    $this->stat('enrollments', 'ثبت‌نام تأیید‌شده', Enrollment::query()->confirmed()->count(), 'وضعیت confirmed', '/admin/course-enrollments?status=confirmed'),
                 ],
             ],
             [

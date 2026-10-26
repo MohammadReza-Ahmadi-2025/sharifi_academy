@@ -138,4 +138,22 @@ class SiteNavigationTest extends TestCase
                 ->where('auth.account.panel.url', '/admin')
             );
     }
+
+    public function test_dual_role_user_sees_both_instructor_and_student_panels(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $user = User::factory()->create(['name' => 'استاد', 'family' => 'دانشجو']);
+        $user->syncRoles(['instructor', 'student']);
+
+        $this->actingAs($user)
+            ->get('/')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('auth.account.role_label', 'استاد · دانشجو')
+                ->has('auth.account.panels', 2)
+                ->where('auth.account.panels.0.label', 'ورود به پنل استاد')
+                ->where('auth.account.panels.1.label', 'ورود به پنل دانشجو')
+            );
+    }
 }

@@ -33,8 +33,9 @@ class ClassSessionController extends Controller
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
 
         $sessions = $courseClass->classSessions()
+            ->with(['adobeRooms'])
             ->get()
-            ->map(fn (ClassSession $session) => ClassSessionPresenter::forList($session));
+            ->map(fn (ClassSession $session) => ClassSessionPresenter::forList($session, $courseClass));
 
         $actor = $request->user();
 
@@ -42,6 +43,7 @@ class ClassSessionController extends Controller
             'course' => CoursePresenter::forShow($course),
             'courseClass' => CourseClassPresenter::forList($courseClass),
             'sessions' => $sessions,
+            'routePrefix' => '/'.$this->nestedCourseRoutePrefix($request),
             'abilities' => [
                 'create' => $actor?->can('class-sessions-create') ?? false,
                 'update' => $actor?->can('class-sessions-update') ?? false,
@@ -60,6 +62,7 @@ class ClassSessionController extends Controller
             'course' => CoursePresenter::forShow($course),
             'courseClass' => CourseClassPresenter::forList($courseClass),
             'statusOptions' => AdminEnumOptions::fromEnum(ClassSessionStatus::class),
+            'routePrefix' => '/'.$this->nestedCourseRoutePrefix($request),
         ]);
     }
 
@@ -94,6 +97,7 @@ class ClassSessionController extends Controller
                 'id' => $room->id,
                 'sco_id' => $room->sco_id,
                 'url_path' => $room->url_path,
+                'meeting_url' => $room->meeting_url,
                 'status_label' => $room->status_label,
             ])
             : collect();
@@ -103,6 +107,8 @@ class ClassSessionController extends Controller
                 'id' => $recording->id,
                 'sco_id' => $recording->sco_id,
                 'name' => $recording->name,
+                'playback_url' => $recording->playback_url,
+                'download_url' => $recording->download_url,
                 'is_public' => $recording->is_public,
                 'duration_seconds' => $recording->duration_seconds,
             ])
@@ -117,6 +123,7 @@ class ClassSessionController extends Controller
             'adobeRecordings' => $recordings,
             'adobeAccessOptions' => AdminAdobeEnumOptions::accessTypes(),
             'adobeStatusOptions' => AdminAdobeEnumOptions::roomStatuses(),
+            'routePrefix' => '/'.$this->nestedCourseRoutePrefix($request),
             'abilities' => [
                 'adobeIndex' => $actor?->can('adobe-rooms-index') ?? false,
                 'adobeCreate' => $actor?->can('adobe-rooms-create') ?? false,
@@ -124,6 +131,8 @@ class ClassSessionController extends Controller
                 'recordingIndex' => $actor?->can('adobe-recordings-index') ?? false,
                 'recordingCreate' => $actor?->can('adobe-recordings-create') ?? false,
                 'recordingDelete' => $actor?->can('adobe-recordings-delete') ?? false,
+                'adobeSync' => $actor?->can('adobe-rooms-update') ?? false,
+                'recordingSync' => $actor?->can('adobe-recordings-create') ?? false,
             ],
         ]);
     }

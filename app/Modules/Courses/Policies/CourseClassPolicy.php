@@ -5,10 +5,18 @@ namespace App\Modules\Courses\Policies;
 use App\Models\User;
 use App\Modules\Courses\Enums\EnrollmentStatus;
 use App\Modules\Courses\Models\CourseClass;
+use App\Modules\Courses\Support\CourseOwnership;
 use App\Modules\Profile\Support\UserProfileCompleteness;
 
 class CourseClassPolicy
 {
+    public function createAdobeRoom(User $user, CourseClass $courseClass): bool
+    {
+        return $user->can('adobe-rooms-create')
+            && $courseClass->course !== null
+            && CourseOwnership::canManage($user, $courseClass->course);
+    }
+
     /**
      * درخواست ثبت‌نام از سایت برای کلاس عمومی و باز.
      */

@@ -3,6 +3,7 @@
 namespace App\Modules\Courses\Http\Requests\Admin;
 
 use App\Modules\Courses\Enums\ClassSessionStatus;
+use App\Modules\Courses\Enums\CourseClassOnlinePlatform;
 use App\Modules\Courses\Models\CourseClass;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -21,6 +22,8 @@ class StoreClassSessionRequest extends FormRequest
     {
         /** @var CourseClass|null $courseClass */
         $courseClass = $this->route('courseClass');
+        $usesVideoLink = $courseClass instanceof CourseClass
+            && ($courseClass->online_platform ?? CourseClassOnlinePlatform::AdobeConnect) === CourseClassOnlinePlatform::VideoLink;
 
         return [
             'session_number' => [
@@ -32,6 +35,13 @@ class StoreClassSessionRequest extends FormRequest
             ],
             'title' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'video_url' => [
+                Rule::requiredIf($usesVideoLink),
+                'nullable',
+                'string',
+                'max:500',
+                'url',
+            ],
             'status' => ['required', Rule::enum(ClassSessionStatus::class)],
             'scheduled_start_at' => ['required', 'date'],
             'scheduled_end_at' => ['required', 'date', 'after:scheduled_start_at'],

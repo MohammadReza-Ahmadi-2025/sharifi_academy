@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\AdobeConnect\Models\AdobeRecording;
 use App\Modules\AdobeConnect\Models\AdobeRoom;
 use App\Modules\Courses\Enums\CourseClassDeliveryType;
+use App\Modules\Courses\Enums\CourseClassOnlinePlatform;
 use App\Modules\Courses\Enums\CourseClassStatus;
 use App\Modules\Courses\Enums\EnrollmentStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'code',
     'status',
     'delivery_type',
+    'online_platform',
     'capacity',
     'price',
     'registration_starts_at',
@@ -84,6 +86,7 @@ class CourseClass extends Model
         return [
             'status' => CourseClassStatus::class,
             'delivery_type' => CourseClassDeliveryType::class,
+            'online_platform' => CourseClassOnlinePlatform::class,
             'capacity' => 'integer',
             'price' => 'integer',
             'registration_starts_at' => 'datetime',
@@ -131,6 +134,16 @@ class CourseClass extends Model
     public function isTaughtBy(User $user): bool
     {
         return $this->instructors()->whereKey($user->id)->exists();
+    }
+
+    public function usesVideoLink(): bool
+    {
+        return ($this->online_platform ?? CourseClassOnlinePlatform::AdobeConnect) === CourseClassOnlinePlatform::VideoLink;
+    }
+
+    public function usesAdobeConnect(): bool
+    {
+        return ! $this->usesVideoLink();
     }
 
     /**

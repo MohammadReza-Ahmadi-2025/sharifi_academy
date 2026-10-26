@@ -124,11 +124,10 @@ class CategoryController extends Controller
     public function update(UpdateCategoryRequest $request, Category $category): RedirectResponse
     {
         $data = $request->validated();
-        $slug = SeoSlug::normalize((string) ($data['slug'] ?? $category->slug));
-
-        if ($slug !== $category->slug) {
-            $slug = $this->uniqueCategorySlug($slug, $category->id);
-        }
+        $slug = $this->uniqueCategorySlug(
+            (string) ($data['slug'] ?? $category->slug),
+            $category->id,
+        );
 
         $category->update([
             'parent_id' => $data['parent_id'] ?? null,

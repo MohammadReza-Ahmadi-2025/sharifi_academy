@@ -10,6 +10,7 @@ use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
 use App\Modules\Courses\Models\Enrollment;
 use App\Modules\Courses\Services\AdminEnrollmentService;
+use App\Modules\Courses\Services\EnrollmentStudentAccessService;
 use App\Modules\Courses\Support\EnsuresNestedCourseAccess;
 use App\Support\Notifications\InstructorModerationNotifier;
 use Illuminate\Http\RedirectResponse;
@@ -34,8 +35,13 @@ class EnrollmentController extends Controller
             ->with('success', "ثبت‌نام #{$enrollment->id} ایجاد شد.");
     }
 
-    public function update(UpdateEnrollmentRequest $request, Course $course, CourseClass $courseClass, Enrollment $enrollment): RedirectResponse
-    {
+    public function update(
+        UpdateEnrollmentRequest $request,
+        Course $course,
+        CourseClass $courseClass,
+        Enrollment $enrollment,
+        EnrollmentStudentAccessService $studentAccess,
+    ): RedirectResponse {
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
 
         if ($enrollment->course_class_id !== $courseClass->id) {
@@ -60,6 +66,8 @@ class EnrollmentController extends Controller
         $enrollment->refresh();
 
         if (! $wasConfirmed && $enrollment->isConfirmed()) {
+            $enrollment->loadMissing('user');
+            $studentAccess->grantStudentRoleIfConfirmed($enrollment);
             InstructorModerationNotifier::enrollmentConfirmed($enrollment);
         }
 

@@ -28,6 +28,7 @@ type CourseClassRow = {
     id: number;
     name: string;
     delivery_type_label: string;
+    online_platform_label?: string | null;
     price: number | null;
     location: string | null;
     schedule_status: 'unscheduled' | 'upcoming' | 'ongoing' | 'finished';
@@ -304,6 +305,9 @@ export default function CourseShow({ course, structuredData }: Props) {
                                                     </h3>
                                                     <p className="mt-1 text-sm text-neutral-black/65">
                                                         {row.delivery_type_label}
+                                                        {row.online_platform_label
+                                                            ? ` · ${row.online_platform_label}`
+                                                            : ''}
                                                     </p>
                                                 </div>
                                                 {row.price !== null && row.price > 0 && (

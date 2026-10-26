@@ -3,8 +3,10 @@
 namespace App\Modules\AdobeConnect\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Modules\AdobeConnect\Http\Requests\Admin\DestroyAdobeRoomRequest;
 use App\Modules\AdobeConnect\Http\Requests\Admin\StoreAdobeRoomRequest;
 use App\Modules\AdobeConnect\Models\AdobeRoom;
+use App\Modules\AdobeConnect\Services\AdobeRoomPayloadFactory;
 use App\Modules\Courses\Models\ClassSession;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
@@ -15,18 +17,23 @@ class AdobeRoomController extends Controller
 {
     use EnsuresNestedCourseAccess;
 
-    public function storeForClass(StoreAdobeRoomRequest $request, Course $course, CourseClass $courseClass): RedirectResponse
-    {
+    public function storeForClass(
+        StoreAdobeRoomRequest $request,
+        Course $course,
+        CourseClass $courseClass,
+        AdobeRoomPayloadFactory $payloadFactory,
+    ): RedirectResponse {
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
+        $this->authorize('createAdobeRoom', $courseClass);
 
         AdobeRoom::query()->create([
-            ...$request->validated(),
+            ...$payloadFactory->resolveForCreate($request->validated()),
             'course_class_id' => $courseClass->id,
             'class_session_id' => null,
         ]);
 
         return redirect()
-            ->route('admin.courses.classes.edit', [$course, $courseClass])
+            ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.edit', [$course, $courseClass])
             ->with('success', 'اتاق ادوبی کلاس ثبت شد.');
     }
 
@@ -35,34 +42,62 @@ class AdobeRoomController extends Controller
         Course $course,
         CourseClass $courseClass,
         ClassSession $classSession,
+        AdobeRoomPayloadFactory $payloadFactory,
     ): RedirectResponse {
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
         $session = $this->classSessionOrFail($course, $courseClass, $classSession->id);
+        $this->authorize('createAdobeRoom', $session);
 
         AdobeRoom::query()->create([
-            ...$request->validated(),
+            ...$payloadFactory->resolveForCreate($request->validated()),
             'course_class_id' => $courseClass->id,
             'class_session_id' => $session->id,
         ]);
 
         return redirect()
-            ->route('admin.courses.classes.sessions.edit', [$course, $courseClass, $session])
+            ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.sessions.edit', [$course, $courseClass, $session])
             ->with('success', 'اتاق ادوبی جلسه ثبت شد.');
     }
 
-    public function destroyForClass(Course $course, CourseClass $courseClass, AdobeRoom $adobeRoom): RedirectResponse
-    {
-        abort_unless(auth()->user()?->can('adobe-rooms-delete'), 403);
+    public function destroyForClass(
+        DestroyAdobeRoomRequest $request,
+        Course $course,
+        CourseClass $courseClass,
+        AdobeRoom $adobeRoom,
+    ): RedirectResponse {
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
 
-        if ($adobeRoom->course_class_id !== $courseClass->id) {
+        if ($adobeRoom->course_class_id !== $courseClass->id || $adobeRoom->class_session_id !== null) {
             abort(404);
         }
 
+        $this->authorize('delete', $adobeRoom);
         $adobeRoom->delete();
 
         return redirect()
-            ->route('admin.courses.classes.edit', [$course, $courseClass])
+            ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.edit', [$course, $courseClass])
             ->with('success', 'اتاق حذف شد.');
+    }
+
+    public function destroyForSession(
+        DestroyAdobeRoomRequest $request,
+        Course $course,
+        CourseClass $courseClass,
+        ClassSession $classSession,
+        AdobeRoom $adobeRoom,
+    ): RedirectResponse {
+        $courseClass = $this->courseClassOrFail($course, $courseClass->id);
+        $session = $this->classSessionOrFail($course, $courseClass, $classSession->id);
+
+        if ($adobeRoom->course_class_id !== $courseClass->id || $adobeRoom->class_session_id !== $session->id) {
+            abort(404);
+        }
+
+        $this->authorize('delete', $adobeRoom);
+        $adobeRoom->delete();
+
+        return redirect()
+            ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.sessions.edit', [$course, $courseClass, $session])
+            ->with('success', 'اتاق جلسه حذف شد.');
     }
 }

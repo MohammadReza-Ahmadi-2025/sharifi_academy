@@ -35,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
         Inertia::handleExceptionsUsing(function ($exceptionResponse) {
             $status = $exceptionResponse->statusCode();
 
-            if (config('app.debug') && $status >= 500) {
+            if (config('app.debug') && ! app()->runningUnitTests() && $status >= 500) {
                 return null;
             }
 

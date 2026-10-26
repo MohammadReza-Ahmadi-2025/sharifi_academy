@@ -7,6 +7,7 @@ use App\Modules\AdobeConnect\Enums\AdobeRoomAccessType;
 use App\Modules\AdobeConnect\Enums\AdobeRoomStatus;
 use App\Modules\AdobeConnect\Models\AdobeRoom;
 use App\Modules\Courses\Enums\ClassSessionStatus;
+use App\Modules\Courses\Enums\CourseClassOnlinePlatform;
 use App\Modules\Courses\Enums\CourseClassStatus;
 use App\Modules\Courses\Enums\CourseStatus;
 use App\Modules\Courses\Enums\EnrollmentStatus;
@@ -179,7 +180,7 @@ class StudentAdobeJoinTest extends TestCase
             'status' => AdobeRoomStatus::Active,
         ]);
 
-        $expectedUrl = route('student.sessions.adobe', [
+        $expectedUrl = route('student.sessions.join', [
             'courseClass' => $class->id,
             'classSession' => $session->id,
         ]);
@@ -189,5 +190,54 @@ class StudentAdobeJoinTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('enrollments.0.sessions.0.adobe_connect_url', $expectedUrl));
+    }
+
+    public function test_student_redirects_to_video_url_when_class_uses_video_platform(): void
+    {
+        $student = User::where('mobile', '09120000003')->firstOrFail();
+
+        $course = Course::query()->create([
+            'title' => 'Video Test',
+            'slug' => 'video-test-course',
+            'status' => CourseStatus::Published,
+        ]);
+
+        $class = CourseClass::query()->create([
+            'course_id' => $course->id,
+            'name' => 'گروه ویدیو',
+            'code' => 'VIDEO-01',
+            'status' => CourseClassStatus::Upcoming,
+            'online_platform' => CourseClassOnlinePlatform::VideoLink,
+            'price' => 0,
+        ]);
+
+        Enrollment::query()->create([
+            'course_class_id' => $class->id,
+            'user_id' => $student->id,
+            'status' => EnrollmentStatus::Confirmed,
+            'confirmed_at' => now(),
+            'price_amount' => 0,
+        ]);
+
+        $session = ClassSession::query()->create([
+            'course_class_id' => $class->id,
+            'session_number' => 1,
+            'title' => 'جلسه ویدیو',
+            'status' => ClassSessionStatus::Scheduled,
+            'scheduled_start_at' => now()->addDay(),
+            'scheduled_end_at' => now()->addDay()->addHours(2),
+            'video_url' => 'https://video.example.com/live/lesson-1',
+        ]);
+
+        $this->actingAs($student)
+            ->get("/student/classes/{$class->id}/sessions/{$session->id}/adobe")
+            ->assertRedirect('https://video.example.com/live/lesson-1');
+
+        $this->actingAs($student)
+            ->get('/student/dashboard')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('enrollments.0.sessions.0.join_label', 'تماشای ویدیو')
+                ->has('enrollments.0.sessions.0.join_url'));
     }
 }

@@ -11,7 +11,9 @@ trait NormalizesCourseInput
         $duration = $this->input('duration_minutes');
 
         $this->merge([
-            'slug' => $this->filled('slug') ? SeoSlug::normalize((string) $this->input('slug')) : null,
+            'slug' => $this->filled('slug')
+                ? SeoSlug::fromOptional((string) $this->input('slug'))
+                : null,
             'code' => $this->filled('code') ? $this->input('code') : null,
             'level' => $this->filled('level') ? $this->input('level') : null,
             'published_at' => $this->filled('published_at') ? $this->input('published_at') : null,

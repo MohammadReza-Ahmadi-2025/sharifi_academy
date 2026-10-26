@@ -18,6 +18,7 @@ type ClassFormData = {
     code: string;
     status: string;
     delivery_type: string;
+    online_platform: string;
     capacity: number | '';
     price: number;
     registration_starts_at: string;
@@ -35,6 +36,7 @@ type Props = {
     errors: Record<string, string>;
     statusOptions: { value: string; label: string }[];
     deliveryTypeOptions: { value: string; label: string }[];
+    onlinePlatformOptions: { value: string; label: string }[];
     instructorRoleOptions: { value: string; label: string }[];
     userOptions: { value: number; label: string }[];
     processing?: boolean;
@@ -46,6 +48,7 @@ export function ClassFormFields({
     errors,
     statusOptions,
     deliveryTypeOptions,
+    onlinePlatformOptions,
     instructorRoleOptions,
     userOptions,
     processing = false,
@@ -53,6 +56,9 @@ export function ClassFormFields({
 }: Props) {
     const statusSelectOptions = mapToSelectOptions(statusOptions);
     const deliverySelectOptions = mapToSelectOptions(deliveryTypeOptions);
+    const onlinePlatformSelectOptions = mapToSelectOptions(onlinePlatformOptions);
+    const showOnlinePlatform =
+        !data.delivery_type || data.delivery_type === 'online' || data.delivery_type === 'hybrid';
     const userSelectOptions = mapToSelectOptions(userOptions);
     const roleSelectOptions = mapToSelectOptions(instructorRoleOptions);
 
@@ -119,6 +125,19 @@ export function ClassFormFields({
                             onChange={(option) => onChange('delivery_type', option?.value ?? '')}
                         />
                     </FormField>
+                    {showOnlinePlatform ? (
+                        <FormField label="پلتفرم آنلاین" error={errors.online_platform}>
+                            <Select
+                                isDisabled={processing}
+                                options={onlinePlatformSelectOptions}
+                                value={findSelectOption(
+                                    onlinePlatformSelectOptions,
+                                    data.online_platform || 'adobe_connect',
+                                )}
+                                onChange={(option) => onChange('online_platform', option?.value ?? 'adobe_connect')}
+                            />
+                        </FormField>
+                    ) : null}
                     <FormField label="ظرفیت" htmlFor="class-capacity" error={errors.capacity}>
                         <AdminInput
                             id="class-capacity"
@@ -211,8 +230,12 @@ export function ClassFormFields({
             </Card>
 
             <Card className="space-y-4 p-6">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                    برای حضور و غیاب و مدیریت جلسه در پنل استاد، استاد را اینجا به کلاس اضافه کنید (مالک دوره به‌تنهایی
+                    دسترسی نمی‌گیرد).
+                </p>
                 <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">اساتید</h2>
+                    <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">اساتید کلاس</h2>
                     <AdminButton type="button" variant="outline" size="sm" disabled={processing} onClick={addInstructor}>
                         <Plus className="ml-1 h-4 w-4" />
                         افزودن استاد

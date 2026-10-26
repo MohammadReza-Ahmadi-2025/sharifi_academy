@@ -99,11 +99,10 @@ class BrandController extends Controller
     public function update(UpdateBrandRequest $request, Brand $brand): RedirectResponse
     {
         $data = $request->validated();
-        $slug = $data['slug'] ?? $brand->slug;
-
-        if ($slug !== $brand->slug) {
-            $slug = $this->uniqueSlug($slug, $brand->id);
-        }
+        $slug = $this->uniqueSlug(
+            (string) ($data['slug'] ?? $brand->slug),
+            $brand->id,
+        );
 
         $brand->update([
             'title' => $data['title'],

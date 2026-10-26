@@ -3,14 +3,22 @@
 namespace App\Modules\Courses\Support;
 
 use App\Modules\Courses\Models\ClassSession;
+use App\Modules\Courses\Models\CourseClass;
 
 class ClassSessionPresenter
 {
     /**
      * @return array<string, mixed>
      */
-    public static function forList(ClassSession $session): array
+    public static function forList(ClassSession $session, ?CourseClass $courseClass = null): array
     {
+        $courseClass ??= $session->relationLoaded('courseClass')
+            ? $session->courseClass
+            : null;
+
+        $joinConfigured = $courseClass instanceof CourseClass
+            && ClassSessionJoinUrl::externalTarget($session, $courseClass) !== null;
+
         return [
             'id' => $session->id,
             'session_number' => $session->session_number,
@@ -19,6 +27,10 @@ class ClassSessionPresenter
             'status_label' => $session->status_label,
             'scheduled_start_at' => $session->scheduled_start_at?->toIso8601String(),
             'scheduled_end_at' => $session->scheduled_end_at?->toIso8601String(),
+            'join_configured' => $joinConfigured,
+            'join_label' => $courseClass instanceof CourseClass
+                ? ClassSessionJoinUrl::joinLabel($courseClass)
+                : null,
         ];
     }
 
@@ -32,6 +44,7 @@ class ClassSessionPresenter
             'session_number' => $session->session_number,
             'title' => $session->title,
             'description' => $session->description,
+            'video_url' => $session->video_url,
             'status' => $session->status?->value,
             'scheduled_start_at' => $session->scheduled_start_at?->format('Y-m-d\TH:i'),
             'scheduled_end_at' => $session->scheduled_end_at?->format('Y-m-d\TH:i'),

@@ -35,6 +35,21 @@ export default function PanelLayout({
 }: Props) {
     const { app, auth, url } = usePage<PageProps>().props;
     const displayName = auth.account?.display_name ?? auth.user?.name ?? 'کاربر';
+    const currentPath = url.split('?')[0];
+    const otherPanels = (auth.account?.panels ?? []).filter((panel) => {
+        const panelPath = panel.url.split('?')[0];
+        if (panelPath === '/student/dashboard' || panelPath.startsWith('/student')) {
+            return !currentPath.startsWith('/student');
+        }
+        if (panelPath === '/instructor' || panelPath.startsWith('/instructor')) {
+            return !currentPath.startsWith('/instructor');
+        }
+        if (panelPath === '/admin' || panelPath.startsWith('/admin')) {
+            return !currentPath.startsWith('/admin');
+        }
+
+        return currentPath !== panelPath && !currentPath.startsWith(`${panelPath}/`);
+    });
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -96,6 +111,22 @@ export default function PanelLayout({
                             );
                         })}
                     </nav>
+                    {otherPanels.length > 0 && (
+                        <div className="mt-3 border-t border-slate-100 pt-3">
+                            <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                                پنل‌های دیگر
+                            </p>
+                            {otherPanels.map((panel) => (
+                                <Link
+                                    key={panel.url}
+                                    href={panel.url}
+                                    className="block rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+                                >
+                                    {panel.label}
+                                </Link>
+                            ))}
+                        </div>
+                    )}
                 </aside>
 
                 <main

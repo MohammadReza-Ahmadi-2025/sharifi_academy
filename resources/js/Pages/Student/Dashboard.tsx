@@ -9,7 +9,10 @@ type Enrollment = {
         id: number;
         title: string;
         starts_at: string | null;
+        join_url: string | null;
+        join_label: string | null;
         adobe_connect_url: string | null;
+        recordings: { id: number; name: string; playback_url: string; download_url: string | null }[];
     }[];
 };
 
@@ -55,16 +58,40 @@ export default function Dashboard({ enrollments }: Props) {
                                                     </span>
                                                 )}
                                             </span>
-                                            {session.adobe_connect_url && (
-                                                <a
-                                                    href={session.adobe_connect_url}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="rounded-lg bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700"
-                                                >
-                                                    ورود به Adobe Connect
-                                                </a>
-                                            )}
+                                            <span className="flex flex-wrap gap-2">
+                                                {(session.join_url ?? session.adobe_connect_url) && (
+                                                    <a
+                                                        href={session.join_url ?? session.adobe_connect_url ?? '#'}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="rounded-lg bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700"
+                                                    >
+                                                        {session.join_label ?? 'ورود به کلاس'}
+                                                    </a>
+                                                )}
+                                                {session.recordings.map((recording) => (
+                                                    <span key={recording.id} className="flex gap-1">
+                                                        <a
+                                                            href={recording.playback_url}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="rounded-lg border border-indigo-200 px-3 py-1 text-indigo-700 hover:bg-indigo-50"
+                                                        >
+                                                            {recording.name}
+                                                        </a>
+                                                        {recording.download_url ? (
+                                                            <a
+                                                                href={recording.download_url}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="rounded-lg border border-slate-200 px-3 py-1 text-slate-600 hover:bg-slate-50"
+                                                            >
+                                                                دانلود MP4
+                                                            </a>
+                                                        ) : null}
+                                                    </span>
+                                                ))}
+                                            </span>
                                         </li>
                                     ))}
                                 </ul>

@@ -4,6 +4,7 @@ use App\Modules\Activity\Http\Controllers\Admin\ActivityLogController;
 use App\Modules\Admin\Http\Controllers\DashboardController;
 use App\Modules\AdobeConnect\Http\Controllers\Admin\AdobeRecordingController;
 use App\Modules\AdobeConnect\Http\Controllers\Admin\AdobeRoomController;
+use App\Modules\AdobeConnect\Http\Controllers\Admin\AdobeSyncController;
 use App\Modules\Blog\Http\Controllers\Admin\PostController as BlogPostController;
 use App\Modules\Blog\Models\Post as BlogPost;
 use App\Modules\Catalog\Http\Controllers\Admin\BrandController;
@@ -182,10 +183,21 @@ Route::prefix('admin')
 
         Route::middleware('permission:adobe-rooms-delete')->group(function () {
             Route::delete('courses/{course}/classes/{courseClass}/adobe-rooms/{adobeRoom}', [AdobeRoomController::class, 'destroyForClass'])->name('courses.classes.adobe-rooms.destroy');
+            Route::delete('courses/{course}/classes/{courseClass}/sessions/{classSession}/adobe-rooms/{adobeRoom}', [AdobeRoomController::class, 'destroyForSession'])
+                ->name('courses.classes.sessions.adobe-rooms.destroy');
+        });
+
+        Route::middleware('permission:adobe-rooms-update')->group(function () {
+            Route::post('courses/{course}/classes/{courseClass}/adobe-rooms/{adobeRoom}/sync', [AdobeSyncController::class, 'syncRoom'])
+                ->name('courses.classes.adobe-rooms.sync');
+            Route::post('courses/{course}/classes/{courseClass}/sessions/{classSession}/adobe-rooms/{adobeRoom}/sync', [AdobeSyncController::class, 'syncSessionRoom'])
+                ->name('courses.classes.sessions.adobe-rooms.sync');
         });
 
         Route::middleware('permission:adobe-recordings-create')->group(function () {
             Route::post('courses/{course}/classes/{courseClass}/sessions/{classSession}/adobe-recordings', [AdobeRecordingController::class, 'store'])->name('courses.classes.sessions.adobe-recordings.store');
+            Route::post('courses/{course}/classes/{courseClass}/sessions/{classSession}/adobe-recordings/sync', [AdobeSyncController::class, 'syncSessionRecordings'])
+                ->name('courses.classes.sessions.adobe-recordings.sync');
         });
 
         Route::middleware('permission:adobe-recordings-delete')->group(function () {
@@ -354,7 +366,7 @@ Route::prefix('admin')
 
         Route::redirect('blog/posts', '/admin/posts');
         Route::redirect('blog/posts/create', '/admin/posts/create');
-        Route::get('blog/posts/{post}/edit', fn (BlogPost $post) => redirect()->route('admin.posts.edit', $post))
+        Route::get('blog/posts/{post:slug}/edit', fn (BlogPost $post) => redirect()->route('admin.posts.edit', $post->id))
             ->whereNumber('post');
 
         Route::middleware('permission:blog-posts-index')->group(function () {
@@ -367,12 +379,12 @@ Route::prefix('admin')
         });
 
         Route::middleware('permission:blog-posts-update')->group(function () {
-            Route::get('posts/{post}/edit', [BlogPostController::class, 'edit'])->name('posts.edit');
-            Route::put('posts/{post}', [BlogPostController::class, 'update'])->name('posts.update');
+            Route::get('posts/{post:id}/edit', [BlogPostController::class, 'edit'])->name('posts.edit');
+            Route::put('posts/{post:id}', [BlogPostController::class, 'update'])->name('posts.update');
         });
 
         Route::middleware('permission:blog-posts-delete')->group(function () {
-            Route::delete('posts/{post}', [BlogPostController::class, 'destroy'])->name('posts.destroy');
+            Route::delete('posts/{post:id}', [BlogPostController::class, 'destroy'])->name('posts.destroy');
         });
 
         Route::middleware('permission:pages-index')->group(function () {

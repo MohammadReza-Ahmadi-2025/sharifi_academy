@@ -21,6 +21,7 @@ export type SiteAccountMenu = {
     role_label: string;
     profile_url: string;
     panel: { label: string; url: string } | null;
+    panels: { label: string; url: string }[];
 };
 
 export type UserNotificationItem = {

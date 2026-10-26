@@ -110,7 +110,7 @@ class PostController extends Controller
         $this->syncFeaturedImageFromRequest($post, $request);
 
         return redirect()
-            ->route('admin.posts.edit', $post)
+            ->route('admin.posts.edit', $post->id)
             ->with('success', 'پست ایجاد شد.');
     }
 
@@ -128,11 +128,10 @@ class PostController extends Controller
     public function update(UpdatePostRequest $request, Post $post): RedirectResponse
     {
         $data = $request->validated();
-        $slug = $data['slug'] ?? $post->slug;
-
-        if ($slug !== $post->slug) {
-            $slug = $this->uniquePostSlug($slug, $post->id);
-        }
+        $slug = $this->uniquePostSlug(
+            (string) ($data['slug'] ?? $post->slug),
+            $post->id,
+        );
 
         $status = PostStatus::from($data['status']);
         $publishedAt = $post->published_at;
@@ -158,7 +157,7 @@ class PostController extends Controller
         $this->syncFeaturedImageFromRequest($post, $request);
 
         return redirect()
-            ->route('admin.posts.edit', $post)
+            ->route('admin.posts.edit', $post->id)
             ->with('success', 'پست به‌روزرسانی شد.');
     }
 

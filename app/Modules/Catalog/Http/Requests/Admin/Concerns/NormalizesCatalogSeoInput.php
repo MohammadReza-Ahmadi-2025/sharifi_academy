@@ -2,12 +2,16 @@
 
 namespace App\Modules\Catalog\Http\Requests\Admin\Concerns;
 
+use App\Support\SeoSlug;
+
 trait NormalizesCatalogSeoInput
 {
     protected function mergeCatalogSeoFields(): void
     {
         $this->merge([
-            'slug' => $this->filled('slug') ? $this->input('slug') : null,
+            'slug' => $this->filled('slug')
+                ? SeoSlug::fromOptional((string) $this->input('slug'))
+                : null,
             'canonical' => $this->filled('canonical') ? $this->input('canonical') : null,
             'meta_title' => $this->filled('meta_title') ? $this->input('meta_title') : null,
             'meta_description' => $this->filled('meta_description') ? $this->input('meta_description') : null,

@@ -21,20 +21,64 @@ class SiteAccountMenu
      *     role: string,
      *     role_label: string,
      *     profile_url: string,
-     *     panel: array{label: string, url: string}|null
+     *     panel: array{label: string, url: string}|null,
+     *     panels: list<array{label: string, url: string}>
      * }
      */
     public static function forUser(User $user): array
     {
-        $role = self::primaryRole($user);
+        $panels = self::panelsForUser($user);
+        $roleLabels = self::roleLabelsForUser($user);
 
         return [
             'display_name' => self::displayName($user),
-            'role' => $role,
-            'role_label' => self::ROLE_LABELS[$role] ?? 'کاربر',
+            'role' => self::primaryRole($user),
+            'role_label' => $roleLabels !== [] ? implode(' · ', $roleLabels) : 'کاربر',
             'profile_url' => route('site.profile.edit'),
-            'panel' => self::panelLink($role),
+            'panel' => $panels[0] ?? null,
+            'panels' => $panels,
         ];
+    }
+
+    /**
+     * @return list<array{label: string, url: string}>
+     */
+    private static function panelsForUser(User $user): array
+    {
+        $panels = [];
+        $seenUrls = [];
+
+        foreach (self::ROLE_ORDER as $roleName) {
+            if (! $user->hasRole($roleName) || ! self::canAccessPanel($user, $roleName)) {
+                continue;
+            }
+
+            $link = self::panelLink($roleName);
+            if ($link === null || isset($seenUrls[$link['url']])) {
+                continue;
+            }
+
+            $seenUrls[$link['url']] = true;
+            $panels[] = $link;
+        }
+
+        return $panels;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function roleLabelsForUser(User $user): array
+    {
+        $labels = [];
+
+        foreach (self::ROLE_ORDER as $roleName) {
+            if ($user->hasRole($roleName)) {
+                $labels[] = self::ROLE_LABELS[$roleName] ?? $roleName;
+            }
+        }
+
+        return $labels;
     }
 
     private static function primaryRole(User $user): string
@@ -48,6 +92,16 @@ class SiteAccountMenu
         $first = $user->getRoleNames()->first();
 
         return $first !== null ? (string) $first : 'student';
+    }
+
+    private static function canAccessPanel(User $user, string $role): bool
+    {
+        return match ($role) {
+            'super-admin', 'admin' => $user->can('admin-panel-access') || $user->hasAnyRole(['super-admin', 'admin']),
+            'instructor' => $user->hasRole('instructor') && $user->can('instructor-panel-access'),
+            'student' => $user->hasRole('student') && $user->can('student-panel-access'),
+            default => false,
+        };
     }
 
     private static function displayName(User $user): string

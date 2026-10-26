@@ -35,7 +35,7 @@ class EnrollmentPendingAdminNotification extends Notification
         return [
             'title' => 'درخواست ثبت‌نام جدید',
             'message' => sprintf('%s برای «%s» (%s) درخواست ثبت‌نام داده است.', $studentName, $courseTitle, $className),
-            'url' => '/admin/course-enrollments',
+            'url' => '/admin/course-enrollments?status=pending',
         ];
     }
 }

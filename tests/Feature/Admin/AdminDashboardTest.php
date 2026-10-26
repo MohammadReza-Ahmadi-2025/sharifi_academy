@@ -38,7 +38,7 @@ class AdminDashboardTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Admin/Dashboard')
-                ->has('statGroups', 4)
+                ->has('statGroups', 5)
                 ->has('charts.usersMonthly', 6)
                 ->has('charts.rolesBreakdown', 3)
                 ->has('charts.visitsDaily', 7)

@@ -6,7 +6,6 @@ use App\Modules\AdobeConnect\Enums\AdobeRoomStatus;
 use App\Modules\AdobeConnect\Models\AdobeRoom;
 use App\Modules\Courses\Models\ClassSession;
 use App\Modules\Courses\Models\CourseClass;
-use App\Modules\Settings\Services\SiteSettingsService;
 
 final class AdobeConnectJoinUrl
 {
@@ -50,11 +49,11 @@ final class AdobeConnectJoinUrl
             return null;
         }
 
-        $base = trim((string) app(SiteSettingsService::class)->get('adobe_connect_base_url', ''));
-        if ($base === '') {
+        $config = app(AdobeConnectConfig::class);
+        if ($config->baseUrl() === '') {
             return null;
         }
 
-        return rtrim($base, '/').'/'.ltrim($path, '/');
+        return app(AdobeConnectUrlBuilder::class)->meetingJoinUrl($path);
     }
 }

@@ -6,8 +6,10 @@ use App\Models\User;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Courses\Enums\CourseClassStatus;
 use App\Modules\Courses\Enums\CourseStatus;
+use App\Modules\Courses\Enums\EnrollmentStatus;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
+use App\Modules\Courses\Models\Enrollment;
 use App\Modules\Locations\Models\ProvinceCity;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -82,6 +84,80 @@ class AdminCourseEnrollmentTest extends TestCase
                 'status' => 'confirmed',
             ])
             ->assertSessionHasErrors('user_id');
+    }
+
+    public function test_confirming_enrollment_assigns_student_role_to_instructor_without_it(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $admin = User::where('mobile', '09120000001')->firstOrFail();
+        $instructor = User::where('mobile', '09120000002')->firstOrFail();
+        $instructor->syncRoles(['instructor']);
+
+        $cityId = ProvinceCity::query()->whereNotNull('parent_id')->value('id');
+        $instructor->profile()->updateOrCreate(
+            ['user_id' => $instructor->id],
+            ['province_city_id' => $cityId],
+        );
+
+        $course = $this->createCourse();
+        $class = CourseClass::query()->create([
+            'course_id' => $course->id,
+            'name' => 'کلاس C',
+            'code' => 'C1',
+            'status' => CourseClassStatus::Upcoming->value,
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/admin/course-enrollments', [
+                'course_id' => $course->id,
+                'course_class_id' => $class->id,
+                'user_id' => $instructor->id,
+                'status' => 'confirmed',
+            ])
+            ->assertRedirect();
+
+        $instructor->refresh();
+        $this->assertTrue($instructor->hasRole('instructor'));
+        $this->assertTrue($instructor->hasRole('student'));
+    }
+
+    public function test_course_enrollments_index_defaults_to_pending_filter(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $admin = User::where('mobile', '09120000001')->firstOrFail();
+        $student = User::where('mobile', '09120000003')->firstOrFail();
+
+        $course = $this->createCourse();
+        $class = CourseClass::query()->create([
+            'course_id' => $course->id,
+            'name' => 'کلاس D',
+            'code' => 'D1',
+            'status' => CourseClassStatus::Upcoming->value,
+        ]);
+
+        Enrollment::query()->create([
+            'course_class_id' => $class->id,
+            'user_id' => $student->id,
+            'status' => EnrollmentStatus::Pending,
+            'price_amount' => 0,
+        ]);
+
+        Enrollment::query()->create([
+            'course_class_id' => $class->id,
+            'user_id' => $admin->id,
+            'status' => EnrollmentStatus::Confirmed,
+            'price_amount' => 0,
+            'confirmed_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/course-enrollments')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('filters.status', 'pending')
+                ->has('enrollments.data', 1)
+                ->where('enrollments.data.0.status', 'pending')
+            );
     }
 
     private function createCourse(): Course

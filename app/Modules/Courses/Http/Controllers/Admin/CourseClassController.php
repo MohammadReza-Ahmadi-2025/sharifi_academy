@@ -7,6 +7,7 @@ use App\Modules\AdobeConnect\Models\AdobeRoom;
 use App\Modules\AdobeConnect\Support\AdminAdobeEnumOptions;
 use App\Modules\Courses\Enums\ClassInstructorRole;
 use App\Modules\Courses\Enums\CourseClassDeliveryType;
+use App\Modules\Courses\Enums\CourseClassOnlinePlatform;
 use App\Modules\Courses\Enums\CourseClassStatus;
 use App\Modules\Courses\Enums\EnrollmentStatus;
 use App\Modules\Courses\Http\Requests\Admin\StoreCourseClassRequest;
@@ -45,6 +46,7 @@ class CourseClassController extends Controller
         return Inertia::render('Admin/Courses/Classes/Index', [
             'course' => CoursePresenter::forShow($course),
             'classes' => $classes,
+            'routePrefix' => '/'.$this->nestedCourseRoutePrefix($request),
             'abilities' => [
                 'create' => $actor?->can('course-classes-create') ?? false,
                 'update' => $actor?->can('course-classes-update') ?? false,
@@ -60,6 +62,7 @@ class CourseClassController extends Controller
 
         return Inertia::render('Admin/Courses/Classes/Create', [
             'course' => CoursePresenter::forShow($course),
+            'routePrefix' => '/'.$this->nestedCourseRoutePrefix($request),
             ...$this->formOptions(),
         ]);
     }
@@ -115,6 +118,7 @@ class CourseClassController extends Controller
                     'id' => $room->id,
                     'sco_id' => $room->sco_id,
                     'url_path' => $room->url_path,
+                    'meeting_url' => $room->meeting_url,
                     'status' => $room->status?->value,
                     'status_label' => $room->status?->label(),
                 ])
@@ -130,6 +134,7 @@ class CourseClassController extends Controller
             'userOptions' => $this->userOptions(),
             'adobeAccessOptions' => AdminAdobeEnumOptions::accessTypes(),
             'adobeStatusOptions' => AdminAdobeEnumOptions::roomStatuses(),
+            'routePrefix' => '/'.$this->nestedCourseRoutePrefix($request),
             'abilities' => [
                 'sessions' => $actor?->can('class-sessions-index') ?? false,
                 'enrollmentsIndex' => $actor?->can('enrollments-index') ?? false,
@@ -138,6 +143,7 @@ class CourseClassController extends Controller
                 'enrollmentsDelete' => $actor?->can('enrollments-delete') ?? false,
                 'adobeIndex' => $actor?->can('adobe-rooms-index') ?? false,
                 'adobeCreate' => $actor?->can('adobe-rooms-create') ?? false,
+                'adobeUpdate' => $actor?->can('adobe-rooms-update') ?? false,
                 'adobeDelete' => $actor?->can('adobe-rooms-delete') ?? false,
             ],
         ]);
@@ -180,6 +186,7 @@ class CourseClassController extends Controller
             'code' => $data['code'],
             'status' => $data['status'],
             'delivery_type' => $data['delivery_type'] ?? CourseClassDeliveryType::Online->value,
+            'online_platform' => $data['online_platform'] ?? CourseClassOnlinePlatform::AdobeConnect->value,
             'capacity' => $data['capacity'] ?? null,
             'price' => $data['price'] ?? 0,
             'registration_starts_at' => $data['registration_starts_at'] ?? null,
@@ -218,6 +225,7 @@ class CourseClassController extends Controller
         return [
             'statusOptions' => AdminEnumOptions::fromEnum(CourseClassStatus::class),
             'deliveryTypeOptions' => AdminEnumOptions::fromEnum(CourseClassDeliveryType::class),
+            'onlinePlatformOptions' => AdminEnumOptions::fromEnum(CourseClassOnlinePlatform::class),
             'instructorRoleOptions' => AdminEnumOptions::fromEnum(ClassInstructorRole::class),
             'userOptions' => $this->userOptions(),
         ];

@@ -4,6 +4,7 @@ namespace App\Modules\Courses\Http\Requests\Admin;
 
 use App\Modules\Courses\Enums\ClassInstructorRole;
 use App\Modules\Courses\Enums\CourseClassDeliveryType;
+use App\Modules\Courses\Enums\CourseClassOnlinePlatform;
 use App\Modules\Courses\Enums\CourseClassStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,6 +26,7 @@ class StoreCourseClassRequest extends FormRequest
             'code' => ['required', 'string', 'max:64'],
             'status' => ['required', Rule::enum(CourseClassStatus::class)],
             'delivery_type' => ['nullable', Rule::enum(CourseClassDeliveryType::class)],
+            'online_platform' => ['nullable', Rule::enum(CourseClassOnlinePlatform::class)],
             'capacity' => ['nullable', 'integer', 'min:0'],
             'price' => ['nullable', 'integer', 'min:0'],
             'registration_starts_at' => ['nullable', 'date'],

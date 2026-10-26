@@ -8,6 +8,20 @@ use Illuminate\Support\Str;
 
 class SeoSlug
 {
+    public static function fromOptional(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        return self::normalize($value);
+    }
+
     public static function normalize(string $value): string
     {
         $value = trim(urldecode($value));

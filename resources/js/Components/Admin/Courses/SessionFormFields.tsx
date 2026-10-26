@@ -11,6 +11,7 @@ type SessionData = {
     session_number: number;
     title: string;
     description: string;
+    video_url?: string;
     status: string;
     scheduled_start_at: string;
     scheduled_end_at: string;
@@ -26,10 +27,18 @@ type Props = {
     errors: Record<string, string>;
     statusOptions: { value: string; label: string }[];
     processing?: boolean;
+    showVideoUrl?: boolean;
     onChange: (key: keyof SessionData, value: unknown) => void;
 };
 
-export function SessionFormFields({ data, errors, statusOptions, processing = false, onChange }: Props) {
+export function SessionFormFields({
+    data,
+    errors,
+    statusOptions,
+    processing = false,
+    showVideoUrl = false,
+    onChange,
+}: Props) {
     const statusSelectOptions = mapToSelectOptions(statusOptions);
     const showActual = data.actual_start_at !== undefined || data.actual_end_at !== undefined;
     const showCancelled = data.cancelled_at !== undefined;
@@ -107,6 +116,24 @@ export function SessionFormFields({ data, errors, statusOptions, processing = fa
                             onChange={(e) => onChange('description', e.target.value)}
                         />
                     </FormField>
+                    {showVideoUrl ? (
+                        <FormField
+                            label="لینک ویدیو / پخش زنده"
+                            htmlFor="session-video-url"
+                            className="md:col-span-2"
+                            error={errors.video_url}
+                        >
+                            <AdminInput
+                                id="session-video-url"
+                                dir="ltr"
+                                className="text-left font-mono"
+                                placeholder="https://..."
+                                value={data.video_url ?? ''}
+                                disabled={processing}
+                                onChange={(e) => onChange('video_url', e.target.value)}
+                            />
+                        </FormField>
+                    ) : null}
                 </div>
             </Card>
 

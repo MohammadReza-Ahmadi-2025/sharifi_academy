@@ -23,6 +23,10 @@ class CourseEnrollmentAdminController extends Controller
         abort_unless($request->user()?->can('enrollments-index'), 403);
 
         $search = trim((string) $request->query('search', ''));
+        $status = (string) $request->query('status', 'pending');
+        if (! in_array($status, ['pending', 'confirmed', 'cancelled', 'all'], true)) {
+            $status = 'pending';
+        }
         $perPage = in_array((int) $request->query('per_page', 25), [25, 50, 100], true)
             ? (int) $request->query('per_page', 25)
             : 25;
@@ -30,6 +34,10 @@ class CourseEnrollmentAdminController extends Controller
         $query = Enrollment::query()
             ->with(['user', 'courseClass.course'])
             ->latest('id');
+
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search): void {
@@ -65,7 +73,8 @@ class CourseEnrollmentAdminController extends Controller
 
         return Inertia::render('Admin/CourseEnrollments/Index', [
             'enrollments' => $enrollments,
-            'filters' => ['search' => $search, 'per_page' => $perPage],
+            'filters' => ['search' => $search, 'status' => $status, 'per_page' => $perPage],
+            'statusOptions' => AdminEnumOptions::fromEnum(EnrollmentStatus::class),
             'abilities' => [
                 'create' => $actor?->can('enrollments-create') ?? false,
             ],

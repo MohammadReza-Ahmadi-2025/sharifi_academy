@@ -6,20 +6,23 @@ import { Head, useForm } from '@inertiajs/react';
 import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
+    routePrefix: string;
     course: { id: number; title: string };
     statusOptions: { value: string; label: string }[];
     deliveryTypeOptions: { value: string; label: string }[];
+    onlinePlatformOptions: { value: string; label: string }[];
     instructorRoleOptions: { value: string; label: string }[];
     userOptions: { value: number; label: string }[];
 };
 
 export default function CourseClassesCreate(props: Props) {
-    const { course } = props;
+    const { course, routePrefix } = props;
     const form = useForm({
         name: '',
         code: '',
         status: 'draft',
         delivery_type: '',
+        online_platform: 'adobe_connect',
         capacity: '' as number | '',
         price: 0,
         registration_starts_at: '',
@@ -35,8 +38,8 @@ export default function CourseClassesCreate(props: Props) {
     return (
         <AdminLayout>
             <Head title="ایجاد کلاس" />
-            <PageHeader title="ایجاد کلاس" backHref={`/admin/courses/${course.id}/classes`} />
-            <AdminFormPage onSubmit={(e) => { e.preventDefault(); form.post(`/admin/courses/${course.id}/classes`); }}>
+            <PageHeader title="ایجاد کلاس" backHref={`${routePrefix}/courses/${course.id}/classes`} />
+            <AdminFormPage onSubmit={(e) => { e.preventDefault(); form.post(`${routePrefix}/courses/${course.id}/classes`); }}>
                 <ClassFormFields
                     {...props}
                     data={form.data}

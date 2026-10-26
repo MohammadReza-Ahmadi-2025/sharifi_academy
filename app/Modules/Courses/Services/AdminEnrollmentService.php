@@ -9,6 +9,10 @@ use App\Support\Notifications\InstructorModerationNotifier;
 
 class AdminEnrollmentService
 {
+    public function __construct(
+        private readonly EnrollmentStudentAccessService $studentAccess,
+    ) {}
+
     /**
      * @param  array{user_id: int, status: string, price_amount?: int|null, admin_note?: string|null}  $data
      */
@@ -27,6 +31,8 @@ class AdminEnrollmentService
         ]);
 
         if ($status === EnrollmentStatus::Confirmed) {
+            $enrollment->loadMissing('user');
+            $this->studentAccess->grantStudentRoleIfConfirmed($enrollment);
             InstructorModerationNotifier::enrollmentConfirmed($enrollment);
         }
 

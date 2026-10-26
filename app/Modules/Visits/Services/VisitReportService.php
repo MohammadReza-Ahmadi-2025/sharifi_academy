@@ -201,7 +201,7 @@ class VisitReportService
 
         return match (class_basename($visitableType)) {
             'Product' => route('admin.catalog.products.edit', $model),
-            'Post' => route('admin.posts.edit', $model),
+            'Post' => route('admin.posts.edit', $model->id),
             'Category' => route('admin.categories.edit', $model).'?type='.urlencode((string) ($model->type ?? 'product')),
             'Brand' => route('admin.catalog.brands.edit', $model),
             'Course' => route('admin.courses.edit', $model),

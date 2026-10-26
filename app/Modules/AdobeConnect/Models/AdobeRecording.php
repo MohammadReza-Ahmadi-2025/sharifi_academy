@@ -14,8 +14,11 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
     'class_session_id',
     'sco_id',
     'name',
+    'url_path',
     'playback_url',
+    'download_url',
     'duration_seconds',
+    'recorded_at',
     'size_bytes',
     'is_public',
     'is_passcode_protected',
@@ -27,6 +30,7 @@ class AdobeRecording extends Model
     {
         return [
             'duration_seconds' => 'integer',
+            'recorded_at' => 'datetime',
             'size_bytes' => 'integer',
             'is_public' => 'boolean',
             'is_passcode_protected' => 'boolean',

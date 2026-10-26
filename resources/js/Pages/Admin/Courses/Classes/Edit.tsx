@@ -8,12 +8,14 @@ import { Head, useForm } from '@inertiajs/react';
 import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
 type Props = {
+    routePrefix: string;
     course: { id: number; title: string };
     courseClass: Record<string, unknown>;
     enrollments: { id: number; user_label: string; status: string; status_label: string; price_amount: number }[];
-    adobeRooms: { id: number; sco_id: string; url_path: string; status_label: string }[];
+    adobeRooms: { id: number; sco_id: string; url_path: string; meeting_url?: string | null; status_label: string }[];
     statusOptions: { value: string; label: string }[];
     deliveryTypeOptions: { value: string; label: string }[];
+    onlinePlatformOptions: { value: string; label: string }[];
     instructorRoleOptions: { value: string; label: string }[];
     userOptions: { value: number; label: string }[];
     enrollmentStatusOptions: { value: string; label: string }[];
@@ -27,18 +29,21 @@ type Props = {
         enrollmentsDelete: boolean;
         adobeIndex: boolean;
         adobeCreate: boolean;
+        adobeUpdate: boolean;
         adobeDelete: boolean;
     };
 };
 
 export default function CourseClassesEdit(props: Props) {
-    const { course, courseClass, enrollments, adobeRooms, abilities } = props;
+    const { routePrefix, course, courseClass, enrollments, adobeRooms, abilities } = props;
     const classId = Number(courseClass.id);
+    const showAdobePanels = String(courseClass.online_platform ?? 'adobe_connect') !== 'video_link';
     const form = useForm({
         name: String(courseClass.name ?? ''),
         code: String(courseClass.code ?? ''),
         status: String(courseClass.status ?? 'draft'),
         delivery_type: String(courseClass.delivery_type ?? ''),
+        online_platform: String(courseClass.online_platform ?? 'adobe_connect'),
         capacity: (courseClass.capacity as number | null) ?? '',
         price: Number(courseClass.price ?? 0),
         registration_starts_at: String(courseClass.registration_starts_at ?? ''),
@@ -56,11 +61,11 @@ export default function CourseClassesEdit(props: Props) {
             <Head title="ویرایش کلاس" />
             <PageHeader
                 title="ویرایش کلاس"
-                backHref={`/admin/courses/${course.id}/classes`}
+                backHref={`${routePrefix}/courses/${course.id}/classes`}
                 actions={
                     abilities.sessions ? (
                         <AdminButton
-                            href={`/admin/courses/${course.id}/classes/${classId}/sessions`}
+                            href={`${routePrefix}/courses/${course.id}/classes/${classId}/sessions`}
                             variant="secondary"
                         >
                             جلسات
@@ -70,7 +75,7 @@ export default function CourseClassesEdit(props: Props) {
             />
             <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();
-                    form.put(`/admin/courses/${course.id}/classes/${classId}`);
+                    form.put(`${routePrefix}/courses/${course.id}/classes/${classId}`);
                 }}>
                 <ClassFormFields
                     {...props}
@@ -102,14 +107,16 @@ export default function CourseClassesEdit(props: Props) {
                 />
             )}
 
-            {(abilities.adobeIndex || abilities.adobeCreate || abilities.adobeDelete) && (
+            {showAdobePanels && (abilities.adobeIndex || abilities.adobeCreate || abilities.adobeDelete) && (
                 <ClassAdobeRoomPanel
+                    routePrefix={routePrefix}
                     courseId={course.id}
                     classId={classId}
                     rooms={adobeRooms}
                     adobeAccessOptions={props.adobeAccessOptions}
                     adobeStatusOptions={props.adobeStatusOptions}
                     canCreate={abilities.adobeCreate}
+                    canUpdate={abilities.adobeUpdate}
                     canDelete={abilities.adobeDelete}
                 />
             )}
