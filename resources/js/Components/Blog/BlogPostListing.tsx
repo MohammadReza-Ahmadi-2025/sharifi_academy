@@ -41,7 +41,7 @@ export function BlogPostListing({ posts, emptyMessage = 'موردی برای ن�
                         <Link href={`/blog/${post.slug}`} className="block p-2">
                             <div className="aspect-[16/10] overflow-hidden rounded-xl bg-secondary/15">
                                 <img
-                                    src={post.image_url ?? '/banner.png'}
+                                    src={post.image_url?.trim() || '/banner.png'}
                                     alt=""
                                     className="size-full object-cover transition duration-500 hover:scale-[1.03]"
                                 />

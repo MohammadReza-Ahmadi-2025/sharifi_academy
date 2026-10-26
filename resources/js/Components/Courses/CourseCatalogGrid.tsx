@@ -49,7 +49,7 @@ export function CourseCatalogGrid({ courses, variant = 'default' }: Props) {
                         }`}
                     >
                         <img
-                            src={course.image_url ?? '/banner.png'}
+                            src={course.image_url?.trim() || '/banner.png'}
                             alt={course.title}
                             loading={variant === 'category' ? 'lazy' : undefined}
                             decoding="async"

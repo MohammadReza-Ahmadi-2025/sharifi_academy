@@ -15,6 +15,11 @@ use Illuminate\Support\Collection;
 
 class HomeItemPresenter
 {
+    private static function imageUrl(?string $url): ?string
+    {
+        return filled($url) ? $url : null;
+    }
+
     /**
      * @param  Collection<int, mixed>|iterable<int, mixed>  $items
      * @return list<array<string, mixed>>
@@ -40,7 +45,7 @@ class HomeItemPresenter
                 'slug' => $item->slug,
                 'description' => $item->short_description,
                 'price' => (int) ($item->min_effective_price ?? 0),
-                'image_url' => $item->mainImage?->publicUrl(),
+                'image_url' => self::imageUrl($item->mainImage?->publicUrl()),
             ];
         }
 
@@ -55,7 +60,7 @@ class HomeItemPresenter
                 'slug' => $item->slug,
                 'description' => $item->short_description,
                 'price' => is_numeric($minPrice) ? (int) $minPrice : 0,
-                'image_url' => $item->mainImage?->publicUrl(),
+                'image_url' => self::imageUrl($item->mainImage?->publicUrl()),
                 'is_featured' => (bool) $item->is_featured,
             ];
         }
@@ -69,7 +74,7 @@ class HomeItemPresenter
                 'slug' => $item->slug,
                 'description' => $intro,
                 'description_format' => 'html',
-                'image_url' => $item->featuredImage?->publicUrl(),
+                'image_url' => self::imageUrl($item->featuredImage?->publicUrl()),
                 'published_at' => $item->published_at?->toIso8601String(),
             ];
         }
@@ -88,7 +93,7 @@ class HomeItemPresenter
                 'id' => $item->id,
                 'title' => $item->title,
                 'slug' => $item->slug,
-                'image_url' => $item->image?->publicUrl(),
+                'image_url' => self::imageUrl($item->image?->publicUrl()),
             ];
         }
 
@@ -99,7 +104,7 @@ class HomeItemPresenter
                 'subtitle' => $item->subtitle,
                 'button_text' => $item->button_text,
                 'button_link' => $item->button_link,
-                'image_url' => $item->file?->publicUrl(),
+                'image_url' => self::imageUrl($item->file?->publicUrl()),
             ];
         }
 
@@ -111,7 +116,7 @@ class HomeItemPresenter
                 'id' => $item->id,
                 'title' => $fullName,
                 'subtitle' => $item->profile?->headline,
-                'image_url' => $avatar['url'] ?? null,
+                'image_url' => self::imageUrl($avatar['url'] ?? null),
                 'resume_url' => route('instructors.resume', $item),
                 'profile_url' => route('instructors.show', $item),
             ];

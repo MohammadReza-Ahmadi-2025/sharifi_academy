@@ -227,7 +227,7 @@ export default function CourseShow({ course, structuredData }: Props) {
                                 <div className="absolute -inset-2 rounded-2xl bg-gradient-to-br from-primary/30 to-secondary/40 blur-sm" aria-hidden />
                                 <div className="relative overflow-hidden rounded-2xl border-4 border-neutral-white shadow-2xl">
                                     <img
-                                        src={course.image_url ?? '/banner.png'}
+                                        src={course.image_url?.trim() || '/banner.png'}
                                         alt={course.title}
                                         className="aspect-[4/3] w-full object-cover"
                                         fetchPriority="high"

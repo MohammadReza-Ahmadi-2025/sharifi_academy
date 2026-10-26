@@ -26,7 +26,7 @@ export function HomeCatalogCard({ item, hrefPrefix, showPrice, contentType, clas
     const mediaBlock = (
         <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-secondary/20">
             <img
-                src={item.image_url ?? '/banner.png'}
+                src={item.image_url?.trim() || '/banner.png'}
                 alt={item.title}
                 className="size-full object-cover transition duration-500 group-hover:scale-[1.04]"
             />

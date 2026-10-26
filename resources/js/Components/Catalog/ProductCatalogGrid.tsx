@@ -49,7 +49,7 @@ export function ProductCatalogGrid({ products, variant = 'default' }: Props) {
                         }`}
                     >
                         <img
-                            src={product.image_url ?? '/banner.png'}
+                            src={product.image_url?.trim() || '/banner.png'}
                             alt={product.title}
                             loading={variant === 'category' ? 'lazy' : undefined}
                             decoding="async"
