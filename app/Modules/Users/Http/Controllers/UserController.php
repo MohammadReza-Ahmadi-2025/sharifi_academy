@@ -3,8 +3,8 @@
 namespace App\Modules\Users\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Roles\Models\Role;
 use App\Models\User;
+use App\Modules\Roles\Models\Role;
 use App\Modules\Roles\Support\PermissionCatalog;
 use App\Modules\Users\Http\Requests\StoreUserRequest;
 use App\Modules\Users\Http\Requests\UpdateUserRequest;
@@ -13,6 +13,7 @@ use App\Modules\Users\Support\UserGuard;
 use App\Modules\Users\Support\UserPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -106,7 +107,7 @@ class UserController extends Controller
         ]);
 
         $user = new User($data);
-        $user->password = $request->validated('password');
+        $user->password = Str::password(32);
         $user->save();
 
         $user->syncRoles($roles);
@@ -159,10 +160,6 @@ class UserController extends Controller
 
         if ($emailChanged) {
             $user->email_verified_at = null;
-        }
-
-        if ($request->filled('password')) {
-            $user->password = $request->validated('password');
         }
 
         $user->save();

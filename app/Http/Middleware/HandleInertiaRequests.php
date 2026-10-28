@@ -79,6 +79,11 @@ class HandleInertiaRequests extends Middleware
             'courseCategoryNav' => fn () => app(SiteCourseCategoryNavService::class)->tree(),
             'siteSocials' => fn () => app(SiteSocialService::class)->forSite(),
             'url' => fn () => $request->url(),
+            'otpPolicy' => [
+                'expires_seconds' => (int) config('otp.expires_minutes') * 60,
+                'resend_cooldown_seconds' => (int) config('otp.resend_cooldown_seconds'),
+                'max_verify_attempts' => (int) config('otp.max_attempts'),
+            ],
         ];
     }
 

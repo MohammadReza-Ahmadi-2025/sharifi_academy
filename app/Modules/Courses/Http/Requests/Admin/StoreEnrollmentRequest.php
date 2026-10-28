@@ -3,23 +3,14 @@
 namespace App\Modules\Courses\Http\Requests\Admin;
 
 use App\Modules\Courses\Enums\EnrollmentStatus;
-use App\Modules\Courses\Http\Requests\Admin\Concerns\ValidatesEnrollableUser;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Validator;
 
 class StoreEnrollmentRequest extends FormRequest
 {
-    use ValidatesEnrollableUser;
-
     public function authorize(): bool
     {
         return $this->user()?->can('enrollments-create') ?? false;
-    }
-
-    public function withValidator(Validator $validator): void
-    {
-        $this->withEnrollableUserValidator($validator);
     }
 
     /**

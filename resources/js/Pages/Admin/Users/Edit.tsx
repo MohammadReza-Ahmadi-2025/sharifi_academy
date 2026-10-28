@@ -30,7 +30,6 @@ export default function UsersEdit({ user, roleOptions, selectedRoles, abilities 
         email: user.email ?? '',
         gender: user.gender ?? '',
         status: user.status,
-        password: '',
         roles: selectedRoles,
     });
 
@@ -82,7 +81,6 @@ export default function UsersEdit({ user, roleOptions, selectedRoles, abilities 
                     roleOptions={roleOptions}
                     processing={form.processing}
                     onChange={(key, value) => form.setData(key, value)}
-                    passwordRequired={false}
                 />
 
                 <AdminFormActions>

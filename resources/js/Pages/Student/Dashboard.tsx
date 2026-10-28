@@ -5,12 +5,15 @@ import { Head, Link } from '@inertiajs/react';
 type Enrollment = {
     id: number;
     course: { id: number; title: string; slug: string };
+    class_name: string;
     sessions: {
         id: number;
         title: string;
         starts_at: string | null;
         join_url: string | null;
         join_label: string | null;
+        join_hint: string | null;
+        adobe_login_hint: string | null;
         adobe_connect_url: string | null;
         recordings: { id: number; name: string; playback_url: string; download_url: string | null }[];
     }[];
@@ -41,6 +44,9 @@ export default function Dashboard({ enrollments }: Props) {
                                     enrollment.course.title
                                 )}
                             </h3>
+                            {enrollment.class_name ? (
+                                <p className="mt-1 text-sm text-zinc-600">کلاس: {enrollment.class_name}</p>
+                            ) : null}
                             {enrollment.sessions.length === 0 ? (
                                 <p className="mt-2 text-sm text-zinc-500">جلسه‌ای برای این کلاس ثبت نشده است.</p>
                             ) : (
@@ -58,8 +64,8 @@ export default function Dashboard({ enrollments }: Props) {
                                                     </span>
                                                 )}
                                             </span>
-                                            <span className="flex flex-wrap gap-2">
-                                                {(session.join_url ?? session.adobe_connect_url) && (
+                                            <span className="flex flex-wrap items-center gap-2">
+                                                {(session.join_url ?? session.adobe_connect_url) ? (
                                                     <a
                                                         href={session.join_url ?? session.adobe_connect_url ?? '#'}
                                                         target="_blank"
@@ -68,7 +74,14 @@ export default function Dashboard({ enrollments }: Props) {
                                                     >
                                                         {session.join_label ?? 'ورود به کلاس'}
                                                     </a>
-                                                )}
+                                                ) : session.join_hint ? (
+                                                    <span className="max-w-xs text-xs leading-relaxed text-amber-800">
+                                                        {session.join_hint}
+                                                    </span>
+                                                ) : null}
+                                                {session.adobe_login_hint ? (
+                                                    <span className="text-xs text-slate-500">{session.adobe_login_hint}</span>
+                                                ) : null}
                                                 {session.recordings.map((recording) => (
                                                     <span key={recording.id} className="flex gap-1">
                                                         <a

@@ -56,4 +56,32 @@ final class AdobeConnectJoinUrl
 
         return app(AdobeConnectUrlBuilder::class)->meetingJoinUrl($path);
     }
+
+    public static function urlPathForSession(ClassSession $session, CourseClass $courseClass): ?string
+    {
+        $sessionRoom = $session->relationLoaded('adobeRooms')
+            ? $session->adobeRooms->first(fn (AdobeRoom $room) => $room->status === AdobeRoomStatus::Active)
+            : $session->adobeRooms()->active()->first();
+
+        if ($sessionRoom instanceof AdobeRoom) {
+            return self::normalizeUrlPath($sessionRoom->url_path);
+        }
+
+        $classRoom = $courseClass->relationLoaded('classLevelAdobeRooms')
+            ? $courseClass->classLevelAdobeRooms->first(fn (AdobeRoom $room) => $room->status === AdobeRoomStatus::Active)
+            : $courseClass->classLevelAdobeRooms()->active()->first();
+
+        if ($classRoom instanceof AdobeRoom) {
+            return self::normalizeUrlPath($classRoom->url_path);
+        }
+
+        return null;
+    }
+
+    private static function normalizeUrlPath(?string $path): ?string
+    {
+        $path = trim((string) $path);
+
+        return $path !== '' ? $path : null;
+    }
 }

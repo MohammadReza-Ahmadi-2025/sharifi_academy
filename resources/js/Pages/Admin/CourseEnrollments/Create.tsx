@@ -41,7 +41,7 @@ export default function CourseEnrollmentsCreate({
         course_id: selectedCourseId ?? 0,
         course_class_id: selectedClassId ?? 0,
         user_id: userOptions[0]?.value ?? 0,
-        status: enrollmentStatusOptions[0]?.value ?? 'confirmed',
+        status: 'confirmed',
         price_amount: defaultPrice,
         admin_note: '',
     });
@@ -84,7 +84,7 @@ export default function CourseEnrollmentsCreate({
             <AdminFormPage onSubmit={submit}>
                 <Card className="space-y-4 p-6">
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                        فقط کاربرانی در لیست «کاربر» نمایش داده می‌شوند که نام، نام خانوادگی و شهر در پروفایل داشته باشند.
+                        هر کاربر فعال را می‌توانید در این کلاس ثبت‌نام کنید، از جمله حساب خودتان.
                     </p>
 
                     <div className="grid gap-4 md:grid-cols-2">
@@ -119,7 +119,7 @@ export default function CourseEnrollmentsCreate({
                                 options={userSelectOptions}
                                 placeholder={
                                     userSelectOptions.length === 0
-                                        ? 'کاربر واجد شرایطی نیست'
+                                        ? 'کاربر فعالی نیست'
                                         : 'انتخاب کاربر…'
                                 }
                                 value={findSelectOption(userSelectOptions, form.data.user_id)}

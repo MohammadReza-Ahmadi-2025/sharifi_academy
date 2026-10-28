@@ -59,24 +59,10 @@ export default function ProfileEdit({ profile, locations }: Props) {
         ...extendedToFormDefaults(profile.extended),
     });
 
-    const passwordForm = useForm({
-        current_password: '',
-        password: '',
-        password_confirmation: '',
-    });
-
     const submitInfo = (event: React.FormEvent) => {
         event.preventDefault();
         infoForm.transform((data) => withAvatarPayload(data, avatarFiles, { removeAvatar }));
         infoForm.put('/admin/profile', { preserveScroll: true, forceFormData: true });
-    };
-
-    const submitPassword = (event: React.FormEvent) => {
-        event.preventDefault();
-        passwordForm.put('/admin/profile/password', {
-            preserveScroll: true,
-            onSuccess: () => passwordForm.reset(),
-        });
     };
 
     const displayName = [profile.name, profile.family].filter(Boolean).join(' ') || '—';
@@ -85,7 +71,7 @@ export default function ProfileEdit({ profile, locations }: Props) {
         <AdminLayout>
             <Head title="پروفایل من" />
 
-            <PageHeader title="پروفایل من" description="اطلاعات حساب، موبایل و تغییر رمز عبور" backHref="/admin" />
+            <PageHeader title="پروفایل من" description="اطلاعات حساب و موبایل" backHref="/admin" />
 
             {flash?.success ? (
                 <p
@@ -262,53 +248,6 @@ export default function ProfileEdit({ profile, locations }: Props) {
                         <AdminButton type="submit" disabled={infoForm.processing}>ذخیره اطلاعات</AdminButton>
                     </AdminFormActions>
                     </form>
-
-                    <Card>
-                        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">تغییر رمز عبور</h2>
-                        <form onSubmit={submitPassword} className="mt-4 space-y-4">
-                            <FormField
-                                label="رمز عبور فعلی"
-                                htmlFor="current_password"
-                                error={passwordForm.errors.current_password}
-                            >
-                                <AdminInput
-                                    id="current_password"
-                                    type="password"
-                                    autoComplete="current-password"
-                                    value={passwordForm.data.current_password}
-                                    onChange={(e) => passwordForm.setData('current_password', e.target.value)}
-                                    disabled={passwordForm.processing}
-                                />
-                            </FormField>
-                            <FormField label="رمز عبور جدید" htmlFor="password" error={passwordForm.errors.password}>
-                                <AdminInput
-                                    id="password"
-                                    type="password"
-                                    autoComplete="new-password"
-                                    value={passwordForm.data.password}
-                                    onChange={(e) => passwordForm.setData('password', e.target.value)}
-                                    disabled={passwordForm.processing}
-                                />
-                            </FormField>
-                            <FormField
-                                label="تکرار رمز جدید"
-                                htmlFor="password_confirmation"
-                                error={passwordForm.errors.password_confirmation}
-                            >
-                                <AdminInput
-                                    id="password_confirmation"
-                                    type="password"
-                                    autoComplete="new-password"
-                                    value={passwordForm.data.password_confirmation}
-                                    onChange={(e) => passwordForm.setData('password_confirmation', e.target.value)}
-                                    disabled={passwordForm.processing}
-                                />
-                            </FormField>
-                            <AdminButton type="submit" variant="outline" disabled={passwordForm.processing}>
-                                به‌روزرسانی رمز
-                            </AdminButton>
-                        </form>
-                    </Card>
                 </div>
             </div>
         </AdminLayout>

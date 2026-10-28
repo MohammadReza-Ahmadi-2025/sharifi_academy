@@ -27,16 +27,6 @@ export const otpPhoneSchema = z.object({
         .pipe(z.string().regex(/^09\d{9}$/, 'شماره موبایل معتبر نیست (مثال: 09123456789)')),
 });
 
-export const passwordLoginSchema = z.object({
-    phone: z
-        .string()
-        .trim()
-        .transform((value) => toWesternDigits(value).replace(/\s+/g, ''))
-        .pipe(z.string().regex(/^09\d{9}$/, 'شماره موبایل معتبر نیست (مثال: 09123456789)')),
-    password: z.string().min(1, 'رمز عبور الزامی است'),
-    remember: z.boolean().optional(),
-});
-
 export const otpCodeSchema = z.object({
     code: z
         .string()

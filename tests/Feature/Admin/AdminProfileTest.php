@@ -2,13 +2,12 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Modules\Locations\Models\ProvinceCity;
 use App\Models\User;
+use App\Modules\Locations\Models\ProvinceCity;
 use App\Modules\Users\Support\UserAvatarMedia;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -132,24 +131,6 @@ class AdminProfileTest extends TestCase
 
         $admin->refresh();
         $this->assertNotNull($admin->getFirstMedia(UserAvatarMedia::COLLECTION));
-    }
-
-    public function test_user_can_update_password(): void
-    {
-        $this->seed(DatabaseSeeder::class);
-
-        $admin = User::where('mobile', '09120000001')->firstOrFail();
-
-        $this->actingAs($admin)
-            ->put('/admin/profile/password', [
-                'current_password' => 'password',
-                'password' => 'new-password-1',
-                'password_confirmation' => 'new-password-1',
-            ])
-            ->assertRedirect();
-
-        $admin->refresh();
-        $this->assertTrue(Hash::check('new-password-1', $admin->password));
     }
 
     public function test_user_can_update_extended_profile(): void

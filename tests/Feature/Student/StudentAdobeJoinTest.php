@@ -19,6 +19,7 @@ use App\Modules\Roles\Support\DefaultRolePermissions;
 use App\Modules\Settings\Models\SiteSetting;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 
 class StudentAdobeJoinTest extends TestCase
@@ -31,6 +32,10 @@ class StudentAdobeJoinTest extends TestCase
 
         $this->seed(DatabaseSeeder::class);
         DefaultRolePermissions::sync();
+
+        Config::set('adobe_connect.base_url', 'https://meet.example.com');
+        Config::set('adobe_connect.login', '');
+        Config::set('adobe_connect.api_token', '');
     }
 
     public function test_student_redirects_to_adobe_when_enrolled_and_room_configured(): void
@@ -90,7 +95,7 @@ class StudentAdobeJoinTest extends TestCase
 
         $this->actingAs($student)
             ->get("/student/classes/{$class->id}/sessions/{$session->id}/adobe")
-            ->assertRedirect('https://meet.example.com/laravel-live/');
+            ->assertRedirect('https://meet.example.com/laravel-live/?login=09120000003&password=09120000003');
     }
 
     public function test_student_cannot_join_adobe_without_enrollment(): void

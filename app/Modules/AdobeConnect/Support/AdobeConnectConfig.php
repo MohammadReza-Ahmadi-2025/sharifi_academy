@@ -49,4 +49,26 @@ final class AdobeConnectConfig
     {
         return max(5, (int) config('adobe_connect.http_timeout_seconds', 30));
     }
+
+    public function meetingsFolderId(): ?string
+    {
+        $value = trim((string) config('adobe_connect.meetings_folder_id', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    public function autoProvisionMeetings(): bool
+    {
+        return (bool) config('adobe_connect.auto_provision_meetings', true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function usersFolderIds(): array
+    {
+        $ids = config('adobe_connect.users_folder_ids', []);
+
+        return is_array($ids) ? array_values(array_filter($ids, fn ($id) => is_string($id) && $id !== '')) : [];
+    }
 }

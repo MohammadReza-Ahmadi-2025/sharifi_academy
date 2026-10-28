@@ -54,7 +54,6 @@ class StoreUserRequest extends FormRequest
         return [
             ...$this->baseUserRules(),
             ...$this->avatarRules(),
-            'password' => ['required', 'string', 'min:8', 'max:255'],
             'roles.*' => ['string', Rule::in($allowedRoles)],
         ];
     }

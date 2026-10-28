@@ -236,11 +236,16 @@ export function ClassFormFields({
                 </p>
                 <div className="flex items-center justify-between gap-2">
                     <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">اساتید کلاس</h2>
-                    <AdminButton type="button" variant="outline" size="sm" disabled={processing} onClick={addInstructor}>
+                    <AdminButton type="button" variant="outline" size="sm" disabled={processing || userOptions.length === 0} onClick={addInstructor}>
                         <Plus className="ml-1 h-4 w-4" />
                         افزودن استاد
                     </AdminButton>
                 </div>
+                {userOptions.length === 0 ? (
+                    <p className="text-sm text-amber-700 dark:text-amber-400">
+                        کاربری با نقش استاد و وضعیت فعال پیدا نشد. ابتدا در بخش کاربران نقش «استاد» بدهید.
+                    </p>
+                ) : null}
                 {data.instructors.length === 0 ? (
                     <p className="text-sm text-slate-500">هنوز استادی اضافه نشده.</p>
                 ) : (

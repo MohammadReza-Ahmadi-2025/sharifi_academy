@@ -26,10 +26,6 @@ class UpdateUserRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->prepareUserFieldsForValidation();
-
-        if ($this->input('password') === '') {
-            $this->request->remove('password');
-        }
     }
 
     public function withValidator(Validator $validator): void
@@ -66,7 +62,6 @@ class UpdateUserRequest extends FormRequest
         return [
             ...$this->baseUserRules($userId),
             ...$this->avatarRules(),
-            'password' => ['nullable', 'string', 'min:8', 'max:255'],
             'roles.*' => ['string', Rule::in($allowedRoles)],
         ];
     }

@@ -3,7 +3,6 @@
 namespace App\Modules\Profile\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Profile\Http\Requests\UpdatePasswordRequest;
 use App\Modules\Profile\Http\Requests\UpdateProfileRequest;
 use App\Modules\Profile\Support\LocationSelectOptions;
 use App\Modules\Profile\Support\ProfilePayload;
@@ -33,14 +32,5 @@ class AccountProfileController extends Controller
         ProfileUpdater::updateUserAndProfile($user, $request->validated(), $request);
 
         return back()->with('success', 'پروفایل به‌روزرسانی شد.');
-    }
-
-    public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
-    {
-        $user = $request->user();
-        $user->password = $request->validated('password');
-        $user->save();
-
-        return back()->with('success', 'رمز عبور با موفقیت تغییر کرد.');
     }
 }

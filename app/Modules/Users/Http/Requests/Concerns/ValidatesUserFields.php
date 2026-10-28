@@ -98,7 +98,6 @@ trait ValidatesUserFields
             'gender' => 'جنسیت',
             'status' => 'وضعیت',
             'roles' => 'نقش‌ها',
-            'password' => 'رمز عبور',
             'avatar' => 'تصویر آواتار',
             'avatar_alt' => 'متن جایگزین آواتار',
             'avatar_title' => 'عنوان آواتار',

@@ -8,6 +8,7 @@ use App\Modules\Auth\Enums\OtpStatus;
 use App\Modules\Auth\Models\MobileOtp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
 
 class MobileOtpTest extends TestCase
@@ -51,7 +52,9 @@ class MobileOtpTest extends TestCase
 
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', ['mobile' => '09121111111']);
-        $this->assertTrue(User::where('mobile', '09121111111')->first()?->hasRole('student') ?? false);
+        $user = User::where('mobile', '09121111111')->first();
+        $this->assertNotNull($user);
+        $this->assertFalse($user->hasRole('student'));
     }
 
     public function test_verify_existing_user_logs_in_without_duplicate(): void
@@ -88,5 +91,65 @@ class MobileOtpTest extends TestCase
 
         $this->post('/auth/otp/request', ['phone' => '09124444444'])->assertSessionHasNoErrors();
         $this->post('/auth/otp/request', ['phone' => '09124444444'])->assertSessionHasErrors('phone');
+    }
+
+    public function test_expired_code_cannot_be_verified(): void
+    {
+        config(['otp.expires_minutes' => 2]);
+
+        $this->post('/auth/otp/request', ['phone' => '09125555555'])->assertSessionHasNoErrors();
+
+        $this->travel(121)->seconds();
+
+        $this->post('/auth/otp/verify', [
+            'phone' => '09125555555',
+            'code' => '123456',
+        ])->assertSessionHasErrors('code');
+
+        $this->assertFalse(Auth::check());
+    }
+
+    public function test_max_wrong_attempts_blocks_otp(): void
+    {
+        config(['otp.max_attempts' => 3]);
+
+        $this->post('/auth/otp/request', ['phone' => '09126666666']);
+
+        for ($i = 0; $i < 3; $i++) {
+            $this->post('/auth/otp/verify', [
+                'phone' => '09126666666',
+                'code' => '000000',
+            ])->assertSessionHasErrors('code');
+        }
+
+        $otp = MobileOtp::query()->where('mobile', '09126666666')->first();
+        $this->assertSame(OtpStatus::Blocked, $otp?->status);
+        $this->assertSame(3, $otp?->attempts);
+
+        $this->post('/auth/otp/verify', [
+            'phone' => '09126666666',
+            'code' => '123456',
+        ])->assertSessionHasErrors('code');
+
+        $this->assertFalse(Auth::check());
+    }
+
+    public function test_ip_rate_limit_blocks_excessive_sms_requests(): void
+    {
+        RateLimiter::clear('otp:request-ip:127.0.0.1');
+
+        config([
+            'otp.rate_limit.ip.max_attempts' => 3,
+            'otp.rate_limit.ip.decay_minutes' => 120,
+            'otp.resend_cooldown_seconds' => 0,
+        ]);
+
+        for ($i = 0; $i < 3; $i++) {
+            $mobile = '0912'.str_pad((string) (7000000 + $i), 7, '0', STR_PAD_LEFT);
+            $this->post('/auth/otp/request', ['phone' => $mobile])->assertSessionHasNoErrors();
+        }
+
+        $this->post('/auth/otp/request', ['phone' => '09127777777'])
+            ->assertSessionHasErrors('phone');
     }
 }

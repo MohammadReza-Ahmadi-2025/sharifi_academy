@@ -40,6 +40,8 @@ use Spatie\Permission\Traits\HasRoles;
     'last_login_ip',
     'email_verified_at',
     'mobile_verified_at',
+    'adobe_connect_principal_id',
+    'adobe_connect_synced_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements HasMedia
@@ -64,6 +66,7 @@ class User extends Authenticatable implements HasMedia
         return [
             'email_verified_at' => 'datetime',
             'mobile_verified_at' => 'datetime',
+            'adobe_connect_synced_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
             'status' => 'integer',

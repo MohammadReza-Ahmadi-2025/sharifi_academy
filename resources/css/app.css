@@ -247,6 +247,10 @@ body {
     color: rgb(0 0 0 / 0.42);
 }
 
+.otp-auth-hint--warn {
+    color: rgb(180 50 40 / 0.92);
+}
+
 .otp-auth-card .otp-auth-sub small {
     font-weight: 600;
     color: var(--color-neutral-black);

@@ -3,7 +3,7 @@ import { PageProps } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 
 type Props = {
-    /** عنوان صفحه — در titlebar با نام سایت ترکیب می‌شود */
+    /** عنوان صفحه — در titlebar بدون نام سایت (نام سایت فقط صفحهٔ اصلی) */
     title?: string;
     description?: string;
 };
@@ -28,7 +28,7 @@ export function SiteDefaultHead({ title, description }: Props) {
             <meta head-key="description" name="description" content={metaDescription ?? metaTitle} />
             {keywords ? <meta head-key="keywords" name="keywords" content={keywords} /> : null}
             <meta head-key="og:type" property="og:type" content="website" />
-            <meta head-key="og:title" property="og:title" content={title ? `${title} · ${appName}` : metaTitle} />
+            <meta head-key="og:title" property="og:title" content={title?.trim() || metaTitle} />
             {metaDescription ? (
                 <meta head-key="og:description" property="og:description" content={metaDescription} />
             ) : null}

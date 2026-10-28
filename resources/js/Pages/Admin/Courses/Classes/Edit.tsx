@@ -18,6 +18,7 @@ type Props = {
     onlinePlatformOptions: { value: string; label: string }[];
     instructorRoleOptions: { value: string; label: string }[];
     userOptions: { value: number; label: string }[];
+    enrollmentUserOptions: { value: number; label: string }[];
     enrollmentStatusOptions: { value: string; label: string }[];
     adobeAccessOptions: { value: string; label: string }[];
     adobeStatusOptions: { value: string; label: string }[];
@@ -98,7 +99,7 @@ export default function CourseClassesEdit(props: Props) {
                     courseId={course.id}
                     classId={classId}
                     enrollments={enrollments}
-                    userOptions={props.userOptions}
+                    userOptions={props.enrollmentUserOptions}
                     enrollmentStatusOptions={props.enrollmentStatusOptions}
                     defaultPrice={Number(courseClass.price ?? 0)}
                     canCreate={abilities.enrollmentsCreate}

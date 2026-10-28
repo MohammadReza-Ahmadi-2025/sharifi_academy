@@ -44,7 +44,6 @@ Route::prefix('admin')
 
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
         Route::middleware('permission:users-index')->group(function () {
             Route::get('users', [UserController::class, 'index'])->name('users.index');

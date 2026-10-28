@@ -63,7 +63,7 @@ export function ClassEnrollmentPanel({
 
     const form = useForm({
         user_id: userOptions[0]?.value ?? 0,
-        status: enrollmentStatusOptions[0]?.value ?? 'pending',
+        status: 'confirmed',
         price_amount: defaultPrice,
         admin_note: '',
     });
@@ -92,7 +92,7 @@ export function ClassEnrollmentPanel({
             <div>
                 <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">ثبت‌نام‌ها</h2>
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    ثبت‌نام دستی — کاربر باید نام، نام خانوادگی و شهر داشته باشد.{' '}
+                    ثبت‌نام دستی هر کاربر فعال.{' '}
                     <a href="/admin/course-enrollments/create" className="text-indigo-600 hover:underline">
                         ثبت‌نام از بخش مرکزی
                     </a>
@@ -111,7 +111,7 @@ export function ClassEnrollmentPanel({
                                 isDisabled={form.processing || userSelectOptions.length === 0}
                                 options={userSelectOptions}
                                 placeholder={
-                                    userSelectOptions.length === 0 ? 'کاربر واجد شرایطی نیست' : undefined
+                                    userSelectOptions.length === 0 ? 'کاربر فعالی نیست' : undefined
                                 }
                                 value={findSelectOption(userSelectOptions, form.data.user_id)}
                                 onChange={(option) => form.setData('user_id', Number(option?.value ?? 0))}

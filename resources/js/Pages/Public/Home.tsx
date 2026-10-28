@@ -16,7 +16,7 @@ export default function Home({ sections, storyGroups }: Props) {
 
     return (
         <AppLayout fullWidth mainClassName="bg-neutral-white">
-            <Head title="خانه" />
+            <Head />
             <HomeStoriesBar initialGroups={storyGroups ?? []} isAuthenticated={auth.user !== null} />
             <div className="home-page min-h-full">
                 <HomeDynamicSections sections={sections} />

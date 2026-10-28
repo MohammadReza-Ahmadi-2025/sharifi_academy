@@ -23,7 +23,6 @@ export default function UsersCreate({ roleOptions }: Props) {
         email: '',
         gender: '',
         status: 1,
-        password: '',
         roles: [] as string[],
     });
 
@@ -54,7 +53,6 @@ export default function UsersCreate({ roleOptions }: Props) {
                     roleOptions={roleOptions}
                     processing={form.processing}
                     onChange={(key, value) => form.setData(key, value)}
-                    passwordRequired
                 />
 
                 <AdminFormActions>

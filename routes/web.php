@@ -5,7 +5,6 @@ use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\SiteSearchController;
 use App\Modules\Auth\Http\Controllers\OtpRequestController;
 use App\Modules\Auth\Http\Controllers\OtpVerifyController;
-use App\Modules\Auth\Http\Controllers\PasswordLoginController;
 use App\Modules\Blog\Http\Controllers\Site\BlogCategoryController;
 use App\Modules\Blog\Http\Controllers\Site\PostController as BlogPostController;
 use App\Modules\Catalog\Http\Controllers\Site\CategoryController;
@@ -55,7 +54,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/stories/{story}/views', [StoryController::class, 'recordView'])->name('stories.views');
     Route::get('/profile', [AccountProfileController::class, 'edit'])->name('site.profile.edit');
     Route::put('/profile', [AccountProfileController::class, 'update'])->name('site.profile.update');
-    Route::put('/profile/password', [AccountProfileController::class, 'updatePassword'])->name('site.profile.password');
 
     Route::post('/account/notifications/read-all', [NotificationController::class, 'markAllRead'])
         ->name('account.notifications.read-all');
@@ -68,7 +66,4 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', fn () => redirect()->route('login'));
     Route::post('/auth/otp/request', OtpRequestController::class)->name('auth.otp.request');
     Route::post('/auth/otp/verify', OtpVerifyController::class)->name('auth.otp.verify');
-    Route::post('/auth/password/login', PasswordLoginController::class)
-        ->middleware('throttle:password-login')
-        ->name('auth.password.login');
 });

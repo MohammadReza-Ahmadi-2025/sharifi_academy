@@ -8,7 +8,7 @@ return [
 
     'resend_cooldown_seconds' => (int) env('OTP_RESEND_COOLDOWN', 120),
 
-    'max_attempts' => (int) env('OTP_MAX_ATTEMPTS', 5),
+    'max_attempts' => (int) env('OTP_MAX_ATTEMPTS', 3),
 
     'default_type' => 'login',
 
@@ -18,11 +18,13 @@ return [
             'decay_minutes' => (int) env('OTP_RATE_MOBILE_DECAY', 60),
         ],
         'ip' => [
-            'max_attempts' => (int) env('OTP_RATE_IP_MAX', 15),
-            'decay_minutes' => (int) env('OTP_RATE_IP_DECAY', 60),
+            // بیش از این تعداد درخواست SMS از یک IP → مسدود تا پایان decay
+            'max_attempts' => (int) env('OTP_RATE_IP_MAX', 10),
+            'decay_minutes' => (int) env('OTP_RATE_IP_DECAY', 120),
         ],
     ],
 
-    'new_user_role' => 'student',
+    /** OTP signup does not assign a role; student role is granted on confirmed enrollment. */
+    'new_user_role' => null,
 
 ];

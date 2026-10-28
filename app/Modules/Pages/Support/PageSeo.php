@@ -28,7 +28,7 @@ class PageSeo
             : url('/pages/'.$page->publicSlug());
 
         return [
-            'title' => $title.' | '.$appName,
+            'title' => $title,
             'description' => $description,
             'keywords' => $keywords,
             'canonical' => $canonical,

@@ -37,8 +37,8 @@ class MobileOtpService
 
         $codeLength = (int) config('otp.code_length', 6);
         $code = $this->codeGenerator->generate($codeLength);
-        $expiresMinutes = (int) config('otp.expires_minutes', 5);
-        $maxAttempts = (int) config('otp.max_attempts', 5);
+        $expiresMinutes = (int) config('otp.expires_minutes', 2);
+        $maxAttempts = (int) config('otp.max_attempts', 3);
 
         DB::transaction(function () use ($mobile, $type, $code, $request, $expiresMinutes, $maxAttempts) {
             MobileOtp::query()
@@ -58,7 +58,13 @@ class MobileOtpService
                 'expires_at' => now()->addMinutes($expiresMinutes),
             ]);
 
-            $this->otpSender->send($mobile, $code, $type);
+            try {
+                $this->otpSender->send($mobile, $code, $type);
+            } catch (\Throwable) {
+                throw ValidationException::withMessages([
+                    'phone' => 'ارسال پیامک با خطا مواجه شد. لطفاً کمی بعد دوباره تلاش کنید.',
+                ]);
+            }
         });
 
         $this->hitRateLimiters($mobile, $request->ip());
@@ -90,6 +96,8 @@ class MobileOtpService
             ->first();
 
         if (! $otp) {
+            $this->expireLatestPendingOtp($mobile, $type);
+
             throw ValidationException::withMessages([
                 'code' => 'کد منقضی شده یا نامعتبر است. دوباره درخواست دهید.',
             ]);
@@ -108,7 +116,7 @@ class MobileOtpService
             $otp->refresh();
 
             if ($otp->attempts >= $otp->max_attempts) {
-                $otp->update(['status' => OtpStatus::Failed]);
+                $otp->update(['status' => OtpStatus::Blocked]);
             }
 
             throw ValidationException::withMessages([
@@ -149,11 +157,6 @@ class MobileOtpService
             'mobile_verified_at' => now(),
         ]);
 
-        $role = config('otp.new_user_role', 'student');
-        if ($role) {
-            $user->assignRole($role);
-        }
-
         return $user;
     }
 
@@ -176,13 +179,12 @@ class MobileOtpService
     {
         $mobileKey = 'otp:mobile:'.$mobile;
         $mobileMax = (int) config('otp.rate_limit.mobile.max_attempts', 5);
-        $mobileDecay = (int) config('otp.rate_limit.mobile.decay_minutes', 60) * 60;
 
         if (RateLimiter::tooManyAttempts($mobileKey, $mobileMax)) {
             $seconds = RateLimiter::availableIn($mobileKey);
 
             throw ValidationException::withMessages([
-                'phone' => 'درخواست‌های زیاد برای این شماره. '.ceil($seconds / 60).' دقیقه دیگر تلاش کنید.',
+                'phone' => 'درخواست‌های زیاد برای این شماره. '.$this->formatRateLimitWait($seconds).' دیگر تلاش کنید.',
             ]);
         }
 
@@ -190,15 +192,14 @@ class MobileOtpService
             return;
         }
 
-        $ipKey = 'otp:ip:'.$ip;
-        $ipMax = (int) config('otp.rate_limit.ip.max_attempts', 15);
-        $ipDecay = (int) config('otp.rate_limit.ip.decay_minutes', 60) * 60;
+        $ipKey = 'otp:request-ip:'.$ip;
+        $ipMax = (int) config('otp.rate_limit.ip.max_attempts', 10);
 
         if (RateLimiter::tooManyAttempts($ipKey, $ipMax)) {
             $seconds = RateLimiter::availableIn($ipKey);
 
             throw ValidationException::withMessages([
-                'phone' => 'درخواست‌های زیاد از این IP. '.ceil($seconds / 60).' دقیقه دیگر تلاش کنید.',
+                'phone' => 'به‌دلیل درخواست‌های مکرر پیامک، این IP به مدت '.$this->formatRateLimitWait($seconds).' مسدود است.',
             ]);
         }
     }
@@ -209,9 +210,30 @@ class MobileOtpService
         RateLimiter::hit('otp:mobile:'.$mobile, $mobileDecay);
 
         if ($ip !== null) {
-            $ipDecay = (int) config('otp.rate_limit.ip.decay_minutes', 60) * 60;
-            RateLimiter::hit('otp:ip:'.$ip, $ipDecay);
+            $ipDecay = (int) config('otp.rate_limit.ip.decay_minutes', 120) * 60;
+            RateLimiter::hit('otp:request-ip:'.$ip, $ipDecay);
         }
+    }
+
+    protected function expireLatestPendingOtp(string $mobile, string $type): void
+    {
+        MobileOtp::query()
+            ->where('mobile', $mobile)
+            ->where('type', $type)
+            ->where('status', OtpStatus::Pending)
+            ->where('expires_at', '<=', now())
+            ->update(['status' => OtpStatus::Expired]);
+    }
+
+    protected function formatRateLimitWait(int $seconds): string
+    {
+        if ($seconds >= 3600) {
+            $hours = (int) ceil($seconds / 3600);
+
+            return $hours.' ساعت';
+        }
+
+        return (int) ceil($seconds / 60).' دقیقه';
     }
 
     /**
@@ -219,7 +241,7 @@ class MobileOtpService
      */
     protected function assertResendCooldown(string $mobile, string $type): void
     {
-        $cooldown = (int) config('otp.resend_cooldown_seconds', 120);
+        $cooldown = (int) config('otp.resend_cooldown_seconds', 60);
 
         $latest = MobileOtp::query()
             ->where('mobile', $mobile)

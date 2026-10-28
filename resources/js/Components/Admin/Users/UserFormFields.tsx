@@ -3,7 +3,6 @@ import { Card } from '@/Components/Admin/shared/ui/card';
 import { FormField } from '@/Components/Admin/shared/ui/form-field';
 import { AdminInput } from '@/Components/Admin/shared/ui/input';
 import { findSelectOption, mapToSelectOptions } from '@/Components/Admin/shared/lib/select-options';
-import { PasswordInput } from '@/Components/Admin/shared/ui/password-input';
 import { Select } from '@/Components/Admin/shared/ui/select';
 
 export type UserFormData = {
@@ -13,7 +12,6 @@ export type UserFormData = {
     email: string;
     gender: string;
     status: number;
-    password: string;
     roles: string[];
 };
 
@@ -23,19 +21,9 @@ type Props = {
     roleOptions: RoleOption[];
     processing: boolean;
     onChange: <K extends keyof UserFormData>(key: K, value: UserFormData[K]) => void;
-    showPassword?: boolean;
-    passwordRequired?: boolean;
 };
 
-export function UserFormFields({
-    data,
-    errors,
-    roleOptions,
-    processing,
-    onChange,
-    showPassword = true,
-    passwordRequired = false,
-}: Props) {
+export function UserFormFields({ data, errors, roleOptions, processing, onChange }: Props) {
     const genderOptions = mapToSelectOptions([
         { value: 'male', label: 'مرد' },
         { value: 'female', label: 'زن' },
@@ -124,26 +112,6 @@ export function UserFormFields({
                     disabled={processing}
                 />
             </Card>
-
-            {showPassword ? (
-                <Card className="space-y-4">
-                    <FormField
-                        label={passwordRequired ? 'رمز عبور' : 'رمز عبور جدید (اختیاری)'}
-                        htmlFor="password"
-                        required={passwordRequired}
-                        error={errors.password}
-                        hint={passwordRequired ? undefined : 'در صورت خالی بودن تغییر نمی‌کند.'}
-                    >
-                        <PasswordInput
-                            id="password"
-                            autoComplete="new-password"
-                            value={data.password}
-                            onChange={(e) => onChange('password', e.target.value)}
-                            disabled={processing}
-                        />
-                    </FormField>
-                </Card>
-            ) : null}
         </div>
     );
 }

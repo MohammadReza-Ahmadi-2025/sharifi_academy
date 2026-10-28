@@ -124,4 +124,9 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
     }>;
     courseCategoryNav: CourseCategoryNavNode[];
     url: string;
+    otpPolicy: {
+        expires_seconds: number;
+        resend_cooldown_seconds: number;
+        max_verify_attempts: number;
+    };
 };

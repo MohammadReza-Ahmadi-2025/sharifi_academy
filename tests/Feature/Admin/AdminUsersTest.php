@@ -55,7 +55,6 @@ class AdminUsersTest extends TestCase
                 'email' => 'newuser@sharifi.test',
                 'gender' => 'female',
                 'status' => 1,
-                'password' => 'password-12',
                 'roles' => ['student'],
             ])
             ->assertRedirect(route('admin.users.index'));
@@ -84,7 +83,6 @@ class AdminUsersTest extends TestCase
                 'email' => 'avatar@sharifi.test',
                 'gender' => 'male',
                 'status' => 1,
-                'password' => 'password-12',
                 'roles' => ['student'],
                 'avatar' => UploadedFile::fake()->image('avatar.jpg', 200, 200)->size(500),
                 'avatar_alt' => 'تصویر کاربر',
@@ -108,7 +106,6 @@ class AdminUsersTest extends TestCase
                 'family' => 'فایل',
                 'mobile' => '09125556677',
                 'status' => 1,
-                'password' => 'password-12',
                 'roles' => ['student'],
                 'avatar' => UploadedFile::fake()->image('big.jpg')->size(3000),
             ])

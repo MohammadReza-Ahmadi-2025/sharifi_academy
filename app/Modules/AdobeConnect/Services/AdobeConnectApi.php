@@ -2,10 +2,13 @@
 
 namespace App\Modules\AdobeConnect\Services;
 
+use App\Modules\AdobeConnect\Support\AdobeConnectConfig;
+
 class AdobeConnectApi
 {
     public function __construct(
         private readonly AdobeConnectXmlClient $client,
+        private readonly AdobeConnectConfig $config,
     ) {}
 
     /**
@@ -99,5 +102,163 @@ class AdobeConnectApi
         return is_string($json)
             && str_contains($json, 'enhanced-av')
             && str_contains($json, 'true');
+    }
+
+    /**
+     * @return array{sco_id: string, name: string, url_path: string}
+     */
+    public function createMeeting(
+        string $name,
+        \DateTimeInterface $begin,
+        \DateTimeInterface $end,
+        ?string $urlPath = null,
+    ): array {
+        $folderId = $this->resolveMeetingsFolderId();
+
+        $query = [
+            'type' => 'meeting',
+            'name' => $name,
+            'folder-id' => $folderId,
+            'date-begin' => $begin->format('Y-m-d\TH:i'),
+            'date-end' => $end->format('Y-m-d\TH:i'),
+            'lang' => 'en',
+        ];
+
+        if ($urlPath !== null && $urlPath !== '') {
+            $query['url-path'] = ltrim($urlPath, '/');
+        }
+
+        $xml = $this->client->get('sco-update', $query);
+        $sco = $xml->sco ?? null;
+        if ($sco === null) {
+            throw new \RuntimeException('Adobe Connect sco-update did not return a meeting sco.');
+        }
+
+        $scoId = (string) ($sco['sco-id'] ?? '');
+        $path = (string) ($sco->{'url-path'} ?? '');
+        if ($scoId === '' || $path === '') {
+            throw new \RuntimeException('Adobe Connect meeting was created but sco-id or url-path is missing.');
+        }
+
+        return [
+            'sco_id' => $scoId,
+            'name' => (string) ($sco->name ?? $name),
+            'url_path' => $path,
+        ];
+    }
+
+    public function resolveMeetingsFolderId(): string
+    {
+        $override = $this->config->meetingsFolderId();
+        if ($override !== null) {
+            return $override;
+        }
+
+        $xml = $this->client->get('sco-shortcuts');
+
+        if (! isset($xml->shortcuts->sco)) {
+            throw new \RuntimeException('Adobe Connect sco-shortcuts returned no folders.');
+        }
+
+        foreach ($xml->shortcuts->sco as $sco) {
+            $type = (string) ($sco['type'] ?? '');
+            if (in_array($type, ['user-meetings', 'my-meetings'], true)) {
+                $folderId = (string) ($sco['sco-id'] ?? '');
+                if ($folderId !== '') {
+                    return $folderId;
+                }
+            }
+        }
+
+        throw new \RuntimeException('Could not find user-meetings folder in Adobe Connect sco-shortcuts.');
+    }
+
+    public function findPrincipalIdByLogin(string $login): ?string
+    {
+        $login = trim($login);
+        if ($login === '') {
+            return null;
+        }
+
+        $xml = $this->client->get('principal-list', ['filter-login' => $login]);
+        if (! isset($xml->{'principal-list'}->principal)) {
+            return null;
+        }
+
+        $principal = $xml->{'principal-list'}->principal;
+        $id = (string) ($principal['principal-id'] ?? '');
+
+        return $id !== '' ? $id : null;
+    }
+
+    /**
+     * @return array{principal_id: string, login: string}
+     */
+    public function registerUser(
+        string $login,
+        string $password,
+        string $firstName,
+        string $lastName,
+        ?string $email = null,
+    ): array {
+        $existing = $this->findPrincipalIdByLogin($login);
+        if ($existing !== null) {
+            $this->updateUserPassword($existing, $password);
+
+            return ['principal_id' => $existing, 'login' => $login];
+        }
+
+        $email ??= $login.'@students.academy-sharifi.ir';
+
+        $folderIds = $this->config->usersFolderIds();
+        if ($folderIds === []) {
+            $folderIds = ['11001', '11000', '7'];
+        }
+
+        $lastException = null;
+        foreach ($folderIds as $folderId) {
+            try {
+                $xml = $this->client->get('principal-update', [
+                    'first-name' => $firstName !== '' ? $firstName : 'Student',
+                    'last-name' => $lastName !== '' ? $lastName : 'User',
+                    'login' => $login,
+                    'password' => $password,
+                    'confirm-password' => $password,
+                    'type' => 'user',
+                    'send-email' => 'false',
+                    'email' => $email,
+                    'folder-id' => $folderId,
+                ]);
+
+                $principalId = (string) ($xml->principal['principal-id'] ?? '');
+                if ($principalId === '') {
+                    continue;
+                }
+
+                return ['principal_id' => $principalId, 'login' => $login];
+            } catch (\Throwable $exception) {
+                $lastException = $exception;
+            }
+        }
+
+        throw $lastException ?? new \RuntimeException('Adobe Connect user registration failed.');
+    }
+
+    public function updateUserPassword(string $principalId, string $password): void
+    {
+        $this->client->get('principal-update', [
+            'principal-id' => $principalId,
+            'password' => $password,
+            'confirm-password' => $password,
+        ]);
+    }
+
+    public function grantMeetingViewAccess(string $meetingScoId, string $principalId): void
+    {
+        $this->client->get('permissions-update', [
+            'acl-id' => $meetingScoId,
+            'principal-id' => $principalId,
+            'permission-id' => 'view',
+        ]);
     }
 }

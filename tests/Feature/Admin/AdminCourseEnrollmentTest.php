@@ -57,7 +57,7 @@ class AdminCourseEnrollmentTest extends TestCase
         ]);
     }
 
-    public function test_enrollment_rejected_when_user_profile_incomplete(): void
+    public function test_admin_can_enroll_user_without_complete_profile(): void
     {
         $this->seed(DatabaseSeeder::class);
         $admin = User::where('mobile', '09120000001')->firstOrFail();
@@ -83,7 +83,53 @@ class AdminCourseEnrollmentTest extends TestCase
                 'user_id' => $incomplete->id,
                 'status' => 'confirmed',
             ])
-            ->assertSessionHasErrors('user_id');
+            ->assertRedirect(route('admin.course-enrollments.index'));
+
+        $this->assertDatabaseHas('enrollments', [
+            'course_class_id' => $class->id,
+            'user_id' => $incomplete->id,
+            'status' => 'confirmed',
+        ]);
+    }
+
+    public function test_confirming_enrollment_assigns_student_role_to_user_without_it(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $admin = User::where('mobile', '09120000001')->firstOrFail();
+
+        $newcomer = User::factory()->create([
+            'mobile' => '09128887766',
+            'name' => 'تازه',
+            'family' => 'وارد',
+        ]);
+        $newcomer->syncRoles([]);
+        $this->assertFalse($newcomer->hasRole('student'));
+
+        $cityId = ProvinceCity::query()->whereNotNull('parent_id')->value('id');
+        $newcomer->profile()->updateOrCreate(
+            ['user_id' => $newcomer->id],
+            ['province_city_id' => $cityId],
+        );
+
+        $course = $this->createCourse();
+        $class = CourseClass::query()->create([
+            'course_id' => $course->id,
+            'name' => 'کلاس OTP',
+            'code' => 'OTP1',
+            'status' => CourseClassStatus::Upcoming->value,
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/admin/course-enrollments', [
+                'course_id' => $course->id,
+                'course_class_id' => $class->id,
+                'user_id' => $newcomer->id,
+                'status' => 'confirmed',
+            ])
+            ->assertRedirect();
+
+        $newcomer->refresh();
+        $this->assertTrue($newcomer->hasRole('student'));
     }
 
     public function test_confirming_enrollment_assigns_student_role_to_instructor_without_it(): void

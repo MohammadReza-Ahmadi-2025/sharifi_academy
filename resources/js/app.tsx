@@ -14,7 +14,7 @@ const fallbackAppName = import.meta.env.VITE_APP_NAME ?? 'Sharifi Academy';
 let documentAppName = fallbackAppName;
 
 createInertiaApp({
-    title: (title) => (title ? `${title} · ${documentAppName}` : documentAppName),
+    title: (title) => (title?.trim() ? title.trim() : documentAppName),
     resolve: (name) =>
         resolvePageComponent(`./Pages/${name}.tsx`, import.meta.glob('./Pages/**/*.tsx')),
     setup({ el, App, props }) {

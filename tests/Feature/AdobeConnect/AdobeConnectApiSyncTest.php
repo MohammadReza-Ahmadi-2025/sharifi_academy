@@ -3,11 +3,15 @@
 namespace Tests\Feature\AdobeConnect;
 
 use App\Modules\AdobeConnect\Models\AdobeRoom;
+use App\Modules\AdobeConnect\Services\AdobeConnectApi;
 use App\Modules\AdobeConnect\Services\AdobeRoomPayloadFactory;
 use App\Modules\AdobeConnect\Services\SyncAdobeSessionRecordingsService;
 use App\Modules\AdobeConnect\Support\AdobeConnectConfig;
 use App\Modules\Courses\Enums\ClassSessionStatus;
+use App\Modules\Courses\Enums\CourseClassDeliveryType;
+use App\Modules\Courses\Enums\CourseClassOnlinePlatform;
 use App\Modules\Courses\Enums\CourseClassStatus;
+use App\Modules\Courses\Enums\CourseStatus;
 use App\Modules\Courses\Models\ClassSession;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
@@ -27,6 +31,109 @@ class AdobeConnectApiSyncTest extends TestCase
         Config::set('adobe_connect.base_url', 'https://connect.test');
         Config::set('adobe_connect.login', 'api@example.com');
         Config::set('adobe_connect.api_token', 'secret-token');
+    }
+
+    public function test_create_meeting_via_sco_update(): void
+    {
+        Http::fake(function ($request) {
+            $url = $request->url();
+            if (str_contains($url, 'action=login')) {
+                return Http::response(
+                    '<?xml version="1.0"?><results><status code="ok"/></results>',
+                    200,
+                    ['Set-Cookie' => 'BREEZESESSION=fake-session; Path=/'],
+                );
+            }
+
+            if (str_contains($url, 'action=sco-shortcuts')) {
+                return Http::response(<<<'XML'
+<?xml version="1.0"?>
+<results><status code="ok"/><shortcuts>
+  <sco sco-id="11004" type="user-meetings"><domain-name>https://connect.test</domain-name></sco>
+</shortcuts></results>
+XML);
+            }
+
+            if (str_contains($url, 'action=sco-update') && str_contains($url, 'type=meeting')) {
+                return Http::response(<<<'XML'
+<?xml version="1.0"?>
+<results><status code="ok"/>
+  <sco sco-id="8001" type="meeting" icon="meeting">
+    <name>Test Class</name>
+    <url-path>/auto-room/</url-path>
+  </sco>
+</results>
+XML);
+            }
+
+            return Http::response('<?xml version="1.0"?><results><status code="invalid"/></results>', 200);
+        });
+
+        $created = app(AdobeConnectApi::class)->createMeeting(
+            'Test Class',
+            now()->addHour(),
+            now()->addHours(3),
+        );
+
+        $this->assertSame('8001', $created['sco_id']);
+        $this->assertSame('/auto-room/', $created['url_path']);
+    }
+
+    public function test_provision_service_creates_adobe_room_for_online_class(): void
+    {
+        Http::fake(function ($request) {
+            $url = $request->url();
+            if (str_contains($url, 'action=login')) {
+                return Http::response(
+                    '<?xml version="1.0"?><results><status code="ok"/></results>',
+                    200,
+                    ['Set-Cookie' => 'BREEZESESSION=fake-session; Path=/'],
+                );
+            }
+
+            if (str_contains($url, 'action=sco-shortcuts')) {
+                return Http::response(<<<'XML'
+<?xml version="1.0"?><results><status code="ok"/><shortcuts>
+  <sco sco-id="11004" type="user-meetings"><domain-name>https://connect.test</domain-name></sco>
+</shortcuts></results>
+XML);
+            }
+
+            if (str_contains($url, 'action=sco-update')) {
+                return Http::response(<<<'XML'
+<?xml version="1.0"?><results><status code="ok"/>
+  <sco sco-id="9002" type="meeting"><name>Class</name><url-path>/room/</url-path></sco>
+</results>
+XML);
+            }
+
+            return Http::response('<?xml version="1.0"?><results><status code="invalid"/></results>', 200);
+        });
+
+        $course = Course::query()->create([
+            'title' => 'دوره',
+            'slug' => 'course-auto-adobe',
+            'status' => CourseStatus::Published,
+        ]);
+
+        $class = CourseClass::query()->create([
+            'course_id' => $course->id,
+            'name' => 'کلاس',
+            'code' => 'AUTO1',
+            'status' => CourseClassStatus::Upcoming,
+            'delivery_type' => CourseClassDeliveryType::Online,
+            'online_platform' => CourseClassOnlinePlatform::AdobeConnect,
+        ]);
+
+        $room = app(\App\Modules\AdobeConnect\Services\ProvisionCourseClassAdobeMeetingService::class)
+            ->provisionIfNeeded($class);
+
+        $this->assertNotNull($room);
+        $this->assertDatabaseHas('adobe_rooms', [
+            'course_class_id' => $class->id,
+            'sco_id' => '9002',
+            'class_session_id' => null,
+        ]);
     }
 
     public function test_room_payload_factory_fetches_sco_info_when_url_path_missing(): void

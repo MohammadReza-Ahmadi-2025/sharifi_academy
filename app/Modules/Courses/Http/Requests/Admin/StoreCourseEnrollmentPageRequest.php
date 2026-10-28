@@ -3,7 +3,6 @@
 namespace App\Modules\Courses\Http\Requests\Admin;
 
 use App\Modules\Courses\Enums\EnrollmentStatus;
-use App\Modules\Courses\Http\Requests\Admin\Concerns\ValidatesEnrollableUser;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
 use App\Modules\Courses\Models\Enrollment;
@@ -13,8 +12,6 @@ use Illuminate\Validation\Validator;
 
 class StoreCourseEnrollmentPageRequest extends FormRequest
 {
-    use ValidatesEnrollableUser;
-
     public function authorize(): bool
     {
         return $this->user()?->can('enrollments-create') ?? false;
@@ -22,8 +19,6 @@ class StoreCourseEnrollmentPageRequest extends FormRequest
 
     public function withValidator(Validator $validator): void
     {
-        $this->withEnrollableUserValidator($validator);
-
         $validator->after(function (Validator $validator): void {
             $courseId = $this->input('course_id');
             $classId = $this->input('course_class_id');

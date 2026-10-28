@@ -86,7 +86,9 @@ export function ClassAdobeRoomPanel({
         <Card className="mt-8 space-y-6 p-6">
             <div>
                 <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">اتاق ادوبی (سطح کلاس)</h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">اتاقی که به کلاس وصل است (بدون جلسه مشخص)</p>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    برای کلاس‌های Adobe Connect، با ذخیره کلاس اتاق معمولاً خودکار ساخته می‌شود. در صورت نیاز دستی SCO ID وارد کنید.
+                </p>
             </div>
 
             {canCreate ? (

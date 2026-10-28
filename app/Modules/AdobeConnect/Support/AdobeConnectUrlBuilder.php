@@ -15,6 +15,13 @@ final class AdobeConnectUrlBuilder
         return $this->config->baseUrl().$path;
     }
 
+    public function meetingJoinUrlWithCredentials(string $urlPath, string $login, string $password): string
+    {
+        $base = rtrim($this->meetingJoinUrl($urlPath), '/');
+
+        return $base.'/?login='.rawurlencode($login).'&password='.rawurlencode($password);
+    }
+
     /**
      * آدرس پخش/باز کردن ضبط در مرورگر (آرشیو جلسه).
      */

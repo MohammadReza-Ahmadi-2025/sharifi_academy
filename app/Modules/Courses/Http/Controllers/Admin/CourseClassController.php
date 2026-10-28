@@ -4,6 +4,7 @@ namespace App\Modules\Courses\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Modules\AdobeConnect\Models\AdobeRoom;
+use App\Modules\AdobeConnect\Services\ProvisionCourseClassAdobeMeetingService;
 use App\Modules\AdobeConnect\Support\AdminAdobeEnumOptions;
 use App\Modules\Courses\Enums\ClassInstructorRole;
 use App\Modules\Courses\Enums\CourseClassDeliveryType;
@@ -20,6 +21,7 @@ use App\Modules\Courses\Support\AdminEnumOptions;
 use App\Modules\Courses\Support\CourseClassPresenter;
 use App\Modules\Courses\Support\CoursePresenter;
 use App\Modules\Courses\Support\EnrollableUserOptions;
+use App\Modules\Courses\Support\InstructorUserOptions;
 use App\Modules\Courses\Support\EnsuresNestedCourseAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -67,8 +69,11 @@ class CourseClassController extends Controller
         ]);
     }
 
-    public function store(StoreCourseClassRequest $request, Course $course): RedirectResponse
-    {
+    public function store(
+        StoreCourseClassRequest $request,
+        Course $course,
+        ProvisionCourseClassAdobeMeetingService $adobeMeetings,
+    ): RedirectResponse {
         $this->authorizeManagedCourse($request, $course, 'update');
 
         $data = $request->validated();
@@ -82,7 +87,7 @@ class CourseClassController extends Controller
 
         return redirect()
             ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.edit', [$course, $courseClass])
-            ->with('success', 'کلاس ایجاد شد.');
+            ->with('success', $this->storeSuccessMessage($courseClass, $adobeMeetings));
     }
 
     public function edit(Request $request, Course $course, CourseClass $courseClass): Response
@@ -132,6 +137,7 @@ class CourseClassController extends Controller
             ...$this->formOptions(),
             'enrollmentStatusOptions' => AdminEnumOptions::fromEnum(EnrollmentStatus::class),
             'userOptions' => $this->userOptions(),
+            'enrollmentUserOptions' => EnrollableUserOptions::forSelect(),
             'adobeAccessOptions' => AdminAdobeEnumOptions::accessTypes(),
             'adobeStatusOptions' => AdminAdobeEnumOptions::roomStatuses(),
             'routePrefix' => '/'.$this->nestedCourseRoutePrefix($request),
@@ -149,8 +155,12 @@ class CourseClassController extends Controller
         ]);
     }
 
-    public function update(UpdateCourseClassRequest $request, Course $course, CourseClass $courseClass): RedirectResponse
-    {
+    public function update(
+        UpdateCourseClassRequest $request,
+        Course $course,
+        CourseClass $courseClass,
+        ProvisionCourseClassAdobeMeetingService $adobeMeetings,
+    ): RedirectResponse {
         $this->authorizeManagedCourse($request, $course, 'update');
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
         $data = $request->validated();
@@ -160,7 +170,7 @@ class CourseClassController extends Controller
 
         return redirect()
             ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.edit', [$course, $courseClass])
-            ->with('success', 'کلاس به‌روزرسانی شد.');
+            ->with('success', $this->updateSuccessMessage($courseClass, $adobeMeetings));
     }
 
     public function destroy(Request $request, Course $course, CourseClass $courseClass): RedirectResponse
@@ -236,6 +246,43 @@ class CourseClassController extends Controller
      */
     private function userOptions(): array
     {
-        return EnrollableUserOptions::forSelect();
+        return InstructorUserOptions::forSelect();
+    }
+
+    private function storeSuccessMessage(
+        CourseClass $courseClass,
+        ProvisionCourseClassAdobeMeetingService $adobeMeetings,
+    ): string {
+        $message = 'کلاس ایجاد شد.';
+
+        return $this->appendAdobeProvisionMessage($courseClass, $adobeMeetings, $message);
+    }
+
+    private function updateSuccessMessage(
+        CourseClass $courseClass,
+        ProvisionCourseClassAdobeMeetingService $adobeMeetings,
+    ): string {
+        $message = 'کلاس به‌روزرسانی شد.';
+
+        return $this->appendAdobeProvisionMessage($courseClass, $adobeMeetings, $message);
+    }
+
+    private function appendAdobeProvisionMessage(
+        CourseClass $courseClass,
+        ProvisionCourseClassAdobeMeetingService $adobeMeetings,
+        string $message,
+    ): string {
+        try {
+            $room = $adobeMeetings->provisionIfNeeded($courseClass->fresh() ?? $courseClass);
+            if ($room !== null) {
+                return $message.' اتاق Adobe Connect به‌صورت خودکار ساخته و وصل شد.';
+            }
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return $message.' ساخت خودکار اتاق Adobe انجام نشد؛ از بخش «اتاق ادوبی» دستی تنظیم کنید.';
+        }
+
+        return $message;
     }
 }

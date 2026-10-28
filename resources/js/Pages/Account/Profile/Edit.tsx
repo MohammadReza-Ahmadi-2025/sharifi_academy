@@ -67,28 +67,14 @@ export default function AccountProfileEdit({ profile, locations }: Props) {
         ...extendedToFormDefaults(profile.extended),
     });
 
-    const passwordForm = useForm({
-        current_password: '',
-        password: '',
-        password_confirmation: '',
-    });
-
     const submitInfo = (event: React.FormEvent) => {
         event.preventDefault();
         infoForm.transform((data) => withAvatarPayload(data, avatarFiles, { removeAvatar }));
         infoForm.put('/profile', { preserveScroll: true, forceFormData: true });
     };
 
-    const submitPassword = (event: React.FormEvent) => {
-        event.preventDefault();
-        passwordForm.put('/profile/password', {
-            preserveScroll: true,
-            onSuccess: () => passwordForm.reset(),
-        });
-    };
-
     return (
-        <AccountLayout title="پروفایل من" description="مدیریت اطلاعات شخصی، آواتار و رمز عبور">
+        <AccountLayout title="پروفایل من" description="مدیریت اطلاعات شخصی و آواتار">
             <Head title="پروفایل من" />
 
             {flash?.success ? (
@@ -245,56 +231,6 @@ export default function AccountProfileEdit({ profile, locations }: Props) {
                     ذخیره اطلاعات
                 </button>
             </form>
-
-            <SiteCard title="تغییر رمز عبور">
-                <form onSubmit={submitPassword} className="mt-4 max-w-lg space-y-4">
-                    <SiteFormField
-                        label="رمز عبور فعلی"
-                        htmlFor="current_password"
-                        error={passwordForm.errors.current_password}
-                    >
-                        <SiteInput
-                            id="current_password"
-                            type="password"
-                            autoComplete="current-password"
-                            value={passwordForm.data.current_password}
-                            onChange={(e) => passwordForm.setData('current_password', e.target.value)}
-                            disabled={passwordForm.processing}
-                        />
-                    </SiteFormField>
-                    <SiteFormField label="رمز جدید" htmlFor="password" error={passwordForm.errors.password}>
-                        <SiteInput
-                            id="password"
-                            type="password"
-                            autoComplete="new-password"
-                            value={passwordForm.data.password}
-                            onChange={(e) => passwordForm.setData('password', e.target.value)}
-                            disabled={passwordForm.processing}
-                        />
-                    </SiteFormField>
-                    <SiteFormField
-                        label="تکرار رمز جدید"
-                        htmlFor="password_confirmation"
-                        error={passwordForm.errors.password_confirmation}
-                    >
-                        <SiteInput
-                            id="password_confirmation"
-                            type="password"
-                            autoComplete="new-password"
-                            value={passwordForm.data.password_confirmation}
-                            onChange={(e) => passwordForm.setData('password_confirmation', e.target.value)}
-                            disabled={passwordForm.processing}
-                        />
-                    </SiteFormField>
-                    <button
-                        type="submit"
-                        disabled={passwordForm.processing}
-                        className="rounded-full border border-primary px-6 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/5 disabled:opacity-60"
-                    >
-                        به‌روزرسانی رمز
-                    </button>
-                </form>
-            </SiteCard>
         </AccountLayout>
     );
 }
