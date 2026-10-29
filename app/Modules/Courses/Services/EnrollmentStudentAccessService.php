@@ -3,6 +3,7 @@
 namespace App\Modules\Courses\Services;
 
 use App\Modules\AdobeConnect\Services\SyncAdobeConnectEnrollmentService;
+use App\Modules\AdobeConnect\Support\AdobeEnrollmentSyncResult;
 use App\Modules\Courses\Models\Enrollment;
 
 class EnrollmentStudentAccessService
@@ -11,15 +12,15 @@ class EnrollmentStudentAccessService
         private readonly SyncAdobeConnectEnrollmentService $adobeEnrollmentSync,
     ) {}
 
-    public function grantStudentRoleIfConfirmed(Enrollment $enrollment): void
+    public function grantStudentRoleIfConfirmed(Enrollment $enrollment): ?AdobeEnrollmentSyncResult
     {
         if (! $enrollment->isConfirmed()) {
-            return;
+            return null;
         }
 
         $user = $enrollment->user;
         if ($user === null) {
-            return;
+            return null;
         }
 
         if (! $user->hasRole('student')) {
@@ -27,6 +28,7 @@ class EnrollmentStudentAccessService
         }
 
         $enrollment->loadMissing('courseClass');
-        $this->adobeEnrollmentSync->sync($enrollment);
+
+        return $this->adobeEnrollmentSync->sync($enrollment);
     }
 }

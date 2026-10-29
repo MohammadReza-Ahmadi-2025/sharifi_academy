@@ -4,6 +4,7 @@ namespace App\Modules\Courses\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Courses\Enums\EnrollmentStatus;
+use App\Modules\AdobeConnect\Support\AdobeEnrollmentSyncResult;
 use App\Modules\Courses\Http\Requests\Admin\StoreCourseEnrollmentPageRequest;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
@@ -137,10 +138,15 @@ class CourseEnrollmentAdminController extends Controller
         $courseClass = $request->courseClass();
         $data = $request->validated();
 
-        $enrollment = $enrollmentService->createForClass($courseClass, $data);
+        $created = $enrollmentService->createForClass($courseClass, $data);
+        $enrollment = $created['enrollment'];
+        $flash = "ثبت‌نام #{$enrollment->id} برای «{$request->course()->title}» ایجاد شد.";
+        if ($created['adobe'] instanceof AdobeEnrollmentSyncResult) {
+            $flash = $created['adobe']->appendToFlash($flash);
+        }
 
         return redirect()
             ->route('admin.course-enrollments.index')
-            ->with('success', "ثبت‌نام #{$enrollment->id} برای «{$request->course()->title}» ایجاد شد.");
+            ->with('success', $flash);
     }
 }

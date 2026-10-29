@@ -109,6 +109,8 @@ class CourseClassController extends Controller
                     'id' => $enrollment->id,
                     'user_id' => $enrollment->user_id,
                     'user_label' => trim(($enrollment->user?->name ?? '').' '.($enrollment->user?->family ?? '')),
+                    'user_mobile' => $enrollment->user?->mobile,
+                    'adobe_linked' => filled($enrollment->user?->adobe_connect_principal_id),
                     'status' => $enrollment->status?->value,
                     'status_label' => $enrollment->status?->label(),
                     'price_amount' => $enrollment->price_amount,

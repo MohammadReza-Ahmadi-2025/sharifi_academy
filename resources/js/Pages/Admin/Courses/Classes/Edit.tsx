@@ -102,6 +102,7 @@ export default function CourseClassesEdit(props: Props) {
                     userOptions={props.enrollmentUserOptions}
                     enrollmentStatusOptions={props.enrollmentStatusOptions}
                     defaultPrice={Number(courseClass.price ?? 0)}
+                    showAdobeConnect={showAdobePanels}
                     canCreate={abilities.enrollmentsCreate}
                     canUpdate={abilities.enrollmentsUpdate}
                     canDelete={abilities.enrollmentsDelete}

@@ -24,6 +24,8 @@ import { FormEvent } from 'react';
 type EnrollmentRow = {
     id: number;
     user_label: string;
+    user_mobile?: string | null;
+    adobe_linked?: boolean;
     status: string;
     status_label: string;
     price_amount: number;
@@ -33,6 +35,7 @@ type Props = {
     courseId: number;
     classId: number;
     enrollments: EnrollmentRow[];
+    showAdobeConnect: boolean;
     userOptions: { value: number; label: string }[];
     enrollmentStatusOptions: { value: string; label: string }[];
     defaultPrice: number;
@@ -45,6 +48,7 @@ export function ClassEnrollmentPanel({
     courseId,
     classId,
     enrollments,
+    showAdobeConnect,
     userOptions,
     enrollmentStatusOptions,
     defaultPrice,
@@ -92,7 +96,8 @@ export function ClassEnrollmentPanel({
             <div>
                 <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">ثبت‌نام‌ها</h2>
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    ثبت‌نام دستی هر کاربر فعال.{' '}
+                    ثبت‌نام دستی هر کاربر فعال. با وضعیت «قطعی»، در کلاس Adobe Connect کاربر با{' '}
+                    <strong>نام کاربری و رمز = موبایل</strong> ساخته یا وصل می‌شود (نام و نام خانوادگی از پروفایل).{' '}
                     <a href="/admin/course-enrollments/create" className="text-indigo-600 hover:underline">
                         ثبت‌نام از بخش مرکزی
                     </a>
@@ -151,6 +156,7 @@ export function ClassEnrollmentPanel({
                 <TableHeader>
                     <TableRow>
                         <TableHead>کاربر</TableHead>
+                        {showAdobeConnect ? <TableHead>Adobe</TableHead> : null}
                         <TableHead>وضعیت</TableHead>
                         <TableHead>مبلغ</TableHead>
                         <TableHead className="w-40 text-left">عملیات</TableHead>
@@ -158,11 +164,35 @@ export function ClassEnrollmentPanel({
                 </TableHeader>
                 <TableBody>
                     {enrollments.length === 0 ? (
-                        <TableEmptyState colSpan={4} title="ثبت‌نامی ثبت نشده" description="از فرم بالا اولین ثبت‌نام را اضافه کنید." />
+                        <TableEmptyState
+                            colSpan={showAdobeConnect ? 5 : 4}
+                            title="ثبت‌نامی ثبت نشده"
+                            description="از فرم بالا اولین ثبت‌نام را اضافه کنید."
+                        />
                     ) : (
                         enrollments.map((row) => (
                             <TableRow key={row.id}>
-                                <TableCell className="font-medium text-slate-900 dark:text-slate-100">{row.user_label}</TableCell>
+                                <TableCell className="font-medium text-slate-900 dark:text-slate-100">
+                                    <div>{row.user_label}</div>
+                                    {row.user_mobile ? (
+                                        <div className="mt-0.5 font-mono text-xs text-slate-500" dir="ltr">
+                                            {row.user_mobile}
+                                        </div>
+                                    ) : null}
+                                </TableCell>
+                                {showAdobeConnect ? (
+                                    <TableCell>
+                                        {row.status === 'confirmed' ? (
+                                            row.adobe_linked ? (
+                                                <Badge variant="success">وصل به Adobe</Badge>
+                                            ) : (
+                                                <Badge variant="secondary">در انتظار Adobe</Badge>
+                                            )
+                                        ) : (
+                                            <span className="text-xs text-slate-400">—</span>
+                                        )}
+                                    </TableCell>
+                                ) : null}
                                 <TableCell>
                                     <Badge variant={row.status === 'confirmed' ? 'success' : 'secondary'}>{row.status_label}</Badge>
                                 </TableCell>

@@ -3,6 +3,7 @@
 namespace App\Modules\Courses\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Modules\AdobeConnect\Support\AdobeEnrollmentSyncResult;
 use App\Modules\Courses\Enums\EnrollmentStatus;
 use App\Modules\Courses\Http\Requests\Admin\StoreEnrollmentRequest;
 use App\Modules\Courses\Http\Requests\Admin\UpdateEnrollmentRequest;
@@ -28,11 +29,16 @@ class EnrollmentController extends Controller
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
         $data = $request->validated();
 
-        $enrollment = $enrollmentService->createForClass($courseClass, $data);
+        $created = $enrollmentService->createForClass($courseClass, $data);
+        $enrollment = $created['enrollment'];
+        $flash = "ثبت‌نام #{$enrollment->id} ایجاد شد.";
+        if ($created['adobe'] instanceof AdobeEnrollmentSyncResult) {
+            $flash = $created['adobe']->appendToFlash($flash);
+        }
 
         return redirect()
             ->route('admin.courses.classes.edit', [$course, $courseClass])
-            ->with('success', "ثبت‌نام #{$enrollment->id} ایجاد شد.");
+            ->with('success', $flash);
     }
 
     public function update(
@@ -65,15 +71,21 @@ class EnrollmentController extends Controller
 
         $enrollment->refresh();
 
+        $adobe = null;
         if (! $wasConfirmed && $enrollment->isConfirmed()) {
             $enrollment->loadMissing('user');
-            $studentAccess->grantStudentRoleIfConfirmed($enrollment);
+            $adobe = $studentAccess->grantStudentRoleIfConfirmed($enrollment);
             InstructorModerationNotifier::enrollmentConfirmed($enrollment);
+        }
+
+        $flash = 'ثبت‌نام به‌روزرسانی شد.';
+        if ($adobe !== null) {
+            $flash = $adobe->appendToFlash($flash);
         }
 
         return redirect()
             ->route('admin.courses.classes.edit', [$course, $courseClass])
-            ->with('success', 'ثبت‌نام به‌روزرسانی شد.');
+            ->with('success', $flash);
     }
 
     public function destroy(Course $course, CourseClass $courseClass, Enrollment $enrollment): RedirectResponse

@@ -102,9 +102,10 @@ XML);
             'price_amount' => 0,
         ]);
 
-        app(SyncAdobeConnectEnrollmentService::class)->sync($enrollment);
+        $result = app(SyncAdobeConnectEnrollmentService::class)->sync($enrollment);
 
         $user->refresh();
         $this->assertSame('555001', $user->adobe_connect_principal_id);
+        $this->assertContains($result->status, ['linked', 'created']);
     }
 }

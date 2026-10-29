@@ -212,7 +212,7 @@ class AdobeConnectApi
 
         $folderIds = $this->config->usersFolderIds();
         if ($folderIds === []) {
-            $folderIds = ['11001', '11000', '7'];
+            $folderIds = $this->discoverUsersFolderIds();
         }
 
         $lastException = null;
@@ -253,6 +253,21 @@ class AdobeConnectApi
         ]);
     }
 
+    public function updateUserProfile(
+        string $principalId,
+        string $firstName,
+        string $lastName,
+        string $password,
+    ): void {
+        $this->client->get('principal-update', [
+            'principal-id' => $principalId,
+            'first-name' => $firstName,
+            'last-name' => $lastName,
+            'password' => $password,
+            'confirm-password' => $password,
+        ]);
+    }
+
     public function grantMeetingViewAccess(string $meetingScoId, string $principalId): void
     {
         $this->client->get('permissions-update', [
@@ -260,5 +275,34 @@ class AdobeConnectApi
             'principal-id' => $principalId,
             'permission-id' => 'view',
         ]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function discoverUsersFolderIds(): array
+    {
+        try {
+            $xml = $this->client->get('sco-shortcuts');
+        } catch (\Throwable) {
+            return ['11001', '11000', '7'];
+        }
+
+        $ids = [];
+        if (isset($xml->shortcuts->sco)) {
+            foreach ($xml->shortcuts->sco as $sco) {
+                $type = (string) ($sco['type'] ?? '');
+                if (preg_match('/user|content|account|custom/i', $type) === 1) {
+                    $id = (string) ($sco['sco-id'] ?? '');
+                    if ($id !== '') {
+                        $ids[] = $id;
+                    }
+                }
+            }
+        }
+
+        $ids = array_values(array_unique($ids));
+
+        return $ids !== [] ? $ids : ['11001', '11000', '7'];
     }
 }
