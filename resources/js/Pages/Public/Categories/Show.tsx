@@ -45,6 +45,7 @@ type Props = {
     };
     structuredData: {
         breadcrumb: Record<string, unknown>;
+        webPage: Record<string, unknown>;
         itemList: Record<string, unknown>;
     };
 };
@@ -113,7 +114,7 @@ export default function CategoryShow({
             <SiteDefaultHead title={category.seo.title} description={category.seo.description ?? undefined} />
             <SiteCatalogSeoHead
                 seo={category.seo}
-                structuredData={[structuredData.breadcrumb, structuredData.itemList]}
+                structuredData={[structuredData.breadcrumb, structuredData.webPage, structuredData.itemList]}
             />
 
             <div className="mx-auto max-w-[88rem] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">

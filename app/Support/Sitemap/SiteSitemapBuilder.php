@@ -4,7 +4,9 @@ namespace App\Support\Sitemap;
 
 use App\Models\User;
 use App\Modules\Blog\Models\Post;
+use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
+use App\Modules\Catalog\Models\Product;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Pages\Models\Page;
 use App\Modules\Profile\Enums\ResumeModerationStatus;
@@ -29,6 +31,8 @@ final class SiteSitemapBuilder
         return collect()
             ->merge($this->staticUrls())
             ->merge($this->courseUrls())
+            ->merge($this->productUrls())
+            ->merge($this->brandUrls())
             ->merge($this->categoryUrls())
             ->merge($this->blogUrls())
             ->merge($this->pageUrls())
@@ -61,6 +65,41 @@ final class SiteSitemapBuilder
                 $course->updated_at ?? $course->published_at,
                 'weekly',
                 '0.9',
+            ));
+    }
+
+    /**
+     * @return Collection<int, SitemapUrl>
+     */
+    private function productUrls(): Collection
+    {
+        return Product::query()
+            ->active()
+            ->visible()
+            ->orderBy('id')
+            ->get(['id', 'slug', 'updated_at'])
+            ->map(fn (Product $product) => new SitemapUrl(
+                url(SiteSearchUrls::product($product)),
+                $product->updated_at,
+                'weekly',
+                '0.8',
+            ));
+    }
+
+    /**
+     * @return Collection<int, SitemapUrl>
+     */
+    private function brandUrls(): Collection
+    {
+        return Brand::query()
+            ->where('status', true)
+            ->orderBy('id')
+            ->get(['id', 'slug', 'updated_at'])
+            ->map(fn (Brand $brand) => new SitemapUrl(
+                url(SiteSearchUrls::brand($brand)),
+                $brand->updated_at,
+                'weekly',
+                '0.6',
             ));
     }
 

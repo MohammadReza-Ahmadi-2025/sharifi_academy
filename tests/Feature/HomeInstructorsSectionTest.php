@@ -185,6 +185,10 @@ class HomeInstructorsSectionTest extends TestCase
                 ->component('Public/InstructorResume/Show')
                 ->where('profile.fullName', 'رضا مدرس')
                 ->where('profile.sections.0.label', 'تحصیلات')
+                ->where('structuredData.person.@type', 'Person')
+                ->where('structuredData.person.name', 'رضا مدرس')
+                ->where('structuredData.profilePage.@type', 'ProfilePage')
+                ->has('structuredData.breadcrumb')
             );
     }
 }

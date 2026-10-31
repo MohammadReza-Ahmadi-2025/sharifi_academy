@@ -61,7 +61,9 @@ class PublicCategoryTest extends TestCase
                 ->has('items.data', 1)
                 ->where('items.data.0.slug', 'published-course')
                 ->has('filters')
-                ->has('structuredData'));
+                ->has('structuredData.breadcrumb')
+                ->where('structuredData.webPage.@type', 'CollectionPage')
+                ->has('structuredData.itemList'));
     }
 
     public function test_product_category_show_lists_visible_products(): void

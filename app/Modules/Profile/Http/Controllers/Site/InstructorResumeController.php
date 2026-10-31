@@ -5,6 +5,7 @@ namespace App\Modules\Profile\Http\Controllers\Site;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Profile\Support\InstructorPublicResumePresenter;
+use App\Modules\Profile\Support\InstructorSeo;
 use App\Modules\Profile\Support\ResumeModeration;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
@@ -17,9 +18,17 @@ class InstructorResumeController extends Controller
         abort_unless(self::isPublicInstructor($user), 404);
 
         $profile = $this->loadPublicProfile($user);
+        $appName = (string) config('app.name');
+        $seo = InstructorSeo::forShow($profile, $appName);
 
         return Inertia::render('Public/InstructorResume/Show', [
             'profile' => $profile,
+            'seo' => $seo,
+            'structuredData' => [
+                'breadcrumb' => InstructorSeo::breadcrumbJsonLd($profile),
+                'person' => InstructorSeo::personJsonLd($profile, $appName),
+                'profilePage' => InstructorSeo::profilePageJsonLd($seo, $appName),
+            ],
         ]);
     }
 

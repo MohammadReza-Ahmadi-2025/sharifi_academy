@@ -10,7 +10,9 @@ use App\Modules\Auth\Http\Controllers\OtpRequestController;
 use App\Modules\Auth\Http\Controllers\OtpVerifyController;
 use App\Modules\Blog\Http\Controllers\Site\BlogCategoryController;
 use App\Modules\Blog\Http\Controllers\Site\PostController as BlogPostController;
+use App\Modules\Catalog\Http\Controllers\Site\BrandController;
 use App\Modules\Catalog\Http\Controllers\Site\CategoryController;
+use App\Modules\Catalog\Http\Controllers\Site\ProductController;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Comments\Http\Controllers\Site\CourseCommentController;
 use App\Modules\Comments\Http\Controllers\Site\PostCommentController;
@@ -37,6 +39,8 @@ Route::redirect('/courses/categories', '/');
 Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
 Route::get('/courses/categories/{category:slug}', fn (Category $category) => redirect()->route('categories.show', $category, 301));
 Route::get('/courses/{course:slug}', [CourseController::class, 'show'])->name('courses.show');
+Route::get('/books/{product:slug}', [ProductController::class, 'show'])->name('books.show');
+Route::get('/brands/{brand}', [BrandController::class, 'show'])->name('brands.show');
 
 Route::get('/blog', [BlogPostController::class, 'index'])->name('blog.index');
 Route::get('/blog/categories/{category:slug}', [BlogCategoryController::class, 'show'])

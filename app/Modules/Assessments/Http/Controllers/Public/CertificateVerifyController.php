@@ -4,6 +4,7 @@ namespace App\Modules\Assessments\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Assessments\Models\Certificate;
+use App\Modules\Assessments\Support\CertificateSeo;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,6 +17,9 @@ class CertificateVerifyController extends Controller
             ->with(['course', 'user'])
             ->firstOrFail();
 
+        $appName = (string) config('app.name');
+        $seo = CertificateSeo::meta($certificate);
+
         return Inertia::render('Public/CertificateVerify', [
             'certificate' => [
                 'code' => $certificate->code,
@@ -24,6 +28,10 @@ class CertificateVerifyController extends Controller
                 'course_title' => $certificate->course?->title,
                 'student_name' => trim(($certificate->user?->name ?? '').' '.($certificate->user?->family ?? '')),
                 'valid' => true,
+            ],
+            'seo' => $seo,
+            'structuredData' => [
+                'credential' => CertificateSeo::credentialJsonLd($certificate, $appName),
             ],
         ]);
     }

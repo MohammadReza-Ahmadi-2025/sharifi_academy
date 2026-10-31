@@ -23,6 +23,8 @@ class ImportSiteSearchCommand extends Command
             return self::SUCCESS;
         }
 
+        $this->call('scout:sync-index-settings');
+
         $models = [
             'products' => Product::class,
             'brands' => Brand::class,
@@ -43,7 +45,7 @@ class ImportSiteSearchCommand extends Command
             });
         }
 
-        $this->components->info('Site search indexes imported.');
+        $this->components->info('Site search indexes imported (courses, products, brands, categories, posts).');
 
         return self::SUCCESS;
     }

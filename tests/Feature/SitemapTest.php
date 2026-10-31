@@ -127,6 +127,7 @@ class SitemapTest extends TestCase
         $this->get('/robots.txt')
             ->assertOk()
             ->assertSee('Sitemap: '.route('sitemap'), false)
-            ->assertSee('Disallow: /admin', false);
+            ->assertSee('Disallow: /admin', false)
+            ->assertSee('Disallow: /search', false);
     }
 }

@@ -139,24 +139,96 @@ return [
     'meilisearch' => [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
+        /*
+         * Typo tolerance: Meilisearch default oneTypo starts at 5 chars, so
+         * short Persian titles like «کتیا» would not match «گتیا».
+         */
         'index-settings' => [
-            // 'users' => [
-            //     'filterableAttributes' => ['id', 'name', 'email'],
-            //     'embedders' => [
-            //         'default' => [
-            //             'source' => 'userProvided',
-            //             'dimensions' => 1536,
-            //         ],
-            //     ],
-            // ],
+            'courses' => [
+                'searchableAttributes' => [
+                    'title',
+                    'code',
+                    'short_description',
+                    'description',
+                    'slug',
+                ],
+                'typoTolerance' => [
+                    'enabled' => true,
+                    'minWordSizeForTypos' => [
+                        'oneTypo' => 3,
+                        'twoTypos' => 6,
+                    ],
+                ],
+            ],
+            'products' => [
+                'searchableAttributes' => [
+                    'title',
+                    'sku',
+                    'brand',
+                    'categories',
+                    'short_description',
+                    'description',
+                    'model',
+                    'slug',
+                ],
+                'typoTolerance' => [
+                    'enabled' => true,
+                    'minWordSizeForTypos' => [
+                        'oneTypo' => 3,
+                        'twoTypos' => 6,
+                    ],
+                ],
+            ],
+            'brands' => [
+                'searchableAttributes' => [
+                    'title',
+                    'description',
+                    'slug',
+                ],
+                'typoTolerance' => [
+                    'enabled' => true,
+                    'minWordSizeForTypos' => [
+                        'oneTypo' => 3,
+                        'twoTypos' => 6,
+                    ],
+                ],
+            ],
+            'categories' => [
+                'searchableAttributes' => [
+                    'title',
+                    'description',
+                    'slug',
+                ],
+                'filterableAttributes' => [
+                    'type',
+                    'status',
+                ],
+                'typoTolerance' => [
+                    'enabled' => true,
+                    'minWordSizeForTypos' => [
+                        'oneTypo' => 3,
+                        'twoTypos' => 6,
+                    ],
+                ],
+            ],
+            'posts' => [
+                'searchableAttributes' => [
+                    'title',
+                    'excerpt',
+                    'content',
+                    'slug',
+                ],
+                'typoTolerance' => [
+                    'enabled' => true,
+                    'minWordSizeForTypos' => [
+                        'oneTypo' => 3,
+                        'twoTypos' => 6,
+                    ],
+                ],
+            ],
         ],
         'model-settings' => [
-            // User::class => [
-            //     'embedding' => [
-            //         'embedder' => 'default',
-            //         'dimensions' => 1536,
-            //     ],
-            // ],
+            //
         ],
     ],
 

@@ -64,6 +64,7 @@ class CategoryController extends Controller
             'filterOptions' => $listing['filterOptions'],
             'structuredData' => [
                 'breadcrumb' => CategorySeo::breadcrumbJsonLd($category),
+                'webPage' => CategorySeo::collectionPageJsonLd($seo, (string) config('app.name')),
                 'itemList' => CategorySeo::itemListJsonLd($category, $listing['items'], $canonical),
             ],
         ]);

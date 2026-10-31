@@ -99,4 +99,24 @@ class CategorySeo
             ],
         ];
     }
+
+    /**
+     * @param  array<string, mixed>  $seo
+     * @return array<string, mixed>
+     */
+    public static function collectionPageJsonLd(array $seo, string $appName): array
+    {
+        return [
+            '@context' => 'https://schema.org',
+            '@type' => 'CollectionPage',
+            'name' => $seo['title'],
+            'description' => $seo['description'] ?? null,
+            'url' => $seo['canonical'],
+            'isPartOf' => [
+                '@type' => 'WebSite',
+                'name' => $appName,
+                'url' => url('/'),
+            ],
+        ];
+    }
 }

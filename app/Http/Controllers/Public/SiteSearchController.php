@@ -31,10 +31,11 @@ class SiteSearchController extends Controller
             'kind' => $kind,
             'total' => $payload['total'],
             'groups' => $payload['groups'],
+            'canonical' => route('search.index'),
             'kindOptions' => [
                 ['value' => '', 'label' => 'همه'],
                 ['value' => 'course', 'label' => 'دوره‌ها'],
-                ['value' => 'book', 'label' => 'کتاب‌ها'],
+                ['value' => 'book', 'label' => 'محصولات'],
                 ['value' => 'post', 'label' => 'وبلاگ'],
                 ['value' => 'category', 'label' => 'دسته‌ها'],
                 ['value' => 'brand', 'label' => 'برندها'],

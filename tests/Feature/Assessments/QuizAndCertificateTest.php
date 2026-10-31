@@ -109,6 +109,8 @@ class QuizAndCertificateTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Public/CertificateVerify')
-                ->where('certificate.valid', true));
+                ->where('certificate.valid', true)
+                ->where('structuredData.credential.@type', 'EducationalOccupationalCredential')
+                ->where('structuredData.credential.identifier', $certificate->code));
     }
 }

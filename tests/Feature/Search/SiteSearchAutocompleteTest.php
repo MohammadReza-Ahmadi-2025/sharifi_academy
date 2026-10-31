@@ -48,6 +48,64 @@ class SiteSearchAutocompleteTest extends TestCase
             ]);
     }
 
+    public function test_autocomplete_finds_katia_when_query_has_first_letter_typo(): void
+    {
+        Course::withoutSyncingToSearch(function (): void {
+            Course::query()->create([
+                'title' => 'آموزش کتیا',
+                'slug' => 'katia-typo-course',
+                'status' => CourseStatus::Published,
+                'published_at' => now(),
+            ]);
+        });
+
+        $this->get('/search/autocomplete?q='.urlencode('گتیا'))
+            ->assertOk()
+            ->assertJsonFragment([
+                'kind' => 'course',
+                'title' => 'آموزش کتیا',
+            ]);
+    }
+
+    public function test_search_results_page_groups_courses_and_posts(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $author = User::where('mobile', '09120000001')->firstOrFail();
+
+        Course::withoutSyncingToSearch(function (): void {
+            Course::query()->create([
+                'title' => 'Results page course alpha',
+                'slug' => 'results-page-course-alpha',
+                'status' => CourseStatus::Published,
+                'published_at' => now(),
+            ]);
+        });
+
+        Post::withoutSyncingToSearch(function () use ($author): void {
+            Post::query()->create([
+                'author_id' => $author->id,
+                'title' => 'Results page post alpha',
+                'slug' => 'results-page-post-alpha',
+                'excerpt' => 'چکیده',
+                'content' => 'متن',
+                'status' => PostStatus::Published,
+                'published_at' => now()->subHour(),
+            ]);
+        });
+
+        $this->get('/search?q=Results+page')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Public/Search/Index')
+                ->where('q', 'Results page')
+                ->where('canonical', route('search.index'))
+                ->where('total', 2)
+                ->has('groups.course', 1)
+                ->has('groups.post', 1)
+                ->where('groups.course.0.title', 'Results page course alpha')
+                ->where('groups.post.0.title', 'Results page post alpha'));
+    }
+
     public function test_autocomplete_finds_published_blog_post(): void
     {
         $this->seed(DatabaseSeeder::class);

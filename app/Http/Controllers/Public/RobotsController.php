@@ -17,6 +17,7 @@ class RobotsController extends Controller
             'Disallow: /login',
             'Disallow: /profile',
             'Disallow: /cart',
+            'Disallow: /search',
             '',
             'Sitemap: '.route('sitemap'),
             '',
