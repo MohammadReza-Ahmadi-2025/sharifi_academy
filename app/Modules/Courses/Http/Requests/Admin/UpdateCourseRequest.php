@@ -37,7 +37,7 @@ class UpdateCourseRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('courses', 'slug')->ignore($course->id)],
-            'code' => ['nullable', 'string', 'max:64', Rule::unique('courses', 'code')->ignore($course->id)],
+            'code' => ['nullable', 'string', 'max:50', Rule::unique('courses', 'code')->ignore($course->id)],
             'short_description' => ['nullable', 'string', 'max:500'],
             'description' => ['nullable', 'string'],
             'level' => ['nullable', Rule::enum(CourseLevel::class)],

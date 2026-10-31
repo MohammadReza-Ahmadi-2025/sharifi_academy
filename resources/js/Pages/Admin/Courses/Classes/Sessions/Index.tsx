@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { ExternalLink, Pencil, Plus, Trash2 } from 'lucide-react';
 
 type Props = {
     routePrefix: string;
@@ -18,6 +18,7 @@ type Props = {
         status_label: string;
         join_configured: boolean;
         join_label: string | null;
+        join_url?: string | null;
     }[];
     abilities: { create: boolean; update: boolean; delete: boolean };
 };
@@ -68,6 +69,17 @@ export default function SessionsIndex({ routePrefix, course, courseClass, sessio
                                 )}
                             </TableCell>
                             <TableCell className="flex justify-end gap-2">
+                                {s.join_url ? (
+                                    <a
+                                        href={s.join_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
+                                    >
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                        {s.join_label ?? 'ورود'}
+                                    </a>
+                                ) : null}
                                 {abilities.update && (
                                     <Link href={`${base}/${s.id}/edit`} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100">
                                         <Pencil className="h-4 w-4" />

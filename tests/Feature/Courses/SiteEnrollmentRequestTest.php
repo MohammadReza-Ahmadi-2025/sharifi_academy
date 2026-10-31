@@ -132,6 +132,52 @@ class SiteEnrollmentRequestTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_cancelled_enrollment_can_be_requested_again(): void
+    {
+        Notification::fake();
+
+        $student = User::where('mobile', '09120000003')->firstOrFail();
+        $this->ensureCompleteProfile($student);
+
+        $course = Course::query()->create([
+            'title' => 'Reopen',
+            'slug' => 'reopen-enroll',
+            'status' => CourseStatus::Published,
+        ]);
+
+        $class = CourseClass::query()->create([
+            'course_id' => $course->id,
+            'name' => 'گروه',
+            'code' => 'REOPEN-01',
+            'status' => CourseClassStatus::Upcoming,
+            'is_public' => true,
+            'price' => 1_500_000,
+        ]);
+
+        Enrollment::query()->create([
+            'course_class_id' => $class->id,
+            'user_id' => $student->id,
+            'status' => EnrollmentStatus::Cancelled,
+            'price_amount' => 0,
+            'cancelled_at' => now(),
+        ]);
+
+        $this->actingAs($student)
+            ->post("/courses/{$course->slug}/enrollments", [
+                'course_class_id' => $class->id,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('enrollments', [
+            'course_class_id' => $class->id,
+            'user_id' => $student->id,
+            'status' => EnrollmentStatus::Pending->value,
+            'price_amount' => 1_500_000,
+        ]);
+        $this->assertSame(1, Enrollment::query()->where('course_class_id', $class->id)->where('user_id', $student->id)->count());
+    }
+
     private function ensureCompleteProfile(User $user): void
     {
         $user->forceFill([

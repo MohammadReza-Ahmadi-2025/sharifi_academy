@@ -3,9 +3,8 @@ import { InstructorResumeProfileView } from '@/Components/Profile/InstructorResu
 import { withResumeAttachmentsPayload } from '@/Components/Profile/resume-form-payload';
 import { FileUploader, useFileUploadState } from '@/Components/shared/FileUploader';
 import { formatFileSize } from '@/Components/shared/file-upload';
-import { instructorPanelLinks } from '@/lib/instructor-panel-links';
 import type { InstructorResumeProfile, ResumeEntry, ResumeSection } from '@/types/instructor-resume';
-import PanelLayout from '@/Layouts/PanelLayout';
+import InstructorLayout from '@/Layouts/InstructorLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { ExternalLink, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { FormEvent, useMemo, useState } from 'react';
@@ -156,11 +155,9 @@ export default function InstructorResumeIndex({
     };
 
     return (
-        <PanelLayout
+        <InstructorLayout
             title="رزومه من"
             description="سوابق تحصیلی، شغلی و پیوست‌ها — مشابه پروفایل لینکدین"
-            homeHref="/instructor"
-            links={instructorPanelLinks}
             contentVariant="plain"
         >
             <Head title="رزومه من" />
@@ -504,6 +501,6 @@ export default function InstructorResumeIndex({
                     </div>
                 </div>
             ) : null}
-        </PanelLayout>
+        </InstructorLayout>
     );
 }

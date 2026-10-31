@@ -3,6 +3,8 @@
 namespace App\Modules\Catalog\Http\Requests\Admin\Concerns;
 
 use App\Modules\Catalog\Enums\VariantDisplayMode;
+use App\Modules\Catalog\Models\ProductVariant;
+use Closure;
 use Illuminate\Validation\Rule;
 
 trait ValidatesProductVariants
@@ -15,7 +17,32 @@ trait ValidatesProductVariants
         return [
             'variants' => ['nullable', 'array'],
             'variants.*.id' => ['nullable', 'integer', 'exists:product_variants,id'],
-            'variants.*.sku' => ['nullable', 'string', 'max:255'],
+            'variants.*.sku' => [
+                'nullable',
+                'string',
+                'max:255',
+                'distinct',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    if (! filled($value)) {
+                        return;
+                    }
+
+                    if (! preg_match('/^variants\.(\d+)\.sku$/', $attribute, $matches)) {
+                        return;
+                    }
+
+                    $variantId = $this->input('variants.'.$matches[1].'.id');
+                    $query = ProductVariant::query()->where('sku', (string) $value);
+
+                    if (is_numeric($variantId)) {
+                        $query->whereKeyNot((int) $variantId);
+                    }
+
+                    if ($query->exists()) {
+                        $fail('این SKU قبلاً ثبت شده است.');
+                    }
+                },
+            ],
             'variants.*.attributes' => ['nullable', 'array'],
             'variants.*.attributes.*' => ['nullable', 'integer', 'exists:attribute_values,id'],
             'variants.*.price' => ['nullable', 'integer', 'min:0'],

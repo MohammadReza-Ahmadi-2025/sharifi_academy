@@ -62,6 +62,16 @@ final class AdobeConnectConfig
         return (bool) config('adobe_connect.auto_provision_meetings', true);
     }
 
+    public function autoSyncEnabled(): bool
+    {
+        return (bool) config('adobe_connect.auto_sync_enabled', true);
+    }
+
+    public function autoSyncWithinHours(): int
+    {
+        return max(1, (int) config('adobe_connect.auto_sync_within_hours', 48));
+    }
+
     /**
      * @return list<string>
      */

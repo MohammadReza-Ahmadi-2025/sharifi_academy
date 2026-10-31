@@ -22,7 +22,16 @@ class CourseClassPublicSchedule
      *     status_label: string,
      *     range_label: string|null,
      *     starts_at: string|null,
-     *     ends_at: string|null
+     *     ends_at: string|null,
+     *     meeting: array{
+     *         weekdays: list<int>,
+     *         weekday_labels: list<string>,
+     *         starts_time: string|null,
+     *         ends_time: string|null,
+     *         time_label: string|null,
+     *         days_label: string|null,
+     *         summary_label: string|null
+     *     }
      * }
      */
     public static function forClass(CourseClass $class): array
@@ -30,39 +39,58 @@ class CourseClassPublicSchedule
         $start = $class->starts_at;
         $end = $class->ends_at;
         $now = Carbon::now();
+        $meeting = CourseClassMeetingSchedule::forClass($class);
 
         $rangeLabel = self::formatRangeLabel($start, $end);
 
         if ($start === null && $end === null) {
-            return self::payload($class, self::STATUS_UNSCHEDULED, 'زمان‌بندی اعلام نشده', null);
+            return self::payload($class, self::STATUS_UNSCHEDULED, 'زمان‌بندی اعلام نشده', null, $meeting);
         }
 
         if ($end !== null && $now->gt($end)) {
-            return self::payload($class, self::STATUS_FINISHED, 'پایان یافته', $rangeLabel);
+            return self::payload($class, self::STATUS_FINISHED, 'پایان یافته', $rangeLabel, $meeting);
         }
 
         if ($start !== null && $now->gte($start) && ($end === null || $now->lte($end))) {
-            return self::payload($class, self::STATUS_ONGOING, 'در حال برگزاری', $rangeLabel);
+            return self::payload($class, self::STATUS_ONGOING, 'در حال برگزاری', $rangeLabel, $meeting);
         }
 
         if ($start !== null && $now->lt($start)) {
-            return self::payload($class, self::STATUS_UPCOMING, 'به‌زودی', $rangeLabel);
+            return self::payload($class, self::STATUS_UPCOMING, 'به‌زودی', $rangeLabel, $meeting);
         }
 
         if ($end !== null && $now->lte($end)) {
-            return self::payload($class, self::STATUS_ONGOING, 'در حال برگزاری', $rangeLabel);
+            return self::payload($class, self::STATUS_ONGOING, 'در حال برگزاری', $rangeLabel, $meeting);
         }
 
-        return self::payload($class, self::STATUS_UNSCHEDULED, 'زمان‌بندی اعلام نشده', $rangeLabel);
+        return self::payload($class, self::STATUS_UNSCHEDULED, 'زمان‌بندی اعلام نشده', $rangeLabel, $meeting);
     }
 
     /**
+     * @param  array{
+     *     weekdays: list<int>,
+     *     weekday_labels: list<string>,
+     *     starts_time: string|null,
+     *     ends_time: string|null,
+     *     time_label: string|null,
+     *     days_label: string|null,
+     *     summary_label: string|null
+     * }  $meeting
      * @return array{
      *     status: string,
      *     status_label: string,
      *     range_label: string|null,
      *     starts_at: string|null,
-     *     ends_at: string|null
+     *     ends_at: string|null,
+     *     meeting: array{
+     *         weekdays: list<int>,
+     *         weekday_labels: list<string>,
+     *         starts_time: string|null,
+     *         ends_time: string|null,
+     *         time_label: string|null,
+     *         days_label: string|null,
+     *         summary_label: string|null
+     *     }
      * }
      */
     private static function payload(
@@ -70,6 +98,7 @@ class CourseClassPublicSchedule
         string $status,
         string $statusLabel,
         ?string $rangeLabel,
+        array $meeting,
     ): array {
         return [
             'status' => $status,
@@ -77,6 +106,7 @@ class CourseClassPublicSchedule
             'range_label' => $rangeLabel,
             'starts_at' => $class->starts_at?->toIso8601String(),
             'ends_at' => $class->ends_at?->toIso8601String(),
+            'meeting' => $meeting,
         ];
     }
 

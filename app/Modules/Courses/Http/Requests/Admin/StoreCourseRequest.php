@@ -32,7 +32,7 @@ class StoreCourseRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:courses,slug'],
-            'code' => ['nullable', 'string', 'max:64', 'unique:courses,code'],
+            'code' => ['nullable', 'string', 'max:50', 'unique:courses,code'],
             'short_description' => ['nullable', 'string', 'max:500'],
             'description' => ['nullable', 'string'],
             'level' => ['nullable', Rule::enum(CourseLevel::class)],

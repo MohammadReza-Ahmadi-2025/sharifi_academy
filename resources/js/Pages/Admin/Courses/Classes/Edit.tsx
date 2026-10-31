@@ -51,6 +51,11 @@ export default function CourseClassesEdit(props: Props) {
         registration_ends_at: String(courseClass.registration_ends_at ?? ''),
         starts_at: String(courseClass.starts_at ?? ''),
         ends_at: String(courseClass.ends_at ?? ''),
+        meeting_weekdays: Array.isArray(courseClass.meeting_weekdays)
+            ? (courseClass.meeting_weekdays as number[])
+            : [],
+        meeting_starts_time: String(courseClass.meeting_starts_time ?? ''),
+        meeting_ends_time: String(courseClass.meeting_ends_time ?? ''),
         location: String(courseClass.location ?? ''),
         description: String(courseClass.description ?? ''),
         is_public: Boolean(courseClass.is_public),

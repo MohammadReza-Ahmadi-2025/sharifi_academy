@@ -3,13 +3,15 @@
 namespace App\Modules\Courses\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Courses\Enums\EnrollmentStatus;
+use App\Modules\AdobeConnect\Services\SyncAdobeSessionAttendanceService;
+use App\Modules\AdobeConnect\Support\AdobeConnectSessionSco;
 use App\Modules\Courses\Enums\SessionAttendanceSource;
-use App\Modules\Courses\Enums\SessionAttendanceStatus;
+use App\Modules\Courses\Http\Requests\Admin\SyncAdobeSessionAttendanceRequest;
 use App\Modules\Courses\Http\Requests\Admin\SyncSessionAttendanceRequest;
 use App\Modules\Courses\Models\ClassSession;
 use App\Modules\Courses\Models\SessionAttendance;
 use App\Modules\Courses\Support\AdminSessionAttendanceOptions;
+use App\Modules\Courses\Support\SessionAttendanceDashboardPresenter;
 use App\Modules\Courses\Support\SessionAttendanceSheetPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,23 +41,20 @@ class SessionAttendanceController extends Controller
             });
         }
 
-        $sessions = $query->paginate($perPage)->withQueryString()
-            ->through(function (ClassSession $session) {
-                $course = $session->courseClass?->course;
-
-                return [
-                    'id' => $session->id,
-                    'title' => $session->title,
-                    'session_number' => $session->session_number,
-                    'starts_at' => $session->scheduled_start_at?->toIso8601String(),
-                    'course_title' => $course?->title,
-                    'class_title' => $session->courseClass?->title,
-                    'attendances_count' => $session->attendances_count,
-                ];
-            });
+        $paginator = $query->paginate($perPage)->withQueryString();
+        $rows = SessionAttendanceDashboardPresenter::enrichSessionRows(
+            collect($paginator->items()),
+        );
 
         return Inertia::render('Admin/SessionAttendances/Index', [
-            'sessions' => $sessions,
+            'summary' => SessionAttendanceDashboardPresenter::summary(),
+            'sessions' => [
+                'data' => $rows,
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
             'filters' => ['search' => $search, 'per_page' => $perPage],
             'abilities' => [
                 'update' => $request->user()?->can('session-attendances-update') ?? false,
@@ -67,17 +66,20 @@ class SessionAttendanceController extends Controller
     {
         abort_unless($request->user()?->can('session-attendances-index'), 403);
 
-        $classSession->load(['courseClass.course']);
+        $classSession->load(['courseClass.course', 'adobeRooms', 'courseClass.classLevelAdobeRooms']);
 
         $courseClass = $classSession->courseClass;
         abort_if($courseClass === null, 404);
+
+        $canUpdate = $request->user()?->can('session-attendances-update') ?? false;
 
         return Inertia::render('Admin/SessionAttendances/Show', [
             'session' => SessionAttendanceSheetPresenter::sessionMeta($classSession),
             'rows' => SessionAttendanceSheetPresenter::rowsForSession($classSession),
             'statusOptions' => AdminSessionAttendanceOptions::statuses(),
+            'can_sync_adobe' => $canUpdate && AdobeConnectSessionSco::meetingScoId($classSession) !== null,
             'abilities' => [
-                'update' => $request->user()?->can('session-attendances-update') ?? false,
+                'update' => $canUpdate,
             ],
         ]);
     }
@@ -99,5 +101,27 @@ class SessionAttendanceController extends Controller
         }
 
         return back()->with('success', 'حضور و غیاب ذخیره شد.');
+    }
+
+    public function syncAdobe(
+        SyncAdobeSessionAttendanceRequest $request,
+        ClassSession $classSession,
+        SyncAdobeSessionAttendanceService $adobeAttendance,
+    ): RedirectResponse {
+        $stats = $adobeAttendance->sync(
+            $classSession,
+            $request->boolean('mark_absent', true),
+        );
+
+        return back()->with(
+            'success',
+            sprintf(
+                'حضور از Adobe همگام شد: %d حاضر، %d غایب، %d بدون تغییر (sco=%s).',
+                $stats['present'],
+                $stats['absent'],
+                $stats['skipped'],
+                $stats['sco_id'],
+            ),
+        );
     }
 }

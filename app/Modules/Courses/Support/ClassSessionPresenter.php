@@ -31,6 +31,7 @@ class ClassSessionPresenter
             'join_label' => $courseClass instanceof CourseClass
                 ? ClassSessionJoinUrl::joinLabel($courseClass)
                 : null,
+            'join_url' => null,
         ];
     }
 

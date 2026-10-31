@@ -151,6 +151,8 @@ Route::prefix('admin')
 
         Route::middleware('permission:enrollments-update')->group(function () {
             Route::put('courses/{course}/classes/{courseClass}/enrollments/{enrollment}', [EnrollmentController::class, 'update'])->name('courses.classes.enrollments.update');
+            Route::post('courses/{course}/classes/{courseClass}/enrollments/sync-adobe', [EnrollmentController::class, 'syncAdobeBulk'])->name('courses.classes.enrollments.sync-adobe-bulk');
+            Route::post('courses/{course}/classes/{courseClass}/enrollments/{enrollment}/sync-adobe', [EnrollmentController::class, 'syncAdobe'])->name('courses.classes.enrollments.sync-adobe');
         });
 
         Route::middleware('permission:enrollments-delete')->group(function () {
@@ -299,6 +301,7 @@ Route::prefix('admin')
         });
         Route::middleware('permission:session-attendances-update')->group(function () {
             Route::put('session-attendances/{classSession}', [SessionAttendanceController::class, 'sync'])->name('session-attendances.sync');
+            Route::post('session-attendances/{classSession}/sync-adobe', [SessionAttendanceController::class, 'syncAdobe'])->name('session-attendances.sync-adobe');
         });
 
         Route::middleware('permission:catalog-products-index')->group(function () {

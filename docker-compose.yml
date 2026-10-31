@@ -11,5 +11,23 @@ services:
     volumes:
       - sharifi_mysql:/var/lib/mysql
 
+  meilisearch:
+    image: getmeili/meilisearch:v1.14
+    ports:
+      - '7700:7700'
+    environment:
+      MEILI_ENV: development
+      MEILI_NO_ANALYTICS: 'true'
+      # برای لوکال بدون کلید؛ در پروداکشن MEILI_MASTER_KEY بگذارید
+      MEILI_MASTER_KEY: ''
+    volumes:
+      - sharifi_meili:/meili_data
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '-', 'http://127.0.0.1:7700/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   sharifi_mysql:
+  sharifi_meili:

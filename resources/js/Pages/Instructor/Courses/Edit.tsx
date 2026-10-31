@@ -2,8 +2,7 @@ import { normalizeCourseFormPayload } from '@/Components/Admin/Courses/course-fo
 import { CourseFormFields } from '@/Components/Admin/Courses/CourseFormFields';
 import { GalleryImagesField, useGalleryUploadState } from '@/Components/Admin/shared/GalleryImagesField';
 import { withGalleryPayload } from '@/Components/shared/gallery-form-payload';
-import { instructorPanelLinks } from '@/lib/instructor-panel-links';
-import PanelLayout from '@/Layouts/PanelLayout';
+import InstructorLayout from '@/Layouts/InstructorLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
@@ -59,10 +58,13 @@ export default function InstructorCoursesEdit({ course, statusOptions, levelOpti
     };
 
     return (
-        <PanelLayout title={`ویرایش: ${course.title}`} homeHref="/instructor" links={instructorPanelLinks}>
+        <InstructorLayout title={`ویرایش: ${course.title}`} description="به‌روزرسانی محتوا و تنظیمات دوره">
             <Head title={`ویرایش ${course.title}`} />
-            <div className="mb-4">
-                <Link href={`/instructor/courses/${course.id}/classes`} className="text-sm text-indigo-600 hover:underline">
+            <div className="mb-5">
+                <Link
+                    href={`/instructor/courses/${course.id}/classes`}
+                    className="text-sm font-semibold text-primary transition hover:text-primary-hover"
+                >
                     مدیریت کلاس‌ها و جلسات
                 </Link>
             </div>
@@ -86,11 +88,11 @@ export default function InstructorCoursesEdit({ course, statusOptions, levelOpti
                 <button
                     type="submit"
                     disabled={form.processing}
-                    className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                    className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary transition hover:bg-primary-hover disabled:opacity-60"
                 >
                     ذخیره تغییرات
                 </button>
             </form>
-        </PanelLayout>
+        </InstructorLayout>
     );
 }

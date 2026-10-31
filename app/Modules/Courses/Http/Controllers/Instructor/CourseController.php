@@ -8,8 +8,13 @@ use App\Modules\Courses\Enums\CourseLevel;
 use App\Modules\Courses\Enums\CourseStatus;
 use App\Modules\Courses\Http\Requests\Admin\StoreCourseRequest;
 use App\Modules\Courses\Http\Requests\Admin\UpdateCourseRequest;
+use App\Modules\Assessments\Models\Quiz;
+use App\Modules\Courses\Enums\EnrollmentStatus;
 use App\Modules\Courses\Models\Course;
+use App\Modules\Courses\Models\CourseClass;
+use App\Modules\Courses\Models\Enrollment;
 use App\Modules\Courses\Support\AdminEnumOptions;
+use App\Modules\Courses\Support\CourseClassMeetingSchedule;
 use App\Modules\Courses\Support\CoursePresenter;
 use App\Modules\Courses\Support\CourseOwnership;
 use App\Modules\Courses\Support\InstructorCourseSubmission;
@@ -90,6 +95,61 @@ class CourseController extends Controller
         return redirect()
             ->route('instructor.courses.edit', $course)
             ->with('success', 'دوره ایجاد شد.');
+    }
+
+    public function show(Request $request, Course $course): Response
+    {
+        $this->authorize('view', $course);
+
+        $classes = $course->courseClasses()
+            ->withCount(['classSessions', 'enrollments'])
+            ->orderBy('id')
+            ->get()
+            ->map(function (CourseClass $class) use ($course): array {
+                $meeting = CourseClassMeetingSchedule::forClass($class);
+
+                return [
+                    'id' => $class->id,
+                    'name' => $class->name,
+                    'code' => $class->code,
+                    'status_label' => $class->status?->label() ?? '',
+                    'sessions_count' => (int) ($class->class_sessions_count ?? 0),
+                    'enrollments_count' => (int) ($class->enrollments_count ?? 0),
+                    'meeting_summary_label' => $meeting['summary_label'],
+                    'edit_url' => route('instructor.courses.classes.edit', [$course, $class]),
+                    'sessions_url' => route('instructor.courses.classes.sessions.index', [$course, $class]),
+                ];
+            })
+            ->values()
+            ->all();
+
+        $classIds = $course->courseClasses()->pluck('id');
+        $sessionsTotal = $course->courseClasses()
+            ->withCount('classSessions')
+            ->get()
+            ->sum('class_sessions_count');
+
+        return Inertia::render('Instructor/Courses/Show', [
+            'course' => [
+                'id' => $course->id,
+                'title' => $course->title,
+                'status_label' => $course->status?->label() ?? '',
+                'edit_url' => route('instructor.courses.edit', $course),
+                'classes_url' => route('instructor.courses.classes.index', $course),
+                'roster_url' => route('instructor.courses.roster', $course),
+                'quizzes_url' => route('instructor.courses.quizzes.index', $course),
+            ],
+            'classes' => $classes,
+            'stats' => [
+                'classes_total' => count($classes),
+                'sessions_total' => (int) $sessionsTotal,
+                'enrollments_confirmed' => Enrollment::query()
+                    ->whereIn('course_class_id', $classIds)
+                    ->where('status', EnrollmentStatus::Confirmed)
+                    ->count(),
+                'quizzes_total' => Quiz::query()->where('course_id', $course->id)->count(),
+            ],
+        ]);
     }
 
     public function edit(Request $request, Course $course): Response

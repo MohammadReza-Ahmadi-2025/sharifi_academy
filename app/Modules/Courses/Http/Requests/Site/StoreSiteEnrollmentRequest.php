@@ -27,7 +27,12 @@ class StoreSiteEnrollmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'course_class_id' => ['required', 'integer', 'min:1'],
+            'course_class_id' => [
+                'required',
+                'integer',
+                'min:1',
+                'exists:course_classes,id',
+            ],
         ];
     }
 
@@ -38,6 +43,7 @@ class StoreSiteEnrollmentRequest extends FormRequest
     {
         return [
             'course_class_id.required' => 'انتخاب کلاس الزامی است.',
+            'course_class_id.exists' => 'کلاس انتخاب‌شده معتبر نیست.',
         ];
     }
 

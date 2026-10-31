@@ -34,6 +34,9 @@ type CourseClassRow = {
     schedule_status: 'unscheduled' | 'upcoming' | 'ongoing' | 'finished';
     schedule_status_label: string;
     schedule_range_label: string | null;
+    meeting_summary_label: string | null;
+    meeting_days_label: string | null;
+    meeting_time_label: string | null;
     starts_at: string | null;
     ends_at: string | null;
 };
@@ -317,10 +320,16 @@ export default function CourseShow({ course, structuredData }: Props) {
                                                 )}
                                             </div>
                                             <ul className="mt-4 space-y-2.5 pr-3 text-sm text-neutral-black/75">
+                                                {row.meeting_summary_label && (
+                                                    <li className="flex items-start gap-2">
+                                                        <Clock className="mt-0.5 size-4 shrink-0 text-primary" />
+                                                        <span>{row.meeting_summary_label}</span>
+                                                    </li>
+                                                )}
                                                 {row.schedule_range_label && (
                                                     <li className="flex items-start gap-2">
                                                         <CalendarDays className="mt-0.5 size-4 shrink-0 text-primary" />
-                                                        <span>{row.schedule_range_label}</span>
+                                                        <span>بازه دوره: {row.schedule_range_label}</span>
                                                     </li>
                                                 )}
                                                 {row.location && (

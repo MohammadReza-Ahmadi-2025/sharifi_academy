@@ -2,8 +2,7 @@ import { normalizeCourseFormPayload } from '@/Components/Admin/Courses/course-fo
 import { CourseFormFields } from '@/Components/Admin/Courses/CourseFormFields';
 import { GalleryImagesField, useGalleryUploadState } from '@/Components/Admin/shared/GalleryImagesField';
 import { withGalleryPayload } from '@/Components/shared/gallery-form-payload';
-import { instructorPanelLinks } from '@/lib/instructor-panel-links';
-import PanelLayout from '@/Layouts/PanelLayout';
+import InstructorLayout from '@/Layouts/InstructorLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
@@ -40,7 +39,7 @@ export default function InstructorCoursesCreate({ statusOptions, levelOptions, c
     };
 
     return (
-        <PanelLayout title="ایجاد دوره" homeHref="/instructor" links={instructorPanelLinks}>
+        <InstructorLayout title="ایجاد دوره" description="اطلاعات دوره جدید را تکمیل کنید">
             <Head title="ایجاد دوره" />
             <form onSubmit={submit} className="space-y-6">
                 <GalleryImagesField
@@ -64,15 +63,18 @@ export default function InstructorCoursesCreate({ statusOptions, levelOptions, c
                     <button
                         type="submit"
                         disabled={form.processing}
-                        className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                        className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary transition hover:bg-primary-hover disabled:opacity-60"
                     >
                         ذخیره دوره
                     </button>
-                    <Link href="/instructor/courses" className="rounded-lg border px-5 py-2.5 text-sm">
+                    <Link
+                        href="/instructor/courses"
+                        className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
                         انصراف
                     </Link>
                 </div>
             </form>
-        </PanelLayout>
+        </InstructorLayout>
     );
 }

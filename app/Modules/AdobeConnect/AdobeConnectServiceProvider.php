@@ -2,6 +2,7 @@
 
 namespace App\Modules\AdobeConnect;
 
+use App\Modules\AdobeConnect\Console\AutoSyncAdobeConnectCommand;
 use App\Modules\AdobeConnect\Console\SyncAdobeConnectCommand;
 use App\Modules\AdobeConnect\Models\AdobeRecording;
 use App\Modules\AdobeConnect\Models\AdobeRoom;
@@ -29,6 +30,7 @@ class AdobeConnectServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 SyncAdobeConnectCommand::class,
+                AutoSyncAdobeConnectCommand::class,
             ]);
         }
     }

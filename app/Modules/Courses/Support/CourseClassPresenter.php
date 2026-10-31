@@ -47,6 +47,11 @@ class CourseClassPresenter
             'registration_ends_at' => $courseClass->registration_ends_at?->format('Y-m-d\TH:i'),
             'starts_at' => $courseClass->starts_at?->format('Y-m-d\TH:i'),
             'ends_at' => $courseClass->ends_at?->format('Y-m-d\TH:i'),
+            'meeting_weekdays' => CourseClassMeetingSchedule::normalizeWeekdays(
+                is_array($courseClass->meeting_weekdays) ? $courseClass->meeting_weekdays : null,
+            ),
+            'meeting_starts_time' => CourseClassMeetingSchedule::normalizeTime($courseClass->meeting_starts_time) ?? '',
+            'meeting_ends_time' => CourseClassMeetingSchedule::normalizeTime($courseClass->meeting_ends_time) ?? '',
             'location' => $courseClass->location,
             'description' => $courseClass->description,
             'is_public' => $courseClass->is_public,

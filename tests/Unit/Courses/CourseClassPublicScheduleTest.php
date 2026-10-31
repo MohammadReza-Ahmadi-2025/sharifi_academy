@@ -23,6 +23,8 @@ class CourseClassPublicScheduleTest extends TestCase
         $this->assertSame(CourseClassPublicSchedule::STATUS_ONGOING, $schedule['status']);
         $this->assertSame('در حال برگزاری', $schedule['status_label']);
         $this->assertNotNull($schedule['range_label']);
+        $this->assertArrayHasKey('meeting', $schedule);
+        $this->assertNull($schedule['meeting']['summary_label']);
 
         Carbon::setTestNow();
     }

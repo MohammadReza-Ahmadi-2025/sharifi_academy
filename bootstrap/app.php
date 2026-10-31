@@ -62,5 +62,6 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('cart:clear-expired-items')->everyFiveMinutes();
+        $schedule->command('adobe-connect:auto-sync')->hourly()->withoutOverlapping();
     })
     ->create();

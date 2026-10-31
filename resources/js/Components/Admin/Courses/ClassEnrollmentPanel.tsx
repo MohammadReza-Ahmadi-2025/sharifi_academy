@@ -17,9 +17,9 @@ import {
 } from '@/Components/Admin/shared/ui/table';
 import { Textarea } from '@/Components/Admin/shared/ui/textarea';
 import { router, useForm } from '@inertiajs/react';
-import { UserPlus } from 'lucide-react';
+import { RefreshCw, UserPlus } from 'lucide-react';
 import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
-import { FormEvent } from 'react';
+import { FormEvent, useState } from 'react';
 
 type EnrollmentRow = {
     id: number;
@@ -57,6 +57,9 @@ export function ClassEnrollmentPanel({
     canDelete,
 }: Props) {
     const confirmToast = useConfirmToast();
+    const [syncingId, setSyncingId] = useState<number | null>(null);
+    const [bulkSyncing, setBulkSyncing] = useState(false);
+
     if (!canCreate && enrollments.length === 0) {
         return null;
     }
@@ -64,6 +67,9 @@ export function ClassEnrollmentPanel({
     const baseUrl = `/admin/courses/${courseId}/classes/${classId}/enrollments`;
     const userSelectOptions = mapToSelectOptions(userOptions);
     const statusSelectOptions = mapToSelectOptions(enrollmentStatusOptions);
+    const pendingAdobeCount = showAdobeConnect
+        ? enrollments.filter((row) => row.status === 'confirmed' && !row.adobe_linked).length
+        : 0;
 
     const form = useForm({
         user_id: userOptions[0]?.value ?? 0,
@@ -85,6 +91,22 @@ export function ClassEnrollmentPanel({
         }, { preserveScroll: true });
     };
 
+    const syncAdobe = (row: EnrollmentRow) => {
+        setSyncingId(row.id);
+        router.post(`${baseUrl}/${row.id}/sync-adobe`, {}, {
+            preserveScroll: true,
+            onFinish: () => setSyncingId(null),
+        });
+    };
+
+    const syncAdobeBulk = () => {
+        setBulkSyncing(true);
+        router.post(`${baseUrl}/sync-adobe`, { only_missing: true }, {
+            preserveScroll: true,
+            onFinish: () => setBulkSyncing(false),
+        });
+    };
+
     const removeEnrollment = (row: EnrollmentRow) => {
         confirmToast(`ثبت‌نام «${row.user_label}» حذف شود؟`, () => {
         router.delete(`${baseUrl}/${row.id}`, { preserveScroll: true });
@@ -93,15 +115,29 @@ export function ClassEnrollmentPanel({
 
     return (
         <Card className="mt-8 space-y-6 p-6">
-            <div>
-                <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">ثبت‌نام‌ها</h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    ثبت‌نام دستی هر کاربر فعال. با وضعیت «قطعی»، در کلاس Adobe Connect کاربر با{' '}
-                    <strong>نام کاربری و رمز = موبایل</strong> ساخته یا وصل می‌شود (نام و نام خانوادگی از پروفایل).{' '}
-                    <a href="/admin/course-enrollments/create" className="text-indigo-600 hover:underline">
-                        ثبت‌نام از بخش مرکزی
-                    </a>
-                </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">ثبت‌نام‌ها</h2>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        ثبت‌نام دستی هر کاربر فعال. با وضعیت «قطعی»، در کلاس Adobe Connect کاربر با{' '}
+                        <strong>نام کاربری و رمز = موبایل</strong> ساخته یا وصل می‌شود (نام و نام خانوادگی از پروفایل).{' '}
+                        <a href="/admin/course-enrollments/create" className="text-indigo-600 hover:underline">
+                            ثبت‌نام از بخش مرکزی
+                        </a>
+                    </p>
+                </div>
+                {showAdobeConnect && canUpdate && pendingAdobeCount > 0 ? (
+                    <AdminButton
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={bulkSyncing}
+                        onClick={syncAdobeBulk}
+                    >
+                        <RefreshCw className={`ml-1 h-3.5 w-3.5 ${bulkSyncing ? 'animate-spin' : ''}`} />
+                        همگام‌سازی Adobe ({pendingAdobeCount})
+                    </AdminButton>
+                ) : null}
             </div>
 
             {canCreate ? (
@@ -201,6 +237,17 @@ export function ClassEnrollmentPanel({
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex justify-end gap-2">
+                                        {showAdobeConnect && canUpdate && row.status === 'confirmed' ? (
+                                            <AdminButton
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={syncingId === row.id}
+                                                onClick={() => syncAdobe(row)}
+                                            >
+                                                {row.adobe_linked ? 'تازه‌سازی Adobe' : 'وصل Adobe'}
+                                            </AdminButton>
+                                        ) : null}
                                         {canUpdate ? (
                                             <AdminButton type="button" variant="outline" size="sm" onClick={() => toggleStatus(row)}>
                                                 {row.status === 'confirmed' ? 'لغو' : 'تأیید'}

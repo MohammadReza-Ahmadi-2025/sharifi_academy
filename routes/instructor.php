@@ -5,9 +5,12 @@ use App\Modules\AdobeConnect\Http\Controllers\Admin\AdobeRoomController;
 use App\Modules\AdobeConnect\Http\Controllers\Admin\AdobeSyncController;
 use App\Modules\Courses\Http\Controllers\Admin\ClassSessionController;
 use App\Modules\Courses\Http\Controllers\Admin\CourseClassController;
+use App\Modules\Assessments\Http\Controllers\Instructor\CourseQuizController;
 use App\Modules\Courses\Http\Controllers\Instructor\CourseController;
+use App\Modules\Courses\Http\Controllers\Instructor\CourseRosterController;
 use App\Modules\Courses\Http\Controllers\Instructor\DashboardController;
 use App\Modules\Courses\Http\Controllers\Instructor\SessionAttendanceController as InstructorSessionAttendanceController;
+use App\Modules\Courses\Http\Controllers\Instructor\SessionJoinController as InstructorSessionJoinController;
 use App\Modules\Profile\Http\Controllers\Instructor\ResumeController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,9 +29,45 @@ Route::prefix('instructor')
             Route::post('courses', [CourseController::class, 'store'])->name('courses.store');
         });
 
+        Route::middleware('permission:courses-index')->group(function () {
+            Route::get('courses/{course}', [CourseController::class, 'show'])->name('courses.show');
+            Route::get('courses/{course}/roster', CourseRosterController::class)->name('courses.roster');
+        });
+
         Route::middleware('permission:courses-update')->group(function () {
             Route::get('courses/{course}/edit', [CourseController::class, 'edit'])->name('courses.edit');
             Route::put('courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+        });
+
+        Route::middleware('permission:quizzes-index')->group(function () {
+            Route::get('courses/{course}/quizzes', [CourseQuizController::class, 'index'])
+                ->name('courses.quizzes.index');
+        });
+
+        Route::middleware('permission:quizzes-create')->group(function () {
+            Route::get('courses/{course}/quizzes/create', [CourseQuizController::class, 'create'])
+                ->name('courses.quizzes.create');
+            Route::post('courses/{course}/quizzes', [CourseQuizController::class, 'store'])
+                ->name('courses.quizzes.store');
+        });
+
+        Route::middleware('permission:quizzes-update')->group(function () {
+            Route::get('courses/{course}/quizzes/{quiz}/edit', [CourseQuizController::class, 'edit'])
+                ->name('courses.quizzes.edit');
+            Route::put('courses/{course}/quizzes/{quiz}', [CourseQuizController::class, 'update'])
+                ->name('courses.quizzes.update');
+        });
+
+        Route::middleware('permission:quizzes-delete')->group(function () {
+            Route::delete('courses/{course}/quizzes/{quiz}', [CourseQuizController::class, 'destroy'])
+                ->name('courses.quizzes.destroy');
+        });
+
+        Route::middleware('permission:certificates-issue')->group(function () {
+            Route::post('courses/{course}/certificates/issue', [\App\Modules\Assessments\Http\Controllers\Instructor\CertificateIssueController::class, 'store'])
+                ->name('courses.certificates.issue');
+            Route::put('courses/{course}/certificate-settings', [\App\Modules\Assessments\Http\Controllers\Instructor\CertificateSettingsController::class, 'update'])
+                ->name('courses.certificate-settings.update');
         });
 
         Route::middleware('permission:instructor-resume-manage')->group(function () {
@@ -121,5 +160,10 @@ Route::prefix('instructor')
                 ->name('session-attendances.index');
             Route::get('session-attendances/{classSession}', [InstructorSessionAttendanceController::class, 'show'])
                 ->name('session-attendances.show');
+            Route::post('session-attendances/{classSession}/sync-adobe', [InstructorSessionAttendanceController::class, 'syncAdobe'])
+                ->name('session-attendances.sync-adobe');
         });
+
+        Route::get('classes/{courseClass}/sessions/{classSession}/join', InstructorSessionJoinController::class)
+            ->name('sessions.join');
     });

@@ -147,14 +147,20 @@ export function SiteHeaderSearch({ className, variant = 'header', onNavigate }: 
         } else if (event.key === 'ArrowUp') {
             event.preventDefault();
             setActiveIndex((prev) => (prev <= 0 ? displayed.length - 1 : prev - 1));
-        } else if (event.key === 'Enter') {
-            const target = activeIndex >= 0 ? displayed[activeIndex] : displayed[0];
-            if (target) {
-                event.preventDefault();
+        } else         if (event.key === 'Enter') {
+            event.preventDefault();
+            if (activeIndex >= 0 && displayed[activeIndex]) {
                 close();
                 setQuery('');
                 onNavigate?.();
-                router.visit(target.url);
+                router.visit(displayed[activeIndex].url);
+                return;
+            }
+
+            if (normalizedQuery.length >= 2) {
+                close();
+                onNavigate?.();
+                router.get('/search', { q: normalizedQuery });
             }
         }
     };
@@ -237,8 +243,21 @@ export function SiteHeaderSearch({ className, variant = 'header', onNavigate }: 
                 </p>
             )}
 
-            <div className="border-t border-secondary/60 px-3 py-2 text-[11px] text-slate-400">
-                Enter برای انتخاب · Esc برای بستن
+            <div className="flex items-center justify-between gap-2 border-t border-secondary/60 px-3 py-2 text-[11px] text-slate-400">
+                <span>Enter صفحه نتایج · Esc بستن</span>
+                {normalizedQuery.length >= 2 ? (
+                    <button
+                        type="button"
+                        className="font-semibold text-primary hover:underline"
+                        onClick={() => {
+                            close();
+                            onNavigate?.();
+                            router.get('/search', { q: normalizedQuery });
+                        }}
+                    >
+                        همه نتایج
+                    </button>
+                ) : null}
             </div>
         </div>
     ) : null;

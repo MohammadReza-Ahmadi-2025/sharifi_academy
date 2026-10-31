@@ -40,6 +40,9 @@ final class SessionAttendanceSheetPresenter
                     'mobile' => $user->mobile,
                     'status' => $status->value,
                     'status_label' => $status->label(),
+                    'duration_minutes' => (int) ($attendance?->duration_minutes ?? 0),
+                    'source' => $attendance?->source?->value,
+                    'source_label' => $attendance?->source_label,
                     'note' => (string) ($attendance?->note ?? ''),
                 ];
             })

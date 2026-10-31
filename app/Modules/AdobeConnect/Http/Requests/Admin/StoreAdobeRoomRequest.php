@@ -32,7 +32,7 @@ class StoreAdobeRoomRequest extends FormRequest
         return [
             'sco_id' => ['required', 'string', 'max:64', 'unique:adobe_rooms,sco_id'],
             'url_path' => ['nullable', 'string', 'max:255', 'unique:adobe_rooms,url_path'],
-            'meeting_url' => ['nullable', 'string', 'max:500', 'url:http,https'],
+            'meeting_url' => ['nullable', 'string', 'max:255', 'url:http,https'],
             'access_type' => ['required', Rule::enum(AdobeRoomAccessType::class)],
             'passcode' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::enum(AdobeRoomStatus::class)],

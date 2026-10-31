@@ -13,6 +13,16 @@ import { Plus, Trash2 } from 'lucide-react';
 
 type InstructorRow = { user_id: number; role: string; is_primary: boolean; share_percentage: string };
 
+const WEEKDAY_OPTIONS = [
+    { value: 6, label: 'شنبه' },
+    { value: 0, label: 'یکشنبه' },
+    { value: 1, label: 'دوشنبه' },
+    { value: 2, label: 'سه‌شنبه' },
+    { value: 3, label: 'چهارشنبه' },
+    { value: 4, label: 'پنجشنبه' },
+    { value: 5, label: 'جمعه' },
+] as const;
+
 type ClassFormData = {
     name: string;
     code: string;
@@ -25,6 +35,9 @@ type ClassFormData = {
     registration_ends_at: string;
     starts_at: string;
     ends_at: string;
+    meeting_weekdays: number[];
+    meeting_starts_time: string;
+    meeting_ends_time: string;
     location: string;
     description: string;
     is_public: boolean;
@@ -205,7 +218,7 @@ export function ClassFormFields({
                             onChange={(v) => onChange('registration_ends_at', v)}
                         />
                     </FormField>
-                    <FormField label="شروع کلاس" error={errors.starts_at}>
+                    <FormField label="شروع دوره کلاس" error={errors.starts_at}>
                         <PersianDatePicker
                             includeTime
                             value={data.starts_at}
@@ -215,7 +228,7 @@ export function ClassFormFields({
                             onChange={(v) => onChange('starts_at', v)}
                         />
                     </FormField>
-                    <FormField label="پایان کلاس" error={errors.ends_at}>
+                    <FormField label="پایان دوره کلاس" error={errors.ends_at}>
                         <PersianDatePicker
                             includeTime
                             value={data.ends_at}
@@ -226,6 +239,69 @@ export function ClassFormFields({
                             onChange={(v) => onChange('ends_at', v)}
                         />
                     </FormField>
+                </div>
+
+                <div className="space-y-3 border-t border-slate-200 pt-4 dark:border-slate-800">
+                    <div>
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">برنامه هفتگی جلسات</h3>
+                        <p className="mt-1 text-xs text-slate-500">
+                            مثلاً شنبه‌ها و دوشنبه‌ها، ساعت ۱۲ تا ۱۴ — هر روز انتخاب‌شده یک جلسه در همان بازه.
+                        </p>
+                    </div>
+                    <FormField label="روزهای هفته" error={errors.meeting_weekdays || errors['meeting_weekdays.0']}>
+                        <div className="flex flex-wrap gap-2">
+                            {WEEKDAY_OPTIONS.map((day) => {
+                                const selected = (data.meeting_weekdays ?? []).includes(day.value);
+                                return (
+                                    <button
+                                        key={day.value}
+                                        type="button"
+                                        disabled={processing}
+                                        onClick={() => {
+                                            const current = data.meeting_weekdays ?? [];
+                                            onChange(
+                                                'meeting_weekdays',
+                                                selected
+                                                    ? current.filter((value) => value !== day.value)
+                                                    : [...current, day.value],
+                                            );
+                                        }}
+                                        className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
+                                            selected
+                                                ? 'border-primary bg-primary/10 text-primary'
+                                                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200'
+                                        }`}
+                                    >
+                                        {day.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </FormField>
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <FormField label="ساعت شروع جلسه" htmlFor="meeting-starts-time" error={errors.meeting_starts_time}>
+                            <AdminInput
+                                id="meeting-starts-time"
+                                type="time"
+                                dir="ltr"
+                                className="text-left"
+                                value={data.meeting_starts_time ?? ''}
+                                disabled={processing}
+                                onChange={(e) => onChange('meeting_starts_time', e.target.value)}
+                            />
+                        </FormField>
+                        <FormField label="ساعت پایان جلسه" htmlFor="meeting-ends-time" error={errors.meeting_ends_time}>
+                            <AdminInput
+                                id="meeting-ends-time"
+                                type="time"
+                                dir="ltr"
+                                className="text-left"
+                                value={data.meeting_ends_time ?? ''}
+                                disabled={processing}
+                                onChange={(e) => onChange('meeting_ends_time', e.target.value)}
+                            />
+                        </FormField>
+                    </div>
                 </div>
             </Card>
 

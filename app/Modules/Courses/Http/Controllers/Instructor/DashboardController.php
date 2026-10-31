@@ -8,6 +8,7 @@ use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
 use App\Modules\Courses\Support\CourseOwnership;
 use App\Modules\Courses\Support\CoursePresenter;
+use App\Modules\Courses\Support\SessionAttendanceDashboardPresenter;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -33,6 +34,8 @@ class DashboardController extends Controller
                 'classes_url' => route('instructor.courses.classes.index', $course),
             ]);
 
+        $attendance = SessionAttendanceDashboardPresenter::summary($user);
+
         $stats = [
             'courses_total' => $courseIds->count(),
             'courses_published' => (clone $ownedQuery)->where('status', CourseStatus::Published)->count(),
@@ -40,6 +43,9 @@ class DashboardController extends Controller
             'classes_total' => $courseIds->isEmpty()
                 ? 0
                 : CourseClass::query()->whereIn('course_id', $courseIds)->count(),
+            'attendance_rate' => $attendance['attendance_rate'],
+            'attendance_present' => $attendance['present_count'],
+            'attendance_absent' => $attendance['absent_count'],
         ];
 
         return Inertia::render('Instructor/Dashboard', [

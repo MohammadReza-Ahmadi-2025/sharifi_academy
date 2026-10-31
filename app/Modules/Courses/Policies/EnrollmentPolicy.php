@@ -20,7 +20,7 @@ class EnrollmentPolicy
     }
 
     /**
-     * مشاهده جزئیات ثبت‌نام (جلسات، Adobe و …) فقط برای مالک و ثبت‌نام قطعی.
+     * مشاهده جزئیات ثبت‌نام خود (جلسات پس از تأیید؛ وضعیت pending هم قابل مشاهده است).
      */
     public function view(User $user, Enrollment $enrollment): bool
     {
@@ -29,9 +29,9 @@ class EnrollmentPolicy
         }
 
         if ($user->hasRole('super-admin')) {
-            return $enrollment->isConfirmed();
+            return true;
         }
 
-        return $enrollment->user_id === $user->id && $enrollment->isConfirmed();
+        return (int) $enrollment->user_id === (int) $user->id;
     }
 }

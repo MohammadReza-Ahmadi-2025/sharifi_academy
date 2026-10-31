@@ -20,9 +20,24 @@ class SyncSessionAttendanceRequest extends FormRequest
     {
         return [
             'attendances' => ['required', 'array'],
-            'attendances.*.user_id' => ['required', 'integer', Rule::exists('users', 'id')],
+            'attendances.*.user_id' => [
+                'required',
+                'integer',
+                'distinct',
+                Rule::exists('users', 'id'),
+            ],
             'attendances.*.status' => ['required', 'string', Rule::in(SessionAttendanceStatus::values())],
             'attendances.*.note' => ['nullable', 'string', 'max:1000'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'attendances.*.user_id.distinct' => 'هر کاربر فقط یک‌بار در لیست حضور می‌تواند باشد.',
         ];
     }
 }

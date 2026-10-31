@@ -20,10 +20,13 @@ class DashboardController extends Controller
 
         $this->authorize('viewAny', Enrollment::class);
 
-        $rows = $enrollments->confirmedEnrollmentsFor($user);
+        $confirmed = $enrollments->confirmedEnrollmentsFor($user);
+        $all = $enrollments->enrollmentsFor($user);
 
         return Inertia::render('Student/Dashboard', [
-            'enrollments' => StudentDashboardPresenter::enrollments($rows),
+            'stats' => $enrollments->statsFor($user),
+            'upcomingSessions' => StudentDashboardPresenter::upcomingSessions($confirmed),
+            'enrollments' => StudentDashboardPresenter::enrollments($all->take(6)),
         ]);
     }
 }

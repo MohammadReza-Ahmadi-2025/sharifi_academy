@@ -29,6 +29,14 @@ return [
     'meetings_folder_id' => env('ADOBE_CONNECT_MEETINGS_FOLDER_ID'),
 
     /** ساخت خودکار اتاق Adobe هنگام ایجاد/ویرایش کلاس آنلاین */
+    'auto_provision_meetings' => (bool) env('ADOBE_CONNECT_AUTO_PROVISION_MEETINGS', true),
+
+    /** همگام‌سازی خودکار ضبط و حضور جلسات اخیر (scheduler) */
+    'auto_sync_enabled' => (bool) env('ADOBE_CONNECT_AUTO_SYNC_ENABLED', true),
+
+    /** پنجرهٔ زمانی (ساعت) برای همگام‌سازی خودکار جلسات پایان‌یافته */
+    'auto_sync_within_hours' => (int) env('ADOBE_CONNECT_AUTO_SYNC_WITHIN_HOURS', 48),
+
     /** @var list<string> پوشه‌های محتمل برای ساخت کاربر (principal-update) */
     'users_folder_ids' => array_values(array_filter(array_map(
         static fn (string $id): string => trim($id),

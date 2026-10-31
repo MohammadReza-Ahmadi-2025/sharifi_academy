@@ -268,12 +268,76 @@ class AdobeConnectApi
         ]);
     }
 
+    /**
+     * گزارش حضور شرکت‌کنندگان یک اتاق جلسه (report-meeting-attendance).
+     *
+     * @param  array{date_gte?: string|null, date_lte?: string|null}  $filters
+     * @return list<array{
+     *     principal_id: string,
+     *     login: string,
+     *     participant_name: string,
+     *     date_created: string|null,
+     *     date_end: string|null
+     * }>
+     */
+    public function meetingAttendance(string $meetingScoId, array $filters = []): array
+    {
+        $query = ['sco-id' => $meetingScoId];
+
+        $dateGte = trim((string) ($filters['date_gte'] ?? ''));
+        $dateLte = trim((string) ($filters['date_lte'] ?? ''));
+        if ($dateGte !== '') {
+            $query['filter-gte-date-created'] = $dateGte;
+        }
+        if ($dateLte !== '') {
+            $query['filter-lte-date-created'] = $dateLte;
+        }
+
+        $xml = $this->client->get('report-meeting-attendance', $query);
+
+        if (! isset($xml->{'report-meeting-attendance'}->row)) {
+            return [];
+        }
+
+        $rows = [];
+        foreach ($xml->{'report-meeting-attendance'}->row as $row) {
+            $principalId = (string) ($row['principal-id'] ?? '');
+            $login = trim((string) ($row->login ?? ''));
+            if ($principalId === '' && $login === '') {
+                continue;
+            }
+
+            $rows[] = [
+                'principal_id' => $principalId,
+                'login' => $login,
+                'participant_name' => trim((string) ($row->{'participant-name'} ?? '')),
+                'date_created' => isset($row->{'date-created'}) ? (string) $row->{'date-created'} : null,
+                'date_end' => isset($row->{'date-end'}) ? (string) $row->{'date-end'} : null,
+            ];
+        }
+
+        return $rows;
+    }
+
     public function grantMeetingViewAccess(string $meetingScoId, string $principalId): void
+    {
+        $this->grantMeetingPermission($meetingScoId, $principalId, 'view');
+    }
+
+    public function grantMeetingHostAccess(string $meetingScoId, string $principalId): void
+    {
+        $this->grantMeetingPermission($meetingScoId, $principalId, 'host');
+    }
+
+    /**
+     * @param  'view'|'host'|'mini-host'  $permission
+     */
+    public function grantMeetingPermission(string $meetingScoId, string $principalId, string $permission = 'view'): void
     {
         $this->client->get('permissions-update', [
             'acl-id' => $meetingScoId,
             'principal-id' => $principalId,
-            'permission-id' => 'view',
+            'permission-id' => $permission,
         ]);
     }
 

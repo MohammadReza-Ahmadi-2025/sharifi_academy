@@ -41,6 +41,10 @@ use Laravel\Scout\Searchable;
     'display_order',
     'created_by',
     'published_at',
+    'certificate_enabled',
+    'certificate_title',
+    'certificate_min_attendance_percent',
+    'certificate_min_quiz_score',
 ])]
 class Course extends Model
 {
@@ -101,6 +105,9 @@ class Course extends Model
             'is_featured' => 'boolean',
             'display_order' => 'integer',
             'published_at' => 'datetime',
+            'certificate_enabled' => 'boolean',
+            'certificate_min_attendance_percent' => 'integer',
+            'certificate_min_quiz_score' => 'integer',
         ];
     }
 

@@ -2,13 +2,13 @@
 
 namespace App\Modules\AdobeConnect\Services;
 
-use App\Models\User;
-use App\Modules\AdobeConnect\Enums\AdobeRoomStatus;
 use App\Modules\AdobeConnect\Support\AdobeConnectConfig;
 use App\Modules\AdobeConnect\Support\AdobeConnectUserCredentials;
 use App\Modules\AdobeConnect\Support\AdobeEnrollmentSyncResult;
+use App\Modules\Courses\Enums\EnrollmentStatus;
 use App\Modules\Courses\Models\CourseClass;
 use App\Modules\Courses\Models\Enrollment;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -16,7 +16,8 @@ class SyncAdobeConnectEnrollmentService
 {
     public function __construct(
         private readonly AdobeConnectConfig $config,
-        private readonly AdobeConnectApi $api,
+        private readonly EnsureAdobeConnectPrincipalService $principals,
+        private readonly GrantAdobeMeetingAccessService $meetingAccess,
     ) {}
 
     public function sync(Enrollment $enrollment): AdobeEnrollmentSyncResult
@@ -43,12 +44,12 @@ class SyncAdobeConnectEnrollmentService
         }
 
         try {
-            [$principalId, $created] = $this->ensureAdobePrincipal($user, $credentials);
+            [$principalId, $created] = $this->principals->ensure($user, $credentials);
             if ($principalId === null) {
                 return AdobeEnrollmentSyncResult::failed($credentials->login);
             }
 
-            $this->grantClassMeetingAccess($courseClass, $principalId);
+            $this->meetingAccess->grantForClass($courseClass, $principalId, 'view');
 
             return $created
                 ? AdobeEnrollmentSyncResult::created($credentials->login)
@@ -65,121 +66,54 @@ class SyncAdobeConnectEnrollmentService
     }
 
     /**
-     * @return array{0: ?string, 1: bool} principal id, was newly created via API
+     * @return array{synced: int, linked: int, created: int, failed: int, skipped: int, messages: list<string>}
      */
-    private function ensureAdobePrincipal(User $user, AdobeConnectUserCredentials $credentials): array
+    public function syncConfirmedForClass(CourseClass $courseClass, bool $onlyMissing = false): array
     {
-        $firstName = trim((string) ($user->name ?? ''));
-        $lastName = trim((string) ($user->family ?? ''));
-        if ($firstName === '') {
-            $firstName = 'Student';
-        }
-        if ($lastName === '') {
-            $lastName = 'User';
-        }
+        $stats = [
+            'synced' => 0,
+            'linked' => 0,
+            'created' => 0,
+            'failed' => 0,
+            'skipped' => 0,
+            'messages' => [],
+        ];
 
-        $existingId = $this->api->findPrincipalIdByLogin($credentials->login);
-        if ($existingId !== null) {
-            $this->api->updateUserProfile(
-                $existingId,
-                $firstName,
-                $lastName,
-                $credentials->password,
-            );
-            $this->persistPrincipal($user, $existingId);
-
-            return [$existingId, false];
+        if (! $courseClass->usesAdobeConnect() || ! $this->config->isApiConfigured()) {
+            return $stats;
         }
 
-        if (filled($user->adobe_connect_principal_id)) {
-            $storedId = (string) $user->adobe_connect_principal_id;
-            try {
-                $this->api->updateUserProfile(
-                    $storedId,
-                    $firstName,
-                    $lastName,
-                    $credentials->password,
-                );
-                $this->persistPrincipal($user, $storedId);
+        /** @var Collection<int, Enrollment> $enrollments */
+        $enrollments = Enrollment::query()
+            ->where('course_class_id', $courseClass->id)
+            ->where('status', EnrollmentStatus::Confirmed)
+            ->with('user')
+            ->orderBy('id')
+            ->get();
 
-                return [$storedId, false];
-            } catch (Throwable) {
-                // fall through to create / re-find
+        foreach ($enrollments as $enrollment) {
+            if ($onlyMissing && filled($enrollment->user?->adobe_connect_principal_id)) {
+                $stats['skipped']++;
+
+                continue;
+            }
+
+            $result = $this->sync($enrollment);
+            match ($result->status) {
+                'linked' => $stats['linked']++,
+                'created' => $stats['created']++,
+                'failed' => $stats['failed']++,
+                default => $stats['skipped']++,
+            };
+
+            if (in_array($result->status, ['linked', 'created', 'failed'], true)) {
+                $stats['synced']++;
+                if ($result->message !== '') {
+                    $stats['messages'][] = $result->message;
+                }
             }
         }
 
-        try {
-            $registered = $this->api->registerUser(
-                $credentials->login,
-                $credentials->password,
-                $firstName,
-                $lastName,
-            );
-            $this->persistPrincipal($user, $registered['principal_id']);
-
-            return [$registered['principal_id'], true];
-        } catch (Throwable $exception) {
-            Log::warning('Adobe Connect user auto-registration failed', [
-                'user_id' => $user->id,
-                'login' => $credentials->login,
-                'message' => $exception->getMessage(),
-            ]);
-
-            $retryFind = $this->api->findPrincipalIdByLogin($credentials->login);
-            if ($retryFind !== null) {
-                $this->api->updateUserProfile(
-                    $retryFind,
-                    $firstName,
-                    $lastName,
-                    $credentials->password,
-                );
-                $this->persistPrincipal($user, $retryFind);
-
-                return [$retryFind, false];
-            }
-
-            return [null, false];
-        }
-    }
-
-    private function grantClassMeetingAccess(CourseClass $courseClass, string $principalId): void
-    {
-        $courseClass->loadMissing(['classLevelAdobeRooms', 'classSessions.adobeRooms']);
-
-        $scoIds = [];
-
-        $classRoom = $courseClass->classLevelAdobeRooms()
-            ->where('status', AdobeRoomStatus::Active)
-            ->first();
-        if ($classRoom !== null) {
-            $scoIds[] = (string) $classRoom->sco_id;
-        }
-
-        foreach ($courseClass->classSessions as $session) {
-            $sessionRoom = $session->adobeRooms()->active()->first();
-            if ($sessionRoom !== null) {
-                $scoIds[] = (string) $sessionRoom->sco_id;
-            }
-        }
-
-        foreach (array_unique(array_filter($scoIds)) as $scoId) {
-            try {
-                $this->api->grantMeetingViewAccess($scoId, $principalId);
-            } catch (Throwable $exception) {
-                Log::warning('Adobe Connect meeting permission failed', [
-                    'sco_id' => $scoId,
-                    'principal_id' => $principalId,
-                    'message' => $exception->getMessage(),
-                ]);
-            }
-        }
-    }
-
-    private function persistPrincipal(User $user, string $principalId): void
-    {
-        $user->forceFill([
-            'adobe_connect_principal_id' => $principalId,
-            'adobe_connect_synced_at' => now(),
-        ])->save();
+        return $stats;
     }
 }

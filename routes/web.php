@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Account\NotificationController;
 use App\Http\Controllers\Public\HomeController;
+use App\Http\Controllers\Public\RobotsController;
+use App\Http\Controllers\Public\SitemapController;
 use App\Http\Controllers\Public\SiteSearchController;
+use App\Modules\Assessments\Http\Controllers\Public\CertificateVerifyController;
 use App\Modules\Auth\Http\Controllers\OtpRequestController;
 use App\Modules\Auth\Http\Controllers\OtpVerifyController;
 use App\Modules\Blog\Http\Controllers\Site\BlogCategoryController;
@@ -21,6 +24,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+Route::get('/robots.txt', RobotsController::class)->name('robots');
+Route::get('/certificates/verify/{code}', CertificateVerifyController::class)->name('certificates.verify');
+
+Route::get('/search', [SiteSearchController::class, 'index'])->name('search.index');
 Route::get('/search/autocomplete', [SiteSearchController::class, 'autocomplete'])
     ->name('search.autocomplete');
 

@@ -126,6 +126,21 @@ return [
                 'session-attendances-delete' => 'حذف رکورد حضور',
             ],
         ],
+        'quizzes' => [
+            'label' => 'آزمون‌ها',
+            'permissions' => [
+                'quizzes-index' => 'مشاهده آزمون‌ها',
+                'quizzes-create' => 'ایجاد آزمون',
+                'quizzes-update' => 'ویرایش آزمون',
+                'quizzes-delete' => 'حذف آزمون',
+            ],
+        ],
+        'certificates' => [
+            'label' => 'گواهینامه‌ها',
+            'permissions' => [
+                'certificates-issue' => 'صدور گواهینامه',
+            ],
+        ],
         'catalog_categories' => [
             'label' => 'دسته‌بندی کاتالوگ',
             'permissions' => [

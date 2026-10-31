@@ -88,6 +88,9 @@ class CoursePublicPresenter
                     'schedule_status' => $schedule['status'],
                     'schedule_status_label' => $schedule['status_label'],
                     'schedule_range_label' => $schedule['range_label'],
+                    'meeting_summary_label' => $schedule['meeting']['summary_label'],
+                    'meeting_days_label' => $schedule['meeting']['days_label'],
+                    'meeting_time_label' => $schedule['meeting']['time_label'],
                     'starts_at' => $schedule['starts_at'],
                     'ends_at' => $schedule['ends_at'],
                 ];

@@ -74,6 +74,14 @@ return [
             'roles' => ['super-admin', 'admin'],
         ],
         [
+            'id' => 'session-attendances',
+            'label' => 'حضور و غیاب',
+            'href' => '/admin/session-attendances',
+            'icon' => 'session-attendances',
+            'permission' => 'session-attendances-index',
+            'roles' => ['super-admin', 'admin'],
+        ],
+        [
             'id' => 'skills',
             'label' => 'مهارت‌ها',
             'href' => '/admin/skills',

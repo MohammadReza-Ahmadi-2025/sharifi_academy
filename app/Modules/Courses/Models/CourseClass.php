@@ -32,6 +32,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'registration_ends_at',
     'starts_at',
     'ends_at',
+    'meeting_weekdays',
+    'meeting_starts_time',
+    'meeting_ends_time',
     'location',
     'description',
     'is_public',
@@ -93,6 +96,7 @@ class CourseClass extends Model
             'registration_ends_at' => 'datetime',
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'meeting_weekdays' => 'array',
             'is_public' => 'boolean',
         ];
     }

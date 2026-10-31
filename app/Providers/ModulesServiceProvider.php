@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Modules\Activity\ActivityServiceProvider;
 use App\Modules\Admin\AdminServiceProvider;
 use App\Modules\AdobeConnect\AdobeConnectServiceProvider;
+use App\Modules\Assessments\AssessmentsServiceProvider;
 use App\Modules\Auth\AuthServiceProvider;
 use App\Modules\Blog\BlogServiceProvider;
 use App\Modules\Cart\CartServiceProvider;
@@ -44,6 +45,7 @@ class ModulesServiceProvider extends ServiceProvider
         $this->app->register(MenuServiceProvider::class);
         $this->app->register(VisitsServiceProvider::class);
         $this->app->register(CoursesServiceProvider::class);
+        $this->app->register(AssessmentsServiceProvider::class);
         $this->app->register(AdobeConnectServiceProvider::class);
         $this->app->register(ProfileServiceProvider::class);
         $this->app->register(SocialServiceProvider::class);

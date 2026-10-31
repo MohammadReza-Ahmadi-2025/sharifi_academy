@@ -5,6 +5,7 @@ namespace App\Modules\Courses\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Modules\AdobeConnect\Models\AdobeRoom;
 use App\Modules\AdobeConnect\Services\ProvisionCourseClassAdobeMeetingService;
+use App\Modules\AdobeConnect\Services\SyncAdobeConnectClassInstructorsService;
 use App\Modules\AdobeConnect\Support\AdminAdobeEnumOptions;
 use App\Modules\Courses\Enums\ClassInstructorRole;
 use App\Modules\Courses\Enums\CourseClassDeliveryType;
@@ -205,6 +206,9 @@ class CourseClassController extends Controller
             'registration_ends_at' => $data['registration_ends_at'] ?? null,
             'starts_at' => $data['starts_at'] ?? null,
             'ends_at' => $data['ends_at'] ?? null,
+            'meeting_weekdays' => $data['meeting_weekdays'] ?? [],
+            'meeting_starts_time' => $data['meeting_starts_time'] ?? null,
+            'meeting_ends_time' => $data['meeting_ends_time'] ?? null,
             'location' => $data['location'] ?? null,
             'description' => $data['description'] ?? null,
             'is_public' => $data['is_public'] ?? false,
@@ -274,15 +278,30 @@ class CourseClassController extends Controller
         ProvisionCourseClassAdobeMeetingService $adobeMeetings,
         string $message,
     ): string {
+        $fresh = $courseClass->fresh() ?? $courseClass;
+
         try {
-            $room = $adobeMeetings->provisionIfNeeded($courseClass->fresh() ?? $courseClass);
+            $room = $adobeMeetings->provisionIfNeeded($fresh);
             if ($room !== null) {
-                return $message.' اتاق Adobe Connect به‌صورت خودکار ساخته و وصل شد.';
+                $message .= ' اتاق Adobe Connect به‌صورت خودکار ساخته و وصل شد.';
             }
         } catch (\Throwable $exception) {
             report($exception);
 
             return $message.' ساخت خودکار اتاق Adobe انجام نشد؛ از بخش «اتاق ادوبی» دستی تنظیم کنید.';
+        }
+
+        try {
+            $instructorStats = app(SyncAdobeConnectClassInstructorsService::class)->sync($fresh->fresh() ?? $fresh);
+            $instructorTouched = $instructorStats['linked'] + $instructorStats['created'];
+            if ($instructorTouched > 0) {
+                $message .= " {$instructorTouched} استاد به عنوان host اتاق Adobe وصل شد.";
+            }
+            if ($instructorStats['failed'] > 0) {
+                $message .= " {$instructorStats['failed']} استاد در Adobe ساخته/وصل نشد.";
+            }
+        } catch (\Throwable $exception) {
+            report($exception);
         }
 
         return $message;

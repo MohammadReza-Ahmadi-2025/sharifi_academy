@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 @import './admin-panel.css';
+@import './instructor-panel.css';
+@import './student-panel.css';
+@import './certificate-print.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
 

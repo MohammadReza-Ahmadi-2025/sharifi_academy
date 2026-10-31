@@ -30,11 +30,21 @@ class ClassSessionPolicy
     }
 
     /**
-     * ورود به کلاس آنلاین (Adobe Connect یا لینک ویدیو) برای دانشجوی ثبت‌نام قطعی.
+     * ورود به کلاس آنلاین (Adobe Connect یا لینک ویدیو):
+     * دانشجو با ثبت‌نام قطعی، یا استاد همان کلاس.
      */
     public function joinSession(User $user, ClassSession $classSession): bool
     {
         if ($user->hasRole('super-admin')) {
+            return true;
+        }
+
+        $courseClass = $classSession->courseClass;
+
+        if ($courseClass !== null
+            && $user->hasRole('instructor')
+            && $user->can('instructor-panel-access')
+            && $courseClass->isTaughtBy($user)) {
             return true;
         }
 

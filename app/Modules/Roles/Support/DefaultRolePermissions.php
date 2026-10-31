@@ -61,6 +61,11 @@ class DefaultRolePermissions
                 'adobe-recordings-create',
                 'adobe-recordings-update',
                 'adobe-recordings-delete',
+                'quizzes-index',
+                'quizzes-create',
+                'quizzes-update',
+                'quizzes-delete',
+                'certificates-issue',
             ],
             'student' => [
                 'student-panel-access',

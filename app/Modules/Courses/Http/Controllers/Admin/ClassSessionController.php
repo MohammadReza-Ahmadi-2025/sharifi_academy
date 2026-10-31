@@ -32,10 +32,23 @@ class ClassSessionController extends Controller
         $this->authorizeManagedCourse($request, $course);
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
 
+        $prefix = $this->nestedCourseRoutePrefix($request);
+        $includeInstructorJoin = $prefix === 'instructor';
+
         $sessions = $courseClass->classSessions()
             ->with(['adobeRooms'])
             ->get()
-            ->map(fn (ClassSession $session) => ClassSessionPresenter::forList($session, $courseClass));
+            ->map(function (ClassSession $session) use ($courseClass, $includeInstructorJoin) {
+                $row = ClassSessionPresenter::forList($session, $courseClass);
+                if ($includeInstructorJoin && ($row['join_configured'] ?? false)) {
+                    $row['join_url'] = route('instructor.sessions.join', [
+                        'courseClass' => $courseClass->id,
+                        'classSession' => $session->id,
+                    ], absolute: false);
+                }
+
+                return $row;
+            });
 
         $actor = $request->user();
 
@@ -43,7 +56,7 @@ class ClassSessionController extends Controller
             'course' => CoursePresenter::forShow($course),
             'courseClass' => CourseClassPresenter::forList($courseClass),
             'sessions' => $sessions,
-            'routePrefix' => '/'.$this->nestedCourseRoutePrefix($request),
+            'routePrefix' => '/'.$prefix,
             'abilities' => [
                 'create' => $actor?->can('class-sessions-create') ?? false,
                 'update' => $actor?->can('class-sessions-update') ?? false,

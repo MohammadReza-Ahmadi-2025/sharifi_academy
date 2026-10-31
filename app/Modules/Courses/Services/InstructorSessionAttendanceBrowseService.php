@@ -14,7 +14,7 @@ class InstructorSessionAttendanceBrowseService
     public function sessionsForInstructor(User $user): Collection
     {
         return ClassSession::query()
-            ->with(['courseClass.course'])
+            ->with(['courseClass.course', 'courseClass.classLevelAdobeRooms', 'adobeRooms'])
             ->withCount('attendances')
             ->whereHas(
                 'courseClass.instructors',
