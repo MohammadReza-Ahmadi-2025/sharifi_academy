@@ -127,7 +127,7 @@ class StudentAdobeJoinTest extends TestCase
 
         $this->actingAs($student)
             ->get("/student/classes/{$class->id}/sessions/{$session->id}/adobe")
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     public function test_dashboard_includes_adobe_join_route_when_room_exists(): void

@@ -96,7 +96,7 @@ class SiteEnrollmentRequestTest extends TestCase
             ->post("/courses/{$course->slug}/enrollments", [
                 'course_class_id' => $class->id,
             ])
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     public function test_duplicate_pending_request_is_forbidden(): void
@@ -129,7 +129,7 @@ class SiteEnrollmentRequestTest extends TestCase
             ->post("/courses/{$course->slug}/enrollments", [
                 'course_class_id' => $class->id,
             ])
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     public function test_cancelled_enrollment_can_be_requested_again(): void

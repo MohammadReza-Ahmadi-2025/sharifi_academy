@@ -10,7 +10,9 @@ use App\Modules\Courses\Models\Course;
 use App\Support\Search\Console\ImportSiteSearchCommand;
 use App\Support\Search\Observers\SiteSearchIndexObserver;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Scout\EngineManager;
 use Laravel\Scout\ModelObserver;
+use Meilisearch\Client as MeilisearchClient;
 
 class SearchServiceProvider extends ServiceProvider
 {
@@ -32,6 +34,14 @@ class SearchServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->app->make(EngineManager::class)->extend('meilisearch', function ($app) {
+            return new SoftFailMeilisearchEngine(
+                $app->make(MeilisearchClient::class),
+                (bool) config('scout.soft_delete', false),
+                (array) config('scout.meilisearch', []),
+            );
+        });
+
         $observer = SiteSearchIndexObserver::class;
 
         foreach (self::SEARCHABLE_MODELS as $modelClass) {

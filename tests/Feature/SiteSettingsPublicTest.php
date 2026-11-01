@@ -38,6 +38,6 @@ class SiteSettingsPublicTest extends TestCase
             ->assertInertia(fn ($page) => $page->component('Public/Maintenance'));
 
         $this->get('/admin')
-            ->assertRedirect('/login');
+            ->assertNotFound();
     }
 }

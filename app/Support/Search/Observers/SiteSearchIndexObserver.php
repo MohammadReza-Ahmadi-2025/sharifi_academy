@@ -5,7 +5,9 @@ namespace App\Support\Search\Observers;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
 use Laravel\Scout\Searchable;
+use Throwable;
 
 class SiteSearchIndexObserver
 {
@@ -23,13 +25,13 @@ class SiteSearchIndexObserver
 
         if (! $model->shouldBeSearchable()) {
             if (method_exists($model, 'wasSearchableBeforeUpdate') && $model->wasSearchableBeforeUpdate()) {
-                $model->unsearchable();
+                $this->safely('unsearchable', $model, fn () => $model->unsearchable());
             }
 
             return;
         }
 
-        $model->searchable();
+        $this->safely('searchable', $model, fn () => $model->searchable());
     }
 
     public function deleted(Model $model): void
@@ -54,7 +56,7 @@ class SiteSearchIndexObserver
             return;
         }
 
-        $model->unsearchable();
+        $this->safely('unsearchable', $model, fn () => $model->unsearchable());
     }
 
     public function restored(Model $model): void
@@ -74,7 +76,7 @@ class SiteSearchIndexObserver
             return;
         }
 
-        $model->unsearchable();
+        $this->safely('unsearchable', $model, fn () => $model->unsearchable());
     }
 
     protected function usesSearchable(Model $model): bool
@@ -96,6 +98,24 @@ class SiteSearchIndexObserver
             $callback();
         } finally {
             $this->forceSaving = false;
+        }
+    }
+
+    /**
+     * Search outages must not break admin CRUD (e.g. category image replace).
+     */
+    protected function safely(string $action, Model $model, Closure $callback): void
+    {
+        try {
+            $callback();
+        } catch (Throwable $e) {
+            Log::warning('Scout index sync failed; request continues.', [
+                'action' => $action,
+                'model' => $model::class,
+                'id' => $model->getKey(),
+                'driver' => config('scout.driver'),
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 }

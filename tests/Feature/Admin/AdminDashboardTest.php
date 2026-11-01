@@ -11,9 +11,9 @@ class AdminDashboardTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_is_redirected_from_admin(): void
+    public function test_guest_sees_not_found_for_admin(): void
     {
-        $this->get('/admin')->assertRedirect('/login');
+        $this->get('/admin')->assertNotFound();
     }
 
     public function test_student_cannot_access_admin_panel(): void
@@ -24,7 +24,7 @@ class AdminDashboardTest extends TestCase
 
         $this->actingAs($student)
             ->get('/admin')
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     public function test_super_admin_can_view_dashboard(): void

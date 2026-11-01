@@ -3,7 +3,7 @@ import { mapAuthUserToProfile } from '@/Components/Admin/shared/lib/profile-user
 import { PopoverPanel } from '@/Components/Admin/shared/ui/popover-panel';
 import { cn } from '@/lib/utils';
 import type { PageProps } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { ChevronDown, ExternalLink, LogOut, UserRound } from 'lucide-react';
 import { useState } from 'react';
 
@@ -97,16 +97,17 @@ export function HeaderProfile() {
             </div>
 
             <div className="border-t border-slate-100 p-2 dark:border-slate-800">
-                <Link
-                    href="/logout"
-                    method="post"
-                    as="button"
-                    onClick={() => setIsOpen(false)}
+                <button
+                    type="button"
+                    onClick={() => {
+                        setIsOpen(false);
+                        router.post('/logout');
+                    }}
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/20"
                 >
                     <LogOut className="h-4 w-4" />
                     خروج از حساب
-                </Link>
+                </button>
             </div>
         </PopoverPanel>
     );

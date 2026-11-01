@@ -39,6 +39,20 @@ class MorphFileGalleryTest extends TestCase
         $category = Category::query()->where('title', 'دسته با تصویر')->firstOrFail();
         $this->assertSame(1, $category->image()->count());
 
+        $this->actingAs($admin)->put('/admin/categories/'.$category->id, [
+            'title' => 'دسته با تصویر',
+            'status' => true,
+            'image' => [
+                0 => [
+                    'alt' => 'دسته جدید',
+                    'file' => UploadedFile::fake()->image('category-new.jpg'),
+                ],
+            ],
+        ])->assertRedirect();
+
+        $this->assertSame(1, $category->fresh()->image()->count());
+        $this->assertSame('دسته جدید', $category->fresh()->image?->alt);
+
         $this->actingAs($admin)->post('/admin/catalog/products', [
             'title' => 'محصول گالری',
             'status' => true,

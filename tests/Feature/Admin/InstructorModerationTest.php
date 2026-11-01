@@ -109,6 +109,6 @@ class InstructorModerationTest extends TestCase
 
         $this->actingAs($instructor)
             ->get(route('admin.instructor-moderation.index'))
-            ->assertForbidden();
+            ->assertNotFound();
     }
 }

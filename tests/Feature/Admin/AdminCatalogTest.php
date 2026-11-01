@@ -21,7 +21,7 @@ class AdminCatalogTest extends TestCase
         $this->seed(DatabaseSeeder::class);
         $student = User::where('mobile', '09120000003')->firstOrFail();
 
-        $this->actingAs($student)->get('/admin/catalog/products')->assertForbidden();
+        $this->actingAs($student)->get('/admin/catalog/products')->assertNotFound();
     }
 
     public function test_super_admin_can_manage_category_product_and_variant(): void

@@ -52,7 +52,7 @@ class AdobeConnectAuthorizationTest extends TestCase
 
         $this->actingAs($otherInstructor)
             ->post("/instructor/courses/{$course->id}/classes/{$class->id}/adobe-rooms", $payload)
-            ->assertForbidden();
+            ->assertNotFound();
 
         $this->actingAs($owner)
             ->post("/instructor/courses/{$course->id}/classes/{$class->id}/adobe-rooms", $payload)
@@ -84,11 +84,11 @@ class AdobeConnectAuthorizationTest extends TestCase
 
         $this->actingAs($student)
             ->post("/admin/courses/{$course->id}/classes/{$class->id}/sessions/{$session->id}/adobe-rooms/{$room->id}/sync")
-            ->assertForbidden();
+            ->assertNotFound();
 
         $this->actingAs($student)
             ->delete("/admin/courses/{$course->id}/classes/{$class->id}/sessions/{$session->id}/adobe-rooms/{$room->id}")
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     /**

@@ -14,7 +14,7 @@ class SiteProfileTest extends TestCase
 
     public function test_guest_cannot_view_site_profile(): void
     {
-        $this->get('/profile')->assertRedirect('/login');
+        $this->get('/profile')->assertNotFound();
     }
 
     public function test_student_can_view_site_profile(): void

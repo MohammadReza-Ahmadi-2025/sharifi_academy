@@ -22,7 +22,7 @@ class AdminUsersTest extends TestCase
 
         $this->actingAs($student)
             ->get('/admin/users')
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     public function test_super_admin_can_view_users_index(): void
@@ -120,6 +120,6 @@ class AdminUsersTest extends TestCase
 
         $this->actingAs($admin)
             ->delete('/admin/users/'.$admin->id)
-            ->assertForbidden();
+            ->assertNotFound();
     }
 }

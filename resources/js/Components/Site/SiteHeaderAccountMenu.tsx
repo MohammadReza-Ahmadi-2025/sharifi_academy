@@ -1,7 +1,7 @@
 import { PopoverPanel } from '@/Components/Admin/shared/ui/popover-panel';
 import { cn } from '@/lib/utils';
 import type { PageProps } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { ChevronDown, LayoutDashboard, LogOut, UserRound } from 'lucide-react';
 import { useState } from 'react';
 
@@ -111,16 +111,17 @@ export function SiteHeaderAccountMenu({ className, onNavigate, variant = 'header
                 </div>
 
                 <div className="border-t border-secondary p-2">
-                    <Link
-                        href="/logout"
-                        method="post"
-                        as="button"
-                        onClick={close}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            close();
+                            router.post('/logout');
+                        }}
                         className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                     >
                         <LogOut className="size-4" />
                         خروج از حساب
-                    </Link>
+                    </button>
                 </div>
             </PopoverPanel>
         </div>

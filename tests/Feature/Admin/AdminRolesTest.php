@@ -20,7 +20,7 @@ class AdminRolesTest extends TestCase
 
         $this->actingAs($student)
             ->get('/admin/roles')
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     public function test_super_admin_can_view_roles_index(): void
@@ -66,6 +66,6 @@ class AdminRolesTest extends TestCase
 
         $this->actingAs($admin)
             ->delete("/admin/roles/{$role->id}")
-            ->assertForbidden();
+            ->assertNotFound();
     }
 }

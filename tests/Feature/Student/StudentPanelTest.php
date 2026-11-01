@@ -32,7 +32,7 @@ class StudentPanelTest extends TestCase
 
     public function test_guest_cannot_open_student_dashboard(): void
     {
-        $this->get('/student/dashboard')->assertRedirect();
+        $this->get('/student/dashboard')->assertNotFound();
     }
 
     public function test_instructor_cannot_open_student_dashboard(): void
@@ -41,7 +41,7 @@ class StudentPanelTest extends TestCase
 
         $this->actingAs($instructor)
             ->get('/student/dashboard')
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     public function test_student_sees_confirmed_enrollments_and_sessions(): void
@@ -109,7 +109,7 @@ class StudentPanelTest extends TestCase
 
         $this->actingAs($other)
             ->get("/student/courses/{$enrollment->id}")
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     /**

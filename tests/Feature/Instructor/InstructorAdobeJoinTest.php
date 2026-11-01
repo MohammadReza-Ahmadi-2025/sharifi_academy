@@ -114,7 +114,7 @@ XML);
 
         $this->actingAs($instructor)
             ->get("/instructor/classes/{$class->id}/sessions/{$session->id}/join")
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     /**

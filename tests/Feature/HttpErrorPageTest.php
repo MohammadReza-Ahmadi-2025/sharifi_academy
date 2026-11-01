@@ -17,15 +17,15 @@ class HttpErrorPageTest extends TestCase
             );
     }
 
-    public function test_forbidden_renders_inertia_error_page(): void
+    public function test_forbidden_is_rendered_as_not_found(): void
     {
         Route::get('/_test-http-403', fn () => abort(403));
 
         $this->get('/_test-http-403')
-            ->assertForbidden()
+            ->assertNotFound()
             ->assertInertia(fn ($page) => $page
                 ->component('Errors/Show')
-                ->where('status', 403)
+                ->where('status', 404)
             );
     }
 

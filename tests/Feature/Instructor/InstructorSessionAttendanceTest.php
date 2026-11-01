@@ -116,7 +116,7 @@ class InstructorSessionAttendanceTest extends TestCase
 
         $this->actingAs($instructor)
             ->get("/instructor/session-attendances/{$session->id}")
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     public function test_instructor_cannot_view_attendance_for_other_course(): void
@@ -149,6 +149,6 @@ class InstructorSessionAttendanceTest extends TestCase
 
         $this->actingAs($instructor)
             ->get("/instructor/session-attendances/{$session->id}")
-            ->assertForbidden();
+            ->assertNotFound();
     }
 }

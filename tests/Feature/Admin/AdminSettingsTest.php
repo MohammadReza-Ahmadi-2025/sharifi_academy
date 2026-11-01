@@ -39,6 +39,6 @@ class AdminSettingsTest extends TestCase
         $this->seed(DatabaseSeeder::class);
         $student = User::where('mobile', '09120000003')->firstOrFail();
 
-        $this->actingAs($student)->get('/admin/settings')->assertForbidden();
+        $this->actingAs($student)->get('/admin/settings')->assertNotFound();
     }
 }

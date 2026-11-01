@@ -76,7 +76,7 @@ class InstructorPanelTest extends TestCase
 
         $this->actingAs($instructor)
             ->get('/instructor/courses/'.$course->id.'/edit')
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     public function test_instructor_can_manage_own_resume(): void
@@ -107,6 +107,6 @@ class InstructorPanelTest extends TestCase
     {
         $student = User::where('mobile', '09120000003')->firstOrFail();
 
-        $this->actingAs($student)->get('/instructor')->assertForbidden();
+        $this->actingAs($student)->get('/instructor')->assertNotFound();
     }
 }

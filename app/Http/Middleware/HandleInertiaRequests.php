@@ -11,6 +11,7 @@ use App\Modules\Settings\Support\SiteSettingsInertiaPayload;
 use App\Modules\Social\Services\SiteSocialService;
 use App\Modules\Users\Support\UserAvatarMedia;
 use App\Support\Notifications\UserNotificationsPresenter;
+use App\Support\SafeCallable;
 use App\Support\SiteAccountMenu;
 use App\Support\SiteNavigation;
 use Closure;
@@ -39,7 +40,11 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
         $settings = app(SiteSettingsService::class);
-        $siteName = (string) ($settings->get('site_name') ?: config('app.name'));
+        $siteName = (string) SafeCallable::run(
+            'share.site_name',
+            fn () => $settings->get('site_name') ?: config('app.name'),
+            config('app.name'),
+        );
         $isAdminRequest = $user !== null
             && ($request->routeIs('admin.*') || $request->is('admin', 'admin/*'));
 
@@ -49,10 +54,18 @@ class HandleInertiaRequests extends Middleware
                 'name' => $siteName,
                 'debug' => (bool) config('app.debug'),
             ],
-            'navigation' => fn () => SiteNavigation::forUser($user),
-            'adminPanel' => fn () => ($isAdminRequest
-                ? ['navigation' => AdminNavigation::forUser($user)]
-                : null),
+            'navigation' => fn () => SafeCallable::run(
+                'share.navigation',
+                fn () => SiteNavigation::forUser($user),
+                ['items' => [], 'cta' => null],
+            ),
+            'adminPanel' => fn () => SafeCallable::run(
+                'share.adminPanel',
+                fn () => ($isAdminRequest
+                    ? ['navigation' => AdminNavigation::forUser($user)]
+                    : null),
+                null,
+            ),
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
@@ -60,24 +73,68 @@ class HandleInertiaRequests extends Middleware
                     'family' => $user->family,
                     'email' => $user->email,
                     'mobile' => $user->mobile,
-                    'avatar' => UserAvatarMedia::payload($user),
-                    'roles' => $isAdminRequest ? $user->getRoleNames()->values()->all() : [],
+                    'avatar' => SafeCallable::run(
+                        'share.avatar',
+                        fn () => UserAvatarMedia::payload($user),
+                        null,
+                    ),
+                    'roles' => $isAdminRequest
+                        ? SafeCallable::run(
+                            'share.roles',
+                            fn () => $user->getRoleNames()->values()->all(),
+                            [],
+                        )
+                        : [],
                     'permissions' => $isAdminRequest
-                        ? $user->getAllPermissions()->pluck('name')->values()->all()
+                        ? SafeCallable::run(
+                            'share.permissions',
+                            fn () => $user->getAllPermissions()->pluck('name')->values()->all(),
+                            [],
+                        )
                         : [],
                 ] : null,
-                'account' => $user ? SiteAccountMenu::forUser($user) : null,
-                'notifications' => fn () => UserNotificationsPresenter::forUser($user),
+                'account' => $user
+                    ? SafeCallable::run(
+                        'share.account',
+                        fn () => SiteAccountMenu::forUser($user),
+                        null,
+                    )
+                    : null,
+                'notifications' => fn () => SafeCallable::run(
+                    'share.notifications',
+                    fn () => UserNotificationsPresenter::forUser($user),
+                    null,
+                ),
             ],
             'flash' => [
                 'success' => fn () => $request->hasSession() ? $request->session()->get('success') : null,
                 'error' => fn () => $request->hasSession() ? $request->session()->get('error') : null,
             ],
-            'cartQty' => fn () => Cart::currentQty(),
-            'siteSettings' => fn () => SiteSettingsInertiaPayload::build($settings),
-            'siteMenus' => fn () => app(SiteMenuService::class)->groupedByLocation(),
-            'courseCategoryNav' => fn () => app(SiteCourseCategoryNavService::class)->tree(),
-            'siteSocials' => fn () => app(SiteSocialService::class)->forSite(),
+            'cartQty' => fn () => SafeCallable::run(
+                'share.cartQty',
+                fn () => Cart::currentQty(),
+                0,
+            ),
+            'siteSettings' => fn () => SafeCallable::run(
+                'share.siteSettings',
+                fn () => SiteSettingsInertiaPayload::build($settings),
+                [],
+            ),
+            'siteMenus' => fn () => SafeCallable::run(
+                'share.siteMenus',
+                fn () => app(SiteMenuService::class)->groupedByLocation(),
+                [],
+            ),
+            'courseCategoryNav' => fn () => SafeCallable::run(
+                'share.courseCategoryNav',
+                fn () => app(SiteCourseCategoryNavService::class)->tree(),
+                [],
+            ),
+            'siteSocials' => fn () => SafeCallable::run(
+                'share.siteSocials',
+                fn () => app(SiteSocialService::class)->forSite(),
+                [],
+            ),
             'url' => fn () => $request->url(),
             'otpPolicy' => [
                 'expires_seconds' => (int) config('otp.expires_minutes') * 60,
