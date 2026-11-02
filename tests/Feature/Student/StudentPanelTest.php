@@ -32,7 +32,7 @@ class StudentPanelTest extends TestCase
 
     public function test_guest_cannot_open_student_dashboard(): void
     {
-        $this->get('/student/dashboard')->assertNotFound();
+        $this->get('/student/dashboard')->assertRedirect('/login');
     }
 
     public function test_instructor_cannot_open_student_dashboard(): void

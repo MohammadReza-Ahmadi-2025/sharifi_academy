@@ -62,12 +62,17 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Hide existence of protected resources: guests and forbidden users both see "not found" (no login redirect).
-        $exceptions->map(
-            AuthenticationException::class,
-            fn (AuthenticationException $e) => new NotFoundHttpException(previous: $e),
-        );
+        // Admin panel: unauthenticated looks like "not found" (no login redirect that reveals the panel).
+        // Profile / student / instructor and other auth routes keep the normal redirect to login.
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            if (! $request->is('admin', 'admin/*')) {
+                return null;
+            }
 
+            throw new NotFoundHttpException(previous: $e);
+        });
+
+        // Forbidden access (any panel/resource) also looks like "not found".
         $exceptions->map(
             AuthorizationException::class,
             fn (AuthorizationException $e) => new NotFoundHttpException(previous: $e),

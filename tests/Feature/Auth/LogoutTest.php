@@ -29,9 +29,9 @@ class LogoutTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_guest_logout_is_not_found(): void
+    public function test_guest_logout_is_redirected_to_login(): void
     {
-        $this->post('/logout')->assertNotFound();
+        $this->post('/logout')->assertRedirect('/login');
 
         $this->assertGuest();
     }
