@@ -10,7 +10,7 @@ class ResumeSubmittedForReviewNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(public User $instructor) {}
+    public function __construct(public User $submitter) {}
 
     /**
      * @return list<string>
@@ -25,11 +25,14 @@ class ResumeSubmittedForReviewNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
-        $name = trim(($this->instructor->name ?? '').' '.($this->instructor->family ?? '')) ?: 'استاد';
+        $name = trim(($this->submitter->name ?? '').' '.($this->submitter->family ?? '')) ?: 'کاربر';
+        $role = $this->submitter->hasRole('instructor')
+            ? 'استاد'
+            : ($this->submitter->hasRole('student') ? 'دانشجو' : 'کاربر');
 
         return [
             'title' => 'رزومه در انتظار تایید',
-            'message' => sprintf('رزومه %s برای بررسی ارسال شده است.', $name),
+            'message' => sprintf('رزومه %s (%s) برای بررسی ارسال شده است.', $name, $role),
             'url' => '/admin/instructor-moderation',
         ];
     }

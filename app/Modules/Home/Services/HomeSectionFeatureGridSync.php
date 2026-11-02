@@ -2,6 +2,7 @@
 
 namespace App\Modules\Home\Services;
 
+use App\Support\Storage\OptimizedImageStore;
 use App\Support\Storage\PublicStorageUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -35,8 +36,8 @@ class HomeSectionFeatureGridSync
             } else {
                 $upload = $request->file("{$key}.0.file");
                 if ($upload instanceof UploadedFile) {
-                    $path = $upload->store('home-sections/feature-grid', 'public');
-                    $imageUrl = PublicStorageUrl::forPath($path);
+                    $stored = app(OptimizedImageStore::class)->store($upload, 'home-sections/feature-grid');
+                    $imageUrl = PublicStorageUrl::forPath($stored['path']);
                 }
             }
 

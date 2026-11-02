@@ -3,6 +3,7 @@
 namespace App\Modules\Users\Support;
 
 use App\Models\User;
+use App\Support\Storage\OptimizedImageStore;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -42,26 +43,36 @@ class UserAvatarMedia
             return;
         }
 
-        $user->clearMediaCollection(self::COLLECTION);
+        $upload = $request->file('avatar');
+        $tempPath = app(OptimizedImageStore::class)->writeTemporaryPath($upload);
 
-        $adder = $user->addMediaFromRequest('avatar');
+        try {
+            $user->clearMediaCollection(self::COLLECTION);
 
-        $title = $request->input('avatar_title');
-        if (is_string($title) && trim($title) !== '') {
-            $adder->usingName(trim($title));
+            $adder = $user->addMedia($tempPath)
+                ->usingFileName(basename($tempPath));
+
+            $title = $request->input('avatar_title');
+            if (is_string($title) && trim($title) !== '') {
+                $adder->usingName(trim($title));
+            }
+
+            $alt = $request->input('avatar_alt');
+            $properties = [];
+            if (is_string($alt) && trim($alt) !== '') {
+                $properties['alt'] = trim($alt);
+            }
+
+            if ($properties !== []) {
+                $adder->withCustomProperties($properties);
+            }
+
+            $adder->toMediaCollection(self::COLLECTION);
+        } finally {
+            if (is_file($tempPath)) {
+                @unlink($tempPath);
+            }
         }
-
-        $alt = $request->input('avatar_alt');
-        $properties = [];
-        if (is_string($alt) && trim($alt) !== '') {
-            $properties['alt'] = trim($alt);
-        }
-
-        if ($properties !== []) {
-            $adder->withCustomProperties($properties);
-        }
-
-        $adder->toMediaCollection(self::COLLECTION);
     }
 
     public static function payload(?User $user): ?array

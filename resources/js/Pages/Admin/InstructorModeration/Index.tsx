@@ -26,6 +26,7 @@ type ResumeRow = {
     id: number;
     full_name: string;
     mobile: string;
+    role_label: string;
     resume_items_count: number;
     submitted_at: string | null;
     review_url: string;
@@ -53,10 +54,10 @@ export default function InstructorModerationIndex({ pendingCourses, pendingResum
 
     return (
         <AdminLayout>
-            <Head title="تایید اساتید" />
+            <Head title="تایید محتوا" />
             <PageHeader
-                title="تایید محتوای اساتید"
-                description="دوره‌های در انتظار انتشار و رزومه‌های ارسال‌شده برای بررسی"
+                title="تایید محتوا"
+                description="دوره‌های در انتظار انتشار و رزومه‌های استاد/دانشجو برای بررسی"
             />
 
             <div className="mb-6 flex flex-wrap gap-3">
@@ -118,7 +119,8 @@ export default function InstructorModerationIndex({ pendingCourses, pendingResum
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>استاد</TableHead>
+                            <TableHead>نام</TableHead>
+                            <TableHead>نقش</TableHead>
                             <TableHead>موبایل</TableHead>
                             <TableHead>تعداد موارد</TableHead>
                             <TableHead className="w-[240px]">عملیات</TableHead>
@@ -127,7 +129,7 @@ export default function InstructorModerationIndex({ pendingCourses, pendingResum
                     <TableBody>
                         {pendingResumes.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center text-slate-500">
+                                <TableCell colSpan={5} className="text-center text-slate-500">
                                     موردی در صف نیست.
                                 </TableCell>
                             </TableRow>
@@ -135,6 +137,7 @@ export default function InstructorModerationIndex({ pendingCourses, pendingResum
                             pendingResumes.map((row) => (
                                 <TableRow key={row.id}>
                                     <TableCell className="font-medium">{row.full_name}</TableCell>
+                                    <TableCell>{row.role_label}</TableCell>
                                     <TableCell dir="ltr" className="text-left">{row.mobile}</TableCell>
                                     <TableCell>{row.resume_items_count.toLocaleString('fa-IR')}</TableCell>
                                     <TableCell>

@@ -27,11 +27,19 @@ class ResumeModerationResultNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
+        $isStudentOnly = method_exists($notifiable, 'hasRole')
+            && $notifiable->hasRole('student')
+            && ! $notifiable->hasRole('instructor');
+
+        $url = $isStudentOnly ? '/student/resume' : '/instructor/resume';
+
         if ($this->approved) {
             return [
                 'title' => 'رزومه تایید شد',
-                'message' => 'رزومه شما تایید شد و در سایت عمومی نمایش داده می‌شود.',
-                'url' => '/instructor/resume',
+                'message' => $isStudentOnly
+                    ? 'رزومه شما توسط ادمین تایید شد.'
+                    : 'رزومه شما تایید شد و در سایت عمومی نمایش داده می‌شود.',
+                'url' => $url,
             ];
         }
 
@@ -43,7 +51,7 @@ class ResumeModerationResultNotification extends Notification
         return [
             'title' => 'رزومه تایید نشد',
             'message' => $message,
-            'url' => '/instructor/resume',
+            'url' => $url,
         ];
     }
 }

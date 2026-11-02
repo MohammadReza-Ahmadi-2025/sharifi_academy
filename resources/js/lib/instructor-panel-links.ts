@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { BookOpen, ClipboardCheck, LayoutDashboard, ScrollText } from 'lucide-react';
+import { BookOpen, ClipboardCheck, LayoutDashboard, Newspaper, ScrollText } from 'lucide-react';
 
 export type InstructorPanelLink = {
     href: string;
@@ -26,6 +26,12 @@ export const instructorPanelLinks: InstructorPanelLink[] = [
         label: 'رزومه',
         icon: ScrollText,
         hint: 'پروفایل حرفه‌ای',
+    },
+    {
+        href: '/instructor/posts',
+        label: 'وبلاگ من',
+        icon: Newspaper,
+        hint: 'نوشته‌ها و انتشار',
     },
     {
         href: '/instructor/session-attendances',

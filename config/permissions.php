@@ -54,6 +54,7 @@ return [
             'label' => 'پنل دانشجو',
             'permissions' => [
                 'student-panel-access' => 'ورود به پنل دانشجو',
+                'student-resume-manage' => 'مدیریت رزومه شخصی دانشجو',
             ],
         ],
         'courses' => [
@@ -66,10 +67,10 @@ return [
             ],
         ],
         'instructor_moderation' => [
-            'label' => 'تایید محتوای اساتید',
+            'label' => 'تایید محتوا',
             'permissions' => [
                 'instructor-moderation-index' => 'مشاهده درخواست‌های تایید',
-                'instructor-moderation-update' => 'تایید یا رد دوره و رزومه استاد',
+                'instructor-moderation-update' => 'تایید یا رد دوره و رزومه',
             ],
         ],
         'course_classes' => [
@@ -242,6 +243,7 @@ return [
                 'blog-posts-create' => 'ایجاد پست',
                 'blog-posts-update' => 'ویرایش پست',
                 'blog-posts-delete' => 'حذف پست',
+                'panel-blog-posts-manage' => 'مدیریت پست وبلاگ در پنل استاد/دانشجو',
             ],
         ],
         'pages' => [

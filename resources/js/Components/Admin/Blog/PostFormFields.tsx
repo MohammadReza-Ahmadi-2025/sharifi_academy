@@ -24,6 +24,9 @@ type Props = {
     categoryOptions: Option[];
     statusOptions: Option[];
     processing?: boolean;
+    /** بدون CKEditor — برای پنل استاد/دانشجو */
+    plainEditor?: boolean;
+    showSeo?: boolean;
     onChange: (key: keyof PostFormData, value: unknown) => void;
 };
 
@@ -33,6 +36,8 @@ export function PostFormFields({
     categoryOptions,
     statusOptions,
     processing = false,
+    plainEditor = false,
+    showSeo = true,
     onChange,
 }: Props) {
     const categorySelectOptions = mapToSelectOptions(categoryOptions);
@@ -83,6 +88,7 @@ export function PostFormFields({
                 </div>
                 <FormField label="خلاصه" error={errors.excerpt}>
                     <Textarea
+                        plain={plainEditor}
                         rows={3}
                         value={data.excerpt}
                         disabled={processing}
@@ -91,6 +97,7 @@ export function PostFormFields({
                 </FormField>
                 <FormField label="متن" required error={errors.content}>
                     <Textarea
+                        plain={plainEditor}
                         rows={12}
                         value={data.content}
                         disabled={processing}
@@ -98,12 +105,14 @@ export function PostFormFields({
                     />
                 </FormField>
             </Card>
-            <CatalogSeoFields
-                data={data}
-                errors={errors}
-                processing={processing}
-                onChange={onChange}
-            />
+            {showSeo ? (
+                <CatalogSeoFields
+                    data={data}
+                    errors={errors}
+                    processing={processing}
+                    onChange={onChange}
+                />
+            ) : null}
         </div>
     );
 }

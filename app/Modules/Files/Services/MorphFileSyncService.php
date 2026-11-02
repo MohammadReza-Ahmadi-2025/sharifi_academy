@@ -3,6 +3,7 @@
 namespace App\Modules\Files\Services;
 
 use App\Modules\Files\Models\File;
+use App\Support\Storage\OptimizedImageStore;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -102,14 +103,17 @@ class MorphFileSyncService
      */
     private function storeUpload(Model $owner, UploadedFile $upload, string $type, int $sort, array $meta): File
     {
-        $path = $upload->store($owner->getTable().'/'.$owner->getKey(), 'public');
+        $stored = app(OptimizedImageStore::class)->store(
+            $upload,
+            $owner->getTable().'/'.$owner->getKey(),
+        );
 
         return $owner->files()->create([
-            'name' => $upload->getClientOriginalName(),
-            'path' => $path,
+            'name' => $stored['name'],
+            'path' => $stored['path'],
             'type' => $type,
-            'extension' => $upload->getClientOriginalExtension(),
-            'size' => $upload->getSize(),
+            'extension' => $stored['extension'],
+            'size' => $stored['size'],
             'alt' => $meta['alt'] ?? null,
             'title' => $meta['title'] ?? null,
             'sort' => $sort,

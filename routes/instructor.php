@@ -11,6 +11,7 @@ use App\Modules\Courses\Http\Controllers\Instructor\CourseRosterController;
 use App\Modules\Courses\Http\Controllers\Instructor\DashboardController;
 use App\Modules\Courses\Http\Controllers\Instructor\SessionAttendanceController as InstructorSessionAttendanceController;
 use App\Modules\Courses\Http\Controllers\Instructor\SessionJoinController as InstructorSessionJoinController;
+use App\Modules\Blog\Http\Controllers\Instructor\PostController as InstructorPostController;
 use App\Modules\Profile\Http\Controllers\Instructor\ResumeController;
 use Illuminate\Support\Facades\Route;
 
@@ -77,6 +78,15 @@ Route::prefix('instructor')
             Route::post('resume', [ResumeController::class, 'store'])->name('resume.store');
             Route::put('resume/{resume}', [ResumeController::class, 'update'])->name('resume.update');
             Route::delete('resume/{resume}', [ResumeController::class, 'destroy'])->name('resume.destroy');
+        });
+
+        Route::middleware('permission:panel-blog-posts-manage')->group(function () {
+            Route::get('posts', [InstructorPostController::class, 'index'])->name('posts.index');
+            Route::get('posts/create', [InstructorPostController::class, 'create'])->name('posts.create');
+            Route::post('posts', [InstructorPostController::class, 'store'])->name('posts.store');
+            Route::get('posts/{post:id}/edit', [InstructorPostController::class, 'edit'])->name('posts.edit');
+            Route::put('posts/{post:id}', [InstructorPostController::class, 'update'])->name('posts.update');
+            Route::delete('posts/{post:id}', [InstructorPostController::class, 'destroy'])->name('posts.destroy');
         });
 
         Route::middleware('permission:course-classes-index')->group(function () {

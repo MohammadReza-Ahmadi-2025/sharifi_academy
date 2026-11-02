@@ -4,8 +4,10 @@ import {
     BookOpen,
     CalendarDays,
     ClipboardCheck,
+    FileText,
     LayoutDashboard,
     ListChecks,
+    Newspaper,
     UserRound,
 } from 'lucide-react';
 
@@ -52,6 +54,18 @@ export const studentPanelLinks: StudentPanelLink[] = [
         label: 'گواهینامه‌ها',
         icon: Award,
         hint: 'مدارک پایان دوره',
+    },
+    {
+        href: '/student/resume',
+        label: 'رزومه من',
+        icon: FileText,
+        hint: 'سوابق و ارسال برای تایید',
+    },
+    {
+        href: '/student/posts',
+        label: 'وبلاگ من',
+        icon: Newspaper,
+        hint: 'نوشته‌ها و انتشار',
     },
     {
         href: '/profile',

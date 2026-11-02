@@ -43,6 +43,7 @@ class DefaultRolePermissions
             'instructor' => [
                 'instructor-panel-access',
                 'instructor-resume-manage',
+                'panel-blog-posts-manage',
                 'courses-index',
                 'courses-create',
                 'courses-update',
@@ -69,6 +70,8 @@ class DefaultRolePermissions
             ],
             'student' => [
                 'student-panel-access',
+                'student-resume-manage',
+                'panel-blog-posts-manage',
             ],
         ];
     }

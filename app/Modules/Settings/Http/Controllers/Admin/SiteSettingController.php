@@ -7,6 +7,7 @@ use App\Modules\Settings\Http\Requests\Admin\UpdateSiteSettingRequest;
 use App\Modules\Settings\Models\SiteSetting;
 use App\Modules\Settings\Support\SiteSettingDefinitions;
 use App\Modules\Settings\Support\SiteSettingPresenter;
+use App\Support\Storage\OptimizedImageStore;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -88,7 +89,8 @@ class SiteSettingController extends Controller
                     Storage::disk('public')->delete($old);
                 }
 
-                $value = $request->file('image')->store('settings', 'public');
+                $value = app(OptimizedImageStore::class)
+                    ->store($request->file('image'), 'settings')['path'];
             } else {
                 $value = $siteSetting->value;
             }

@@ -48,7 +48,7 @@ return [
         ],
         [
             'id' => 'instructor-moderation',
-            'label' => 'تایید اساتید',
+            'label' => 'تایید محتوا',
             'href' => '/admin/instructor-moderation',
             'icon' => 'instructor-moderation',
             'permission' => 'instructor-moderation-index',

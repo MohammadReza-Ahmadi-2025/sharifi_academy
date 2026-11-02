@@ -19,8 +19,8 @@ final class InstructorModerationQueue
             ->count();
 
         $resumesPending = User::query()
-            ->role('instructor')
             ->where('status', 1)
+            ->role(['instructor', 'student'])
             ->whereHas('profile', fn ($q) => $q->where('resume_moderation_status', ResumeModerationStatus::Pending->value))
             ->count();
 

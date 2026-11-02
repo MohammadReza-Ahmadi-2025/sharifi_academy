@@ -38,6 +38,10 @@ class MorphFileGalleryTest extends TestCase
 
         $category = Category::query()->where('title', 'دسته با تصویر')->firstOrFail();
         $this->assertSame(1, $category->image()->count());
+        $this->assertSame('webp', $category->image?->extension);
+        $this->assertLessThanOrEqual(2 * 1024 * 1024, (int) $category->image?->size);
+        $this->assertTrue(str_ends_with((string) $category->image?->path, '.webp'));
+        Storage::disk('public')->assertExists((string) $category->image?->path);
 
         $this->actingAs($admin)->put('/admin/categories/'.$category->id, [
             'title' => 'دسته با تصویر',

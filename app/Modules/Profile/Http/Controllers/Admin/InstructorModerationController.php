@@ -43,11 +43,11 @@ class InstructorModerationController extends Controller
             ->values()
             ->all();
 
-        $pendingInstructors = User::query()
-            ->role('instructor')
+        $pendingResumes = User::query()
             ->where('status', 1)
+            ->role(['instructor', 'student'])
             ->whereHas('profile', fn ($q) => $q->where('resume_moderation_status', ResumeModerationStatus::Pending->value))
-            ->with(['profile'])
+            ->with(['profile', 'roles'])
             ->withCount('resumes')
             ->limit(100)
             ->get()
@@ -55,11 +55,13 @@ class InstructorModerationController extends Controller
             ->values()
             ->map(function (User $user) {
                 $profile = $user->profile;
+                $roleLabel = $user->hasRole('instructor') ? 'استاد' : ($user->hasRole('student') ? 'دانشجو' : '—');
 
                 return [
                     'id' => $user->id,
                     'full_name' => trim(($user->name ?? '').' '.($user->family ?? '')) ?: '—',
                     'mobile' => $user->mobile,
+                    'role_label' => $roleLabel,
                     'resume_items_count' => (int) ($user->resumes_count ?? 0),
                     'submitted_at' => $profile?->resume_submitted_at?->toIso8601String(),
                     'review_url' => route('admin.instructor-moderation.resumes.show', $user),
@@ -69,10 +71,10 @@ class InstructorModerationController extends Controller
 
         return Inertia::render('Admin/InstructorModeration/Index', [
             'pendingCourses' => $pendingCourses,
-            'pendingResumes' => $pendingInstructors,
+            'pendingResumes' => $pendingResumes,
             'counts' => [
                 'courses' => count($pendingCourses),
-                'resumes' => count($pendingInstructors),
+                'resumes' => count($pendingResumes),
             ],
             'abilities' => [
                 'moderate' => $request->user()?->can('instructor-moderation-update') ?? false,
@@ -83,7 +85,8 @@ class InstructorModerationController extends Controller
     public function showResume(Request $request, User $user): Response
     {
         abort_unless($request->user()?->can('instructor-moderation-index'), 403);
-        abort_unless($user->hasRole('instructor'), 404);
+        abort_unless($user->hasAnyRole(['instructor', 'student']), 404);
+        abort_unless(ResumeModeration::status($user) === ResumeModerationStatus::Pending, 404);
 
         $user->load([
             'profile',
@@ -98,6 +101,7 @@ class InstructorModerationController extends Controller
                 'status_label' => ResumeModeration::status($user)->label(),
                 'note' => $user->profile?->resume_moderation_note,
                 'submitted_at' => $user->profile?->resume_submitted_at?->toIso8601String(),
+                'role_label' => $user->hasRole('instructor') ? 'استاد' : 'دانشجو',
             ],
             'abilities' => [
                 'moderate' => $request->user()?->can('instructor-moderation-update') ?? false,
@@ -137,18 +141,22 @@ class InstructorModerationController extends Controller
     public function approveResume(Request $request, User $user): RedirectResponse
     {
         abort_unless($request->user()?->can('instructor-moderation-update'), 403);
-        abort_unless($user->hasRole('instructor'), 404);
+        abort_unless($user->hasAnyRole(['instructor', 'student']), 404);
+        abort_unless(ResumeModeration::status($user) === ResumeModerationStatus::Pending, 404);
 
         ResumeModeration::markApproved($user, $request->user());
 
         InstructorModerationNotifier::resumeModerationResult($user, true);
 
-        return back()->with('success', 'رزومه استاد تایید شد و عمومی شد.');
+        $label = $user->hasRole('instructor') ? 'استاد' : 'دانشجو';
+
+        return back()->with('success', "رزومه {$label} تایید شد.");
     }
 
     public function rejectResume(RejectInstructorResumeRequest $request, User $user): RedirectResponse
     {
-        abort_unless($user->hasRole('instructor'), 404);
+        abort_unless($user->hasAnyRole(['instructor', 'student']), 404);
+        abort_unless(ResumeModeration::status($user) === ResumeModerationStatus::Pending, 404);
 
         $note = $request->validated('note');
 
@@ -156,6 +164,6 @@ class InstructorModerationController extends Controller
 
         InstructorModerationNotifier::resumeModerationResult($user, false, $note);
 
-        return back()->with('success', 'رزومه رد شد؛ استاد می‌تواند اصلاح و دوباره ارسال کند.');
+        return back()->with('success', 'رزومه رد شد؛ کاربر می‌تواند اصلاح و دوباره ارسال کند.');
     }
 }

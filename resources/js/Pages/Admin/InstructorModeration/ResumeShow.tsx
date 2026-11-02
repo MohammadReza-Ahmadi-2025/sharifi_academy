@@ -15,6 +15,7 @@ type Props = {
         status_label: string;
         note: string | null;
         submitted_at: string | null;
+        role_label?: string;
     };
     abilities: { moderate: boolean };
 };
@@ -36,7 +37,7 @@ export default function InstructorModerationResumeShow({ profile, moderation, ab
             <Head title={`بررسی رزومه ${profile.fullName}`} />
             <PageHeader
                 title={`بررسی رزومه: ${profile.fullName}`}
-                description={`وضعیت: ${moderation.status_label}`}
+                description={`${moderation.role_label ? `${moderation.role_label} · ` : ''}وضعیت: ${moderation.status_label}`}
                 backHref="/admin/instructor-moderation"
             />
 
