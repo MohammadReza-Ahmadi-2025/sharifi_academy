@@ -116,9 +116,29 @@ export function PersianDatePicker({
   );
 
   const yearOptions = React.useMemo(() => {
-    const center = viewYear;
-    return Array.from({ length: 21 }, (_, index) => center - 10 + index);
-  }, [viewYear]);
+    const minBound = min
+      ? (isoToJalali(toGregorianDateOnly(min) || min)?.year ?? now.year - 120)
+      : now.year - 120;
+    const maxBound = max
+      ? (isoToJalali(toGregorianDateOnly(max) || max)?.year ?? now.year + 20)
+      : now.year + 20;
+
+    const start = Math.min(minBound, maxBound);
+    const end = Math.max(minBound, maxBound);
+    const years: number[] = [];
+
+    for (let year = end; year >= start; year -= 1) {
+      years.push(year);
+    }
+
+    // Keep the currently viewed year selectable even if outside min/max while navigating.
+    if (!years.includes(viewYear)) {
+      years.push(viewYear);
+      years.sort((a, b) => b - a);
+    }
+
+    return years;
+  }, [min, max, now.year, viewYear]);
 
   const { time: valueTime } = splitIsoDateTime(value);
   const displayValue = React.useMemo(() => {

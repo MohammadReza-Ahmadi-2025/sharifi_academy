@@ -23,6 +23,13 @@ function yesterdayIsoDate(): string {
     return localIsoDate(date);
 }
 
+function yearsAgoIsoDate(years: number): string {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - years);
+
+    return localIsoDate(date);
+}
+
 type Errors = Partial<Record<string, string>>;
 
 type Props = {
@@ -72,6 +79,7 @@ export function ProfileExtendedFields({
             : 'min-h-[120px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100';
 
     const maxBirthDate = useMemo(() => yesterdayIsoDate(), []);
+    const minBirthDate = useMemo(() => yearsAgoIsoDate(120), []);
 
     const birthDatePickerClass =
         variant === 'site'
@@ -107,6 +115,7 @@ export function ProfileExtendedFields({
                         onChange={(value) => onChange('birth_date', value)}
                         disabled={processing}
                         placeholder="انتخاب تاریخ تولد"
+                        min={minBirthDate}
                         max={maxBirthDate}
                         clearable
                         className={birthDatePickerClass}
