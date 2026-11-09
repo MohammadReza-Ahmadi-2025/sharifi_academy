@@ -84,21 +84,28 @@ export function PersianDatePicker({
   const [isOpen, setIsOpen] = React.useState(false);
   const [viewYear, setViewYear] = React.useState(now.year);
   const [viewMonth, setViewMonth] = React.useState(now.month);
+  const [yearPanelOpen, setYearPanelOpen] = React.useState(false);
   const [pendingDate, setPendingDate] = React.useState("");
   const [pendingTime, setPendingTime] = React.useState(defaultTime);
+  const yearListRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setYearPanelOpen(false);
+      return;
+    }
 
     const anchor = selectedJalali ?? {
-      year: now.year,
-      month: now.month,
-      day: now.day,
+      year: JalaliDateTime.now().year,
+      month: JalaliDateTime.now().month,
+      day: JalaliDateTime.now().day,
     };
 
     setViewYear(anchor.year);
     setViewMonth(anchor.month);
-  }, [isOpen, selectedJalali, now.year, now.month, now.day]);
+    // Only re-anchor when the popover opens, not on every parent re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   React.useEffect(() => {
     if (!isOpen || !includeTime) {
@@ -115,30 +122,37 @@ export function PersianDatePicker({
     [viewYear, viewMonth],
   );
 
-  const yearOptions = React.useMemo(() => {
+  const yearBounds = React.useMemo(() => {
+    // Default span covers adult birth years well past Jalali 1395.
     const minBound = min
-      ? (isoToJalali(toGregorianDateOnly(min) || min)?.year ?? now.year - 120)
-      : now.year - 120;
+      ? (isoToJalali(toGregorianDateOnly(min) || min)?.year ?? 1300)
+      : 1300;
     const maxBound = max
       ? (isoToJalali(toGregorianDateOnly(max) || max)?.year ?? now.year + 20)
       : now.year + 20;
 
-    const start = Math.min(minBound, maxBound);
-    const end = Math.max(minBound, maxBound);
-    const years: number[] = [];
+    return {
+      start: Math.min(minBound, maxBound),
+      end: Math.max(minBound, maxBound),
+    };
+  }, [min, max, now.year]);
 
-    for (let year = end; year >= start; year -= 1) {
+  const yearOptions = React.useMemo(() => {
+    const years: number[] = [];
+    for (let year = yearBounds.end; year >= yearBounds.start; year -= 1) {
       years.push(year);
     }
+    return years;
+  }, [yearBounds.end, yearBounds.start]);
 
-    // Keep the currently viewed year selectable even if outside min/max while navigating.
-    if (!years.includes(viewYear)) {
-      years.push(viewYear);
-      years.sort((a, b) => b - a);
+  React.useEffect(() => {
+    if (!yearPanelOpen || !yearListRef.current) {
+      return;
     }
 
-    return years;
-  }, [min, max, now.year, viewYear]);
+    const active = yearListRef.current.querySelector<HTMLElement>('[data-active-year="true"]');
+    active?.scrollIntoView({ block: "center" });
+  }, [yearPanelOpen, viewYear]);
 
   const { time: valueTime } = splitIsoDateTime(value);
   const displayValue = React.useMemo(() => {
@@ -184,21 +198,30 @@ export function PersianDatePicker({
   };
 
   const goToPreviousMonth = () => {
+    setYearPanelOpen(false);
     const next = addJalaliMonths(viewYear, viewMonth, -1);
-    setViewYear(next.year);
+    setViewYear(Math.max(yearBounds.start, next.year));
     setViewMonth(next.month);
   };
 
   const goToNextMonth = () => {
+    setYearPanelOpen(false);
     const next = addJalaliMonths(viewYear, viewMonth, 1);
-    setViewYear(next.year);
+    setViewYear(Math.min(yearBounds.end, next.year));
     setViewMonth(next.month);
   };
 
   const goToTodayMonth = () => {
+    setYearPanelOpen(false);
     const current = JalaliDateTime.now();
     setViewYear(current.year);
     setViewMonth(current.month);
+  };
+
+  const jumpYears = (delta: number) => {
+    setViewYear((current) =>
+      Math.min(yearBounds.end, Math.max(yearBounds.start, current + delta)),
+    );
   };
 
   const minDate = min ? toGregorianDateOnly(min) : undefined;
@@ -341,16 +364,19 @@ export function PersianDatePicker({
                 <ChevronRight className="h-4 w-4" />
               </button>
 
-              <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+              <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5">
                 <select
                   value={viewMonth}
-                  onChange={(event) => setViewMonth(Number(event.target.value))}
-                className={cn(
-                  "truncate rounded-lg border border-slate-200 bg-white px-2 font-medium text-slate-900 outline-none focus:border-[rgb(var(--primary)/0.5)] focus:ring-2 focus:ring-[rgb(var(--primary)/0.15)] dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 max-md:max-w-none max-md:py-2",
-                  isCompact
-                    ? "max-w-[6.5rem] py-1 text-xs"
-                    : "max-w-[7.5rem] py-1.5 text-sm",
-                )}
+                  onChange={(event) => {
+                    setYearPanelOpen(false);
+                    setViewMonth(Number(event.target.value));
+                  }}
+                  className={cn(
+                    "truncate rounded-lg border border-slate-200 bg-white px-2 font-medium text-slate-900 outline-none focus:border-[rgb(var(--primary)/0.5)] focus:ring-2 focus:ring-[rgb(var(--primary)/0.15)] dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 max-md:max-w-none max-md:py-2",
+                    isCompact
+                      ? "max-w-[6.5rem] py-1 text-xs"
+                      : "max-w-[7.5rem] py-1.5 text-sm",
+                  )}
                   aria-label="انتخاب ماه"
                 >
                   {JALALI_MONTH_NAMES.map((monthName, index) => (
@@ -360,21 +386,23 @@ export function PersianDatePicker({
                   ))}
                 </select>
 
-                <select
-                  value={viewYear}
-                  onChange={(event) => setViewYear(Number(event.target.value))}
+                <button
+                  type="button"
+                  onClick={() => setYearPanelOpen((open) => !open)}
+                  aria-label="انتخاب سال"
+                  aria-expanded={yearPanelOpen}
                   className={cn(
-                    "rounded-lg border border-slate-200 bg-white px-2 font-medium text-slate-900 outline-none focus:border-[rgb(var(--primary)/0.5)] focus:ring-2 focus:ring-[rgb(var(--primary)/0.15)] dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 max-md:py-2",
+                    "rounded-lg border px-2.5 font-semibold outline-none transition-colors",
+                    "border-slate-200 bg-white text-slate-900 hover:border-[rgb(var(--primary)/0.45)] hover:bg-[rgb(var(--primary)/0.06)]",
+                    "focus-visible:border-[rgb(var(--primary)/0.5)] focus-visible:ring-2 focus-visible:ring-[rgb(var(--primary)/0.15)]",
+                    "dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100",
+                    yearPanelOpen &&
+                      "border-[rgb(var(--primary))] bg-[rgb(var(--primary)/0.08)] text-[rgb(var(--primary))]",
                     isCompact ? "py-1 text-xs" : "py-1.5 text-sm",
                   )}
-                  aria-label="انتخاب سال"
                 >
-                  {yearOptions.map((year) => (
-                    <option key={year} value={year}>
-                      {toPersianDigits(year)}
-                    </option>
-                  ))}
-                </select>
+                  {toPersianDigits(viewYear)}
+                </button>
               </div>
 
               <button
@@ -387,89 +415,147 @@ export function PersianDatePicker({
               </button>
             </div>
 
-            <div className={cn(isCompact ? "mb-2 h-7" : "mb-3 h-8")}>
-              {!viewingCurrentMonth ? (
-                <button
-                  type="button"
-                  onClick={goToTodayMonth}
-                  className="h-full w-full rounded-lg border border-dashed border-[rgb(var(--primary)/0.35)] px-3 text-xs font-medium text-[rgb(var(--primary))] transition-colors hover:bg-[rgb(var(--primary)/0.08)]"
-                >
-                  بازگشت به {now.getMonthName()} {toPersianDigits(now.year)}
-                </button>
-              ) : null}
-            </div>
-
-            <div
-              className={cn(
-                "mb-2 grid grid-cols-7 gap-1",
-                isCompact ? "gap-0.5" : "gap-1",
-              )}
-            >
-              {JALALI_WEEKDAY_SHORT.map((weekday) => (
-                <div
-                  key={weekday}
-                  className="py-1 text-center text-[11px] font-bold text-[rgb(var(--primary)/0.65)] dark:text-[rgb(var(--primary)/0.75)]"
-                >
-                  {weekday}
-                </div>
-              ))}
-            </div>
-
-            <div
-              className={cn(
-                "grid grid-cols-7 content-start max-md:h-auto max-md:flex-1 max-md:gap-2",
-                isCompact ? "h-[11.5rem] gap-0.5" : "h-[14.75rem] gap-1",
-              )}
-            >
-              {monthCells.map((cell, index) => {
-                if (!cell) {
-                  return (
-                    <div
-                      key={`empty-${index}`}
-                      className={cn(isCompact ? "h-8" : "h-9", "max-md:h-12")}
-                    />
-                  );
-                }
-
-                const isSelected = selectedDateIso ? cell.iso === selectedDateIso : false;
-                const isToday = cell.iso === todayIso;
-                const dayDisabled = isDayDisabled(cell.iso);
-
-                return (
+            {yearPanelOpen ? (
+              <div className={cn(isCompact ? "mb-2" : "mb-3")}>
+                <div className="mb-2 flex items-center justify-between gap-2">
                   <button
-                    key={cell.iso}
                     type="button"
-                    disabled={dayDisabled}
-                    onClick={() => handleSelect(cell.iso)}
-                    aria-label={
-                      isToday
-                        ? `امروز ${toPersianDigits(cell.day)}`
-                        : toPersianDigits(cell.day)
-                    }
-                    aria-current={isToday ? "date" : undefined}
-                    className={cn(
-                      "relative flex items-center justify-center rounded-lg font-medium transition-all max-md:h-12 max-md:text-base",
-                      isCompact
-                        ? "h-8 text-xs"
-                        : "h-9 text-sm",
-                      isSelected
-                        ? "bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))] shadow-sm shadow-[rgb(var(--primary)/0.35)]"
-                        : "text-slate-700 hover:bg-[rgb(var(--primary)/0.08)] hover:text-[rgb(var(--primary))] dark:text-slate-200 dark:hover:bg-[rgb(var(--primary)/0.12)]",
-                      isToday &&
-                        !isSelected &&
-                        "bg-[rgb(var(--primary)/0.12)] font-bold text-[rgb(var(--primary))] ring-1 ring-[rgb(var(--primary)/0.45)] ring-inset",
-                      dayDisabled &&
-                        "cursor-not-allowed opacity-30 hover:bg-transparent dark:hover:bg-transparent",
-                    )}
+                    onClick={() => jumpYears(-10)}
+                    className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900"
                   >
-                    {toPersianDigits(cell.day)}
-                    {isToday && !isSelected && (
-                      <span className="absolute bottom-1 h-1 w-1 rounded-full bg-[rgb(var(--primary))]" />
-                    )}
+                    ۱۰ سال قبل
                   </button>
-                );
-              })}
-            </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    از {toPersianDigits(yearBounds.start)} تا {toPersianDigits(yearBounds.end)}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => jumpYears(10)}
+                    className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900"
+                  >
+                    ۱۰ سال بعد
+                  </button>
+                </div>
+                <div
+                  ref={yearListRef}
+                  className={cn(
+                    "grid grid-cols-3 gap-1.5 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900/60",
+                    isCompact ? "max-h-40" : "max-h-52",
+                    "max-md:max-h-64",
+                  )}
+                >
+                  {yearOptions.map((year) => {
+                    const active = year === viewYear;
+
+                    return (
+                      <button
+                        key={year}
+                        type="button"
+                        data-active-year={active ? "true" : undefined}
+                        onClick={() => {
+                          setViewYear(year);
+                          setYearPanelOpen(false);
+                        }}
+                        className={cn(
+                          "rounded-lg px-2 py-2 text-sm font-medium transition-colors",
+                          active
+                            ? "bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))] shadow-sm"
+                            : "bg-white text-slate-700 hover:bg-[rgb(var(--primary)/0.1)] hover:text-[rgb(var(--primary))] dark:bg-slate-950 dark:text-slate-200",
+                        )}
+                      >
+                        {toPersianDigits(year)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className={cn(isCompact ? "mb-2 h-7" : "mb-3 h-8")}>
+                  {!viewingCurrentMonth ? (
+                    <button
+                      type="button"
+                      onClick={goToTodayMonth}
+                      className="h-full w-full rounded-lg border border-dashed border-[rgb(var(--primary)/0.35)] px-3 text-xs font-medium text-[rgb(var(--primary))] transition-colors hover:bg-[rgb(var(--primary)/0.08)]"
+                    >
+                      بازگشت به {now.getMonthName()} {toPersianDigits(now.year)}
+                    </button>
+                  ) : null}
+                </div>
+
+                <div
+                  className={cn(
+                    "mb-2 grid grid-cols-7 gap-1",
+                    isCompact ? "gap-0.5" : "gap-1",
+                  )}
+                >
+                  {JALALI_WEEKDAY_SHORT.map((weekday) => (
+                    <div
+                      key={weekday}
+                      className="py-1 text-center text-[11px] font-bold text-[rgb(var(--primary)/0.65)] dark:text-[rgb(var(--primary)/0.75)]"
+                    >
+                      {weekday}
+                    </div>
+                  ))}
+                </div>
+
+                <div
+                  className={cn(
+                    "grid grid-cols-7 content-start max-md:h-auto max-md:flex-1 max-md:gap-2",
+                    isCompact ? "h-[11.5rem] gap-0.5" : "h-[14.75rem] gap-1",
+                  )}
+                >
+                  {monthCells.map((cell, index) => {
+                    if (!cell) {
+                      return (
+                        <div
+                          key={`empty-${index}`}
+                          className={cn(isCompact ? "h-8" : "h-9", "max-md:h-12")}
+                        />
+                      );
+                    }
+
+                    const isSelected = selectedDateIso ? cell.iso === selectedDateIso : false;
+                    const isToday = cell.iso === todayIso;
+                    const dayDisabled = isDayDisabled(cell.iso);
+
+                    return (
+                      <button
+                        key={cell.iso}
+                        type="button"
+                        disabled={dayDisabled}
+                        onClick={() => handleSelect(cell.iso)}
+                        aria-label={
+                          isToday
+                            ? `امروز ${toPersianDigits(cell.day)}`
+                            : toPersianDigits(cell.day)
+                        }
+                        aria-current={isToday ? "date" : undefined}
+                        className={cn(
+                          "relative flex items-center justify-center rounded-lg font-medium transition-all max-md:h-12 max-md:text-base",
+                          isCompact
+                            ? "h-8 text-xs"
+                            : "h-9 text-sm",
+                          isSelected
+                            ? "bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))] shadow-sm shadow-[rgb(var(--primary)/0.35)]"
+                            : "text-slate-700 hover:bg-[rgb(var(--primary)/0.08)] hover:text-[rgb(var(--primary))] dark:text-slate-200 dark:hover:bg-[rgb(var(--primary)/0.12)]",
+                          isToday &&
+                            !isSelected &&
+                            "bg-[rgb(var(--primary)/0.12)] font-bold text-[rgb(var(--primary))] ring-1 ring-[rgb(var(--primary)/0.45)] ring-inset",
+                          dayDisabled &&
+                            "cursor-not-allowed opacity-30 hover:bg-transparent dark:hover:bg-transparent",
+                        )}
+                      >
+                        {toPersianDigits(cell.day)}
+                        {isToday && !isSelected && (
+                          <span className="absolute bottom-1 h-1 w-1 rounded-full bg-[rgb(var(--primary))]" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
             {includeTime ? (
               <div
