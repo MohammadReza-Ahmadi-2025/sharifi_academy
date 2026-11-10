@@ -86,7 +86,10 @@ class InstructorPanelTest extends TestCase
         $this->actingAs($instructor)
             ->get('/instructor/resume')
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('Instructor/Resume/Index'));
+            ->assertInertia(fn ($page) => $page
+                ->component('Instructor/Resume/Index')
+                ->has('accountProfile')
+                ->has('locations'));
 
         $this->actingAs($instructor)
             ->post('/instructor/resume', [

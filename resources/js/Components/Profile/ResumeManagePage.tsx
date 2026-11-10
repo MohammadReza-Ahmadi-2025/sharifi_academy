@@ -1,9 +1,11 @@
 import { PersianDatePicker } from '@/Components/Admin/shared/ui/persian-date-picker';
 import { InstructorResumeProfileView } from '@/Components/Profile/InstructorResumeProfileView';
+import { ResumeProfileEditor, type ResumeEditableProfile } from '@/Components/Profile/ResumeProfileEditor';
 import { withResumeAttachmentsPayload } from '@/Components/Profile/resume-form-payload';
 import { FileUploader, useFileUploadState } from '@/Components/shared/FileUploader';
 import { formatFileSize } from '@/Components/shared/file-upload';
 import type { InstructorResumeProfile, ResumeEntry, ResumeSection } from '@/types/instructor-resume';
+import type { LocationOptions } from '@/types/profile-extended';
 import InstructorLayout from '@/Layouts/InstructorLayout';
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
@@ -31,6 +33,8 @@ export type ResumeManagePageProps = {
     skillOptions: { id: number; name: string }[];
     selectedSkills: { skill_id: number; level: number | null }[];
     panel: PanelMeta;
+    accountProfile: ResumeEditableProfile;
+    locations: LocationOptions;
 };
 
 const emptyForm = {
@@ -62,6 +66,8 @@ export function ResumeManagePage({
     skillOptions,
     selectedSkills,
     panel,
+    accountProfile,
+    locations,
 }: ResumeManagePageProps) {
     const basePath = panel.base_path;
     const Layout: ComponentType<LayoutProps> =
@@ -272,6 +278,8 @@ export function ResumeManagePage({
                     </button>
                 </div>
             ) : null}
+
+            <ResumeProfileEditor profile={accountProfile} locations={locations} />
 
             {panel.public_visibility ? (
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-3">

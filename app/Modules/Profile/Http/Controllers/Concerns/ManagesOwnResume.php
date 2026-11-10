@@ -11,6 +11,8 @@ use App\Modules\Profile\Http\Requests\SubmitResumeForReviewRequest;
 use App\Modules\Profile\Models\Resume;
 use App\Modules\Profile\Models\Skill;
 use App\Modules\Profile\Support\InstructorPublicResumePresenter;
+use App\Modules\Profile\Support\LocationSelectOptions;
+use App\Modules\Profile\Support\ProfilePayload;
 use App\Modules\Profile\Support\ResumeAttachmentMedia;
 use App\Modules\Profile\Support\ResumeEntryPresenter;
 use App\Modules\Profile\Support\ResumeModeration;
@@ -103,6 +105,8 @@ trait ManagesOwnResume
                 ->values()
                 ->all(),
             'panel' => $meta,
+            'accountProfile' => ProfilePayload::forUser($user),
+            'locations' => LocationSelectOptions::forForms(),
         ]);
     }
 

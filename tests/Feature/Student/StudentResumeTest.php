@@ -33,7 +33,9 @@ class StudentResumeTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('Student/Resume/Index')
                 ->where('panel.panel', 'student')
-                ->where('panel.base_path', '/student/resume'));
+                ->where('panel.base_path', '/student/resume')
+                ->has('accountProfile')
+                ->has('locations.provinces'));
 
         $this->actingAs($student)
             ->post('/student/resume', [

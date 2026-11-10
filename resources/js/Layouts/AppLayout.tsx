@@ -2,7 +2,6 @@ import { SiteFooterContactCard } from '@/Components/Site/SiteFooterContactCard';
 import { SiteDefaultHead } from '@/Components/Site/SiteDefaultHead';
 import { SiteTheme } from '@/Components/Site/SiteTheme';
 import { SiteHeader } from '@/Components/SiteHeader';
-import { siteSettingsFromPage } from '@/lib/site-settings';
 import { PageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { cn } from '@/lib/utils';
@@ -23,10 +22,8 @@ type Props = PropsWithChildren<{
 export default function AppLayout({ children, fullWidth = false, mainClassName }: Props) {
     const pageProps = usePage<PageProps>().props;
     const { app, siteMenus } = pageProps;
-    const settings = siteSettingsFromPage(pageProps);
     const footerMenus = (siteMenus?.footer ?? []) as SiteMenuGroup[];
 
-    const tagline = settings.site_description?.trim() || 'آموزش تخصصی مهندسی';
     const hasFooterMenus = footerMenus.length > 0;
 
     return (
@@ -37,7 +34,7 @@ export default function AppLayout({ children, fullWidth = false, mainClassName }
 
             <main
                 className={cn(
-                    'flex flex-1 flex-col items-stretch pb-[7.5rem] lg:pb-0',
+                    'flex flex-1 flex-col items-stretch',
                     fullWidth ? 'w-full' : 'mx-auto w-full max-w-7xl px-4 py-8',
                     mainClassName,
                 )}
@@ -45,8 +42,8 @@ export default function AppLayout({ children, fullWidth = false, mainClassName }
                 {children}
             </main>
 
-            <footer className="mt-auto border-t border-secondary bg-primary text-on-primary">
-                <div className="mx-auto max-w-7xl px-4 py-10">
+            <footer className="mt-auto border-t border-secondary bg-primary text-on-primary pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
+                <div className="mx-auto max-w-7xl px-4 py-10 lg:pb-10">
                     <div className="flex flex-col gap-10 pb-10 lg:flex-row lg:items-end lg:justify-between">
                         {hasFooterMenus ? (
                             <div className="grid flex-1 gap-8 text-sm grid-cols-2 md:grid-cols-3">
@@ -93,7 +90,7 @@ export default function AppLayout({ children, fullWidth = false, mainClassName }
                     </div>
 
                     <p className="border-t border-white/10 pt-6 text-center text-sm opacity-90">
-                        {app.name} — {tagline}
+                        تمامی حقوق برای {app.name} محفوظ است.
                     </p>
                 </div>
             </footer>

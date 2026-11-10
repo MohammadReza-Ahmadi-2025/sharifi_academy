@@ -3,6 +3,7 @@
 namespace App\Modules\Profile\Support;
 
 use App\Models\User;
+use App\Modules\Profile\Enums\ResumeModerationStatus;
 use App\Modules\Users\Support\UserAvatarMedia;
 use Illuminate\Http\Request;
 
@@ -34,5 +35,10 @@ class ProfileUpdater
 
         UserProfileSync::sync($user, $validated);
         UserAvatarMedia::syncFromRequest($user, $request);
+
+        // Public resume fields changed — send approved profiles back to review.
+        if (ResumeModeration::status($user->fresh()) === ResumeModerationStatus::Approved) {
+            ResumeModeration::markPending($user);
+        }
     }
 }
