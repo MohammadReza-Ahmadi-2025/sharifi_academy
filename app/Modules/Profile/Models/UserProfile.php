@@ -2,6 +2,7 @@
 
 namespace App\Modules\Profile\Models;
 
+use App\Casts\PurifiedHtml;
 use App\Models\User;
 use App\Modules\Locations\Models\ProvinceCity;
 use App\Modules\Profile\Enums\ResumeModerationStatus;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'user_id',
+    'uuid',
     'headline',
     'bio',
     'birth_date',
@@ -29,6 +31,7 @@ class UserProfile extends Model
     protected function casts(): array
     {
         return [
+            'bio' => PurifiedHtml::class,
             'birth_date' => 'date',
             'is_public' => 'boolean',
             'is_verified' => 'boolean',

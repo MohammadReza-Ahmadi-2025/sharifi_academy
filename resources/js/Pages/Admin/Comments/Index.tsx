@@ -104,6 +104,7 @@ function ReplyForm({ commentId }: { commentId: number }) {
             </FormField>
             <FormField label="پاسخ" required error={form.errors.body}>
                 <Textarea
+                    plain
                     rows={3}
                     value={form.data.body}
                     disabled={form.processing}

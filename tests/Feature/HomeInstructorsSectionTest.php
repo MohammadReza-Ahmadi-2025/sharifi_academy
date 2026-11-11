@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Home\Models\HomeSection;
 use App\Modules\Home\Models\HomeSectionTab;
 use App\Modules\Profile\Models\Resume;
+use App\Modules\Profile\Support\InstructorPublicUuid;
 use App\Modules\Profile\Support\ResumeModeration;
 use App\Services\Home\HomePageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -66,9 +67,11 @@ class HomeInstructorsSectionTest extends TestCase
                         }
                         $firstItem = $sectionRow['tabs'][0]['items'][0] ?? null;
 
+                        $uuid = InstructorPublicUuid::routeKey($instructor);
+
                         return $firstItem !== null
                             && ($firstItem['title'] ?? '') === 'علی استادی'
-                            && str_contains((string) ($firstItem['profile_url'] ?? ''), '/instructors/'.$instructor->id);
+                            && str_contains((string) ($firstItem['profile_url'] ?? ''), '/instructors/'.$uuid);
                     }
 
                     return false;
@@ -149,18 +152,26 @@ class HomeInstructorsSectionTest extends TestCase
             'display_order' => 0,
         ]);
 
-        $this->getJson(route('instructors.resume', $instructor))
+        $uuid = InstructorPublicUuid::routeKey($instructor);
+
+        $this->getJson(route('instructors.resume', ['instructor' => $uuid]))
             ->assertOk()
             ->assertJsonPath('sections.0.type', 'experience')
-            ->assertJsonPath('sections.0.items.0.title', 'مدرس CATIA');
+            ->assertJsonPath('sections.0.items.0.title', 'مدرس CATIA')
+            ->assertJsonPath('uuid', $uuid);
+
+        $this->get('/instructors/'.$instructor->id)->assertNotFound();
+        $this->getJson('/instructors/'.$instructor->id.'/resume')->assertNotFound();
     }
 
     public function test_public_resume_is_hidden_for_non_instructors(): void
     {
         $user = User::factory()->create(['status' => 1]);
+        $uuid = InstructorPublicUuid::routeKey($user);
 
-        $this->getJson(route('instructors.resume', $user))->assertNotFound();
-        $this->get(route('instructors.show', $user))->assertNotFound();
+        $this->getJson(route('instructors.resume', ['instructor' => $uuid]))->assertNotFound();
+        $this->get(route('instructors.show', ['instructor' => $uuid]))->assertNotFound();
+        $this->get('/instructors/'.$user->id)->assertNotFound();
     }
 
     public function test_public_resume_page_renders_for_instructor(): void
@@ -179,11 +190,14 @@ class HomeInstructorsSectionTest extends TestCase
             'display_order' => 0,
         ]);
 
-        $this->get(route('instructors.show', $instructor))
+        $uuid = InstructorPublicUuid::routeKey($instructor);
+
+        $this->get(route('instructors.show', ['instructor' => $uuid]))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Public/InstructorResume/Show')
                 ->where('profile.fullName', 'رضا مدرس')
+                ->where('profile.uuid', $uuid)
                 ->where('profile.sections.0.label', 'تحصیلات')
                 ->where('structuredData.person.@type', 'Person')
                 ->where('structuredData.person.name', 'رضا مدرس')

@@ -31,6 +31,7 @@ class ProductPublicPresenter
             'slug' => $product->publicSlug(),
             'short_description' => $product->short_description,
             'description' => $product->description,
+            'features' => $product->features,
             'sku' => $product->sku,
             'brand' => $product->brand ? [
                 'id' => $product->brand->id,

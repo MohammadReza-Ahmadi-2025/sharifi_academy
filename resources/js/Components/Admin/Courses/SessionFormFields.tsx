@@ -178,6 +178,7 @@ export function SessionFormFields({
                         </FormField>
                         <FormField label="دلیل لغو" className="md:col-span-2" error={errors.cancellation_reason}>
                             <Textarea
+                                plain
                                 rows={2}
                                 value={data.cancellation_reason ?? ''}
                                 disabled={processing}

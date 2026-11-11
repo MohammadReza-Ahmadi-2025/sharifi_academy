@@ -2,6 +2,7 @@
 
 namespace App\Modules\Catalog\Models;
 
+use App\Casts\PurifiedHtml;
 use App\Modules\Visits\Concerns\HasVisits;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -50,6 +51,7 @@ class Brand extends Model
     protected function casts(): array
     {
         return [
+            'description' => PurifiedHtml::class,
             'meta_keywords' => 'array',
             'status' => 'boolean',
             'sort' => 'integer',

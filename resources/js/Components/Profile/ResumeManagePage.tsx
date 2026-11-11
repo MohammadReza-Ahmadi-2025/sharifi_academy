@@ -177,6 +177,13 @@ export function ResumeManagePage({
 
     const profileForPreview: InstructorResumeProfile = {
         ...profilePreview,
+        id: profilePreview.id,
+        fullName:
+            [accountProfile.name, accountProfile.family].filter(Boolean).join(' ') ||
+            profilePreview.fullName,
+        headline: accountProfile.extended.headline ?? profilePreview.headline,
+        bio: accountProfile.extended.bio ?? profilePreview.bio,
+        avatar: accountProfile.avatar ?? profilePreview.avatar,
         sections,
     };
 

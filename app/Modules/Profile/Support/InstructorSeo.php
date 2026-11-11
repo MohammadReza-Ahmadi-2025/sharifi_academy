@@ -23,7 +23,11 @@ class InstructorSeo
         return [
             'title' => "رزومه {$name}",
             'description' => $description,
-            'canonical' => (string) ($profile['profile_url'] ?? route('instructors.show', ['user' => $profile['id']])),
+            'canonical' => (string) ($profile['profile_url'] ?? (
+                filled($profile['uuid'] ?? null)
+                    ? route('instructors.show', ['instructor' => $profile['uuid']])
+                    : url('/')
+            )),
             'keywords' => '',
             'og_image' => is_string($avatarUrl) && $avatarUrl !== '' ? $avatarUrl : null,
             'og_type' => 'profile',

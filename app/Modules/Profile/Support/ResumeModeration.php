@@ -56,6 +56,8 @@ final class ResumeModeration
             'resume_reviewed_by' => $reviewer?->id,
             'resume_moderation_note' => null,
         ]);
+
+        InstructorPublicUuid::ensureFor($user->fresh(['profile']) ?? $user);
     }
 
     public static function markRejected(User $user, ?string $note, ?User $reviewer = null): void

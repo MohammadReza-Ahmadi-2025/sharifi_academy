@@ -4,6 +4,7 @@ namespace Tests\Feature\Student;
 
 use App\Models\User;
 use App\Modules\Profile\Enums\ResumeModerationStatus;
+use App\Modules\Profile\Support\InstructorPublicUuid;
 use App\Modules\Profile\Support\ResumeModeration;
 use App\Modules\Roles\Support\DefaultRolePermissions;
 use Database\Seeders\DatabaseSeeder;
@@ -72,7 +73,9 @@ class StudentResumeTest extends TestCase
         $this->assertSame(ResumeModerationStatus::Approved, ResumeModeration::status($student->fresh()));
 
         // Student resumes stay off the public instructor pages.
-        $this->get(route('instructors.show', $student))->assertNotFound();
+        $uuid = InstructorPublicUuid::routeKey($student->fresh());
+        $this->get(route('instructors.show', ['instructor' => $uuid]))->assertNotFound();
+        $this->get('/instructors/'.$student->id)->assertNotFound();
     }
 
     public function test_guest_is_redirected_from_student_resume(): void

@@ -28,7 +28,7 @@ export function WarehouseFormFields({ data, errors, onChange }: Props) {
                 <Input dir="ltr" value={data.code} onChange={(e) => onChange('code', e.target.value)} />
             </FormField>
             <FormField label="آدرس" error={errors.address}>
-                <Textarea rows={3} value={data.address} onChange={(e) => onChange('address', e.target.value)} />
+                <Textarea plain rows={3} value={data.address} onChange={(e) => onChange('address', e.target.value)} />
             </FormField>
             <FormField label="تلفن" error={errors.phone}>
                 <Input dir="ltr" value={data.phone} onChange={(e) => onChange('phone', e.target.value)} />

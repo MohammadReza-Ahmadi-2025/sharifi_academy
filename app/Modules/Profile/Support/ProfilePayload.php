@@ -5,6 +5,7 @@ namespace App\Modules\Profile\Support;
 use App\Models\User;
 use App\Modules\Roles\Support\PermissionCatalog;
 use App\Modules\Users\Support\UserAvatarMedia;
+use App\Support\SafeHtml;
 
 class ProfilePayload
 {
@@ -37,7 +38,7 @@ class ProfilePayload
                 ->all(),
             'extended' => [
                 'headline' => $extended?->headline,
-                'bio' => $extended?->bio,
+                'bio' => SafeHtml::nullable($extended?->bio),
                 'birthDate' => $extended?->birth_date?->format('Y-m-d'),
                 'nationalCode' => $extended?->national_code,
                 'provinceCityId' => $extended?->province_city_id,

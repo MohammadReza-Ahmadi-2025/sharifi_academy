@@ -8,6 +8,7 @@ use App\Modules\Courses\Enums\CourseStatus;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Profile\Enums\ResumeModerationStatus;
 use App\Modules\Profile\Models\Resume;
+use App\Modules\Profile\Support\InstructorPublicUuid;
 use App\Modules\Profile\Support\ResumeModeration;
 use App\Modules\Roles\Support\DefaultRolePermissions;
 use Database\Seeders\DatabaseSeeder;
@@ -92,7 +93,9 @@ class InstructorModerationTest extends TestCase
 
         $this->assertSame(ResumeModerationStatus::Pending, ResumeModeration::status($instructor->fresh()));
 
-        $this->get(route('instructors.show', $instructor))->assertNotFound();
+        $pendingUuid = InstructorPublicUuid::routeKey($instructor->fresh());
+        $this->get(route('instructors.show', ['instructor' => $pendingUuid]))->assertNotFound();
+        $this->get('/instructors/'.$instructor->id)->assertNotFound();
 
         $this->actingAs($admin)
             ->post(route('admin.instructor-moderation.resumes.approve', $instructor))
@@ -100,7 +103,9 @@ class InstructorModerationTest extends TestCase
 
         $this->assertSame(ResumeModerationStatus::Approved, ResumeModeration::status($instructor->fresh()));
 
-        $this->get(route('instructors.show', $instructor))->assertOk();
+        $uuid = InstructorPublicUuid::routeKey($instructor->fresh());
+        $this->get(route('instructors.show', ['instructor' => $uuid]))->assertOk();
+        $this->get('/instructors/'.$instructor->id)->assertNotFound();
     }
 
     public function test_admin_moderation_index_requires_permission(): void

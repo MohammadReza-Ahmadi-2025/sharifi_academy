@@ -30,6 +30,7 @@ export type ResumeSection = {
 
 export type InstructorResumeProfile = {
     id: number;
+    uuid?: string;
     fullName: string;
     headline?: string | null;
     bio?: string | null;

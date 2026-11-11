@@ -10,6 +10,7 @@ use App\Modules\Catalog\Models\Product;
 use App\Modules\Courses\Enums\CourseClassStatus;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Home\Models\Banner;
+use App\Modules\Profile\Support\InstructorPublicUuid;
 use App\Modules\Users\Support\UserAvatarMedia;
 use Illuminate\Support\Collection;
 
@@ -44,6 +45,7 @@ class HomeItemPresenter
                 'title' => $item->title,
                 'slug' => $item->slug,
                 'description' => $item->short_description,
+                'description_format' => 'html',
                 'price' => (int) ($item->min_effective_price ?? 0),
                 'image_url' => self::imageUrl($item->mainImage?->publicUrl()),
             ];
@@ -111,14 +113,16 @@ class HomeItemPresenter
         if ($item instanceof User) {
             $fullName = trim(($item->name ?? '').' '.($item->family ?? '')) ?: 'استاد';
             $avatar = UserAvatarMedia::payload($item);
+            $uuid = InstructorPublicUuid::routeKey($item);
 
             return [
                 'id' => $item->id,
+                'uuid' => $uuid,
                 'title' => $fullName,
                 'subtitle' => $item->profile?->headline,
                 'image_url' => self::imageUrl($avatar['url'] ?? null),
-                'resume_url' => route('instructors.resume', $item),
-                'profile_url' => route('instructors.show', $item),
+                'resume_url' => route('instructors.resume', ['instructor' => $uuid]),
+                'profile_url' => route('instructors.show', ['instructor' => $uuid]),
             ];
         }
 

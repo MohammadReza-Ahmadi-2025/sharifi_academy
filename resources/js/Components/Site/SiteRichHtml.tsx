@@ -5,11 +5,43 @@ type Props = {
     className?: string;
 };
 
-/** خروجی CKEditor / HTML ادمین — روی سایت عمومی */
-export function SiteRichHtml({ html, className }: Props) {
+/**
+ * If content was saved/escaped as entities (&lt;p&gt;...), unescape once so tags can render.
+ */
+function normalizeRichHtml(html: string): string {
     const trimmed = html.trim();
-
     if (trimmed === '') {
+        return '';
+    }
+
+    const looksEncoded = /&lt;[a-z]/i.test(trimmed) && !/<[a-z][\s\S]*>/i.test(trimmed);
+    if (!looksEncoded) {
+        return trimmed;
+    }
+
+    if (typeof document === 'undefined') {
+        return trimmed
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&amp;/g, '&');
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = trimmed;
+
+    return textarea.value.trim();
+}
+
+/**
+ * خروجی CKEditor — تگ‌های HTML رندر می‌شوند (معادل {!! !!} در Blade).
+ * محتوا باید سمت سرور با HTML Purifier پاک شده باشد؛ اسکریپت اجازه ندارد.
+ */
+export function SiteRichHtml({ html, className }: Props) {
+    const normalized = normalizeRichHtml(html);
+
+    if (normalized === '') {
         return null;
     }
 
@@ -17,8 +49,7 @@ export function SiteRichHtml({ html, className }: Props) {
         <div
             className={cn('site-rich-html', className)}
             dir="rtl"
-            // محتوا از پنل ادمین می‌آید؛ تگ‌های HTML باید رندر شوند نه به‌صورت متن خام
-            dangerouslySetInnerHTML={{ __html: trimmed }}
+            dangerouslySetInnerHTML={{ __html: normalized }}
         />
     );
 }

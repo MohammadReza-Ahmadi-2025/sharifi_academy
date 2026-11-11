@@ -2,6 +2,7 @@
 
 namespace App\Modules\Pages\Models;
 
+use App\Casts\PurifiedHtml;
 use App\Support\Concerns\ResolvesSeoSlugRouteBinding;
 use App\Support\SeoSlug;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -44,6 +45,7 @@ class Page extends Model
     protected function casts(): array
     {
         return [
+            'content' => PurifiedHtml::class,
             'is_active' => 'boolean',
             'meta_keywords' => 'array',
         ];

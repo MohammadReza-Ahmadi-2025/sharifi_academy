@@ -10,6 +10,7 @@ use App\Modules\Catalog\Models\Product;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Pages\Models\Page;
 use App\Modules\Profile\Enums\ResumeModerationStatus;
+use App\Modules\Profile\Support\InstructorPublicUuid;
 use App\Support\Search\SiteSearchUrls;
 use Illuminate\Support\Collection;
 
@@ -166,14 +167,19 @@ final class SiteSitemapBuilder
             ->whereHas('profile', fn ($query) => $query->where(
                 'resume_moderation_status',
                 ResumeModerationStatus::Approved->value,
-            ))
+            )->whereNotNull('uuid'))
+            ->with('profile:id,user_id,uuid')
             ->orderBy('id')
             ->get(['id', 'updated_at'])
-            ->map(fn (User $user) => new SitemapUrl(
-                route('instructors.show', $user),
-                $user->updated_at,
-                'monthly',
-                '0.5',
-            ));
+            ->map(function (User $user) {
+                $uuid = InstructorPublicUuid::routeKey($user);
+
+                return new SitemapUrl(
+                    route('instructors.show', ['instructor' => $uuid]),
+                    $user->updated_at,
+                    'monthly',
+                    '0.5',
+                );
+            });
     }
 }

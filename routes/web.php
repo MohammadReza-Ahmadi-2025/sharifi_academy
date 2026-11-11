@@ -51,9 +51,11 @@ Route::get('/pages/{page:slug}', [SitePageController::class, 'show'])->name('pag
 
 Route::get('/stories/feed', [StoryController::class, 'feed'])->name('stories.feed');
 
-Route::get('/instructors/{user}', [InstructorResumeController::class, 'showPage'])
+Route::get('/instructors/{instructor}', [InstructorResumeController::class, 'showPage'])
+    ->whereUuid('instructor')
     ->name('instructors.show');
-Route::get('/instructors/{user}/resume', [InstructorResumeController::class, 'show'])
+Route::get('/instructors/{instructor}/resume', [InstructorResumeController::class, 'show'])
+    ->whereUuid('instructor')
     ->name('instructors.resume');
 
 Route::middleware('auth')->group(function () {

@@ -99,7 +99,7 @@ class UpdateProfileRequest extends FormRequest
             ],
             'gender' => ['nullable', Rule::in(['male', 'female'])],
             'headline' => ['nullable', 'string', 'max:255'],
-            'bio' => ['nullable', 'string', 'max:5000'],
+            'bio' => ['nullable', 'string', 'max:20000'],
             'birth_date' => ['nullable', 'date', 'before:today'],
             'national_code' => [
                 'nullable',

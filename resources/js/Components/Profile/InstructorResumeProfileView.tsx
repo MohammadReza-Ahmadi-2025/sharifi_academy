@@ -1,5 +1,6 @@
 import type { InstructorResumeProfile, ResumeEntry } from '@/types/instructor-resume';
 import { formatFileSize } from '@/Components/shared/file-upload';
+import { SiteRichHtml } from '@/Components/Site/SiteRichHtml';
 import { cn } from '@/lib/utils';
 import { ExternalLink, FileText } from 'lucide-react';
 
@@ -129,9 +130,10 @@ export function InstructorResumeProfileView({ profile, variant = 'page', classNa
                         <p className="mt-1 text-sm text-neutral-black/60 md:text-base">{profile.headline}</p>
                     ) : null}
                     {profile.bio ? (
-                        <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-neutral-black/75 md:text-[0.95rem]">
-                            {profile.bio}
-                        </p>
+                        <SiteRichHtml
+                            html={profile.bio}
+                            className="mt-3 text-sm leading-relaxed text-neutral-black/75 md:text-[0.95rem]"
+                        />
                     ) : null}
                 </div>
             </header>

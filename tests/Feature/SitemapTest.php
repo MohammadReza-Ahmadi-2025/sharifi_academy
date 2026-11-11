@@ -9,6 +9,7 @@ use App\Modules\Catalog\Models\Category;
 use App\Modules\Courses\Enums\CourseStatus;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Pages\Models\Page;
+use App\Modules\Profile\Support\InstructorPublicUuid;
 use App\Modules\Profile\Support\ResumeModeration;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -115,13 +116,19 @@ class SitemapTest extends TestCase
         $this->assertStringContainsString('/categories/'.$courseCategory->publicSlug(), $body);
         $this->assertStringContainsString('/blog/'.$publishedPost->publicSlug(), $body);
         $this->assertStringContainsString(route('pages.show', $activePage), $body);
-        $this->assertStringContainsString(route('instructors.show', $instructor), $body);
+        $instructorUuid = InstructorPublicUuid::routeKey($instructor);
+        $this->assertStringContainsString(route('instructors.show', ['instructor' => $instructorUuid]), $body);
+        $this->assertStringNotContainsString('/instructors/'.$instructor->id, $body);
 
         $this->assertStringNotContainsString('sitemap-draft-course', $body);
         $this->assertStringNotContainsString('sitemap-inactive-cat', $body);
         $this->assertStringNotContainsString('sitemap-draft-post', $body);
         $this->assertStringNotContainsString('sitemap-inactive-page', $body);
-        $this->assertStringNotContainsString(route('instructors.show', $hiddenInstructor), $body);
+        $this->assertStringNotContainsString('/instructors/'.$hiddenInstructor->id, $body);
+        $hiddenUuid = (string) ($hiddenInstructor->fresh('profile')?->profile?->uuid ?? '');
+        if ($hiddenUuid !== '') {
+            $this->assertStringNotContainsString(route('instructors.show', ['instructor' => $hiddenUuid]), $body);
+        }
         $this->assertDoesNotMatchRegularExpression('#https?://[^<]+/(admin|instructor|student)(/|<)#', $body);
 
         $this->get('/robots.txt')

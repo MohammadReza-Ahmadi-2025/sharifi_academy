@@ -1,5 +1,6 @@
 import { HomeTestimonialStars, clampTestimonialRating } from '@/Components/Home/HomeTestimonialStars';
 import type { TestimonialItem } from '@/Components/Home/HomeTestimonialsSection';
+import { SiteRichHtml } from '@/Components/Site/SiteRichHtml';
 import { Autoplay, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
@@ -38,7 +39,10 @@ function TestimonialSlideCard({ item }: { item: TestimonialItem }) {
                     {rating.toLocaleString('fa-IR')}/۵
                 </span>
             </div>
-            <p className="mt-4 flex-1 text-sm leading-relaxed text-neutral-black/75">{item.quote}</p>
+            <SiteRichHtml
+                html={item.quote}
+                className="mt-4 flex-1 text-sm leading-relaxed text-neutral-black/75"
+            />
         </article>
     );
 }

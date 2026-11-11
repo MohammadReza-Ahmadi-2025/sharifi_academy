@@ -81,4 +81,34 @@ class SiteProfileTest extends TestCase
         $this->assertSame('0499370899', $student->profile->national_code);
         $this->assertFalse($student->profile->is_public);
     }
+
+    public function test_profile_bio_html_is_purified_without_scripts(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $student = User::where('mobile', '09120000003')->firstOrFail();
+
+        $this->actingAs($student)
+            ->put('/profile', [
+                'name' => $student->name,
+                'family' => $student->family,
+                'mobile' => $student->mobile,
+                'email' => $student->email,
+                'gender' => $student->gender,
+                'headline' => null,
+                'bio' => '<p>بیو امن</p><script>alert(1)</script><p onclick="x()">ادامه</p>',
+                'birth_date' => null,
+                'national_code' => null,
+                'province_city_id' => null,
+                'is_public' => true,
+            ])
+            ->assertRedirect();
+
+        $student->load('profile');
+        $bio = (string) $student->profile?->bio;
+
+        $this->assertStringContainsString('بیو امن', $bio);
+        $this->assertStringNotContainsString('<script', $bio);
+        $this->assertStringNotContainsString('onclick', $bio);
+    }
 }

@@ -14,6 +14,7 @@ use App\Modules\Home\Models\HomeSectionTab;
 use App\Modules\Home\Services\HomeCacheInvalidator;
 use App\Modules\Home\Support\HomeItemPresenter;
 use App\Modules\Profile\Enums\ResumeModerationStatus;
+use App\Support\SafeHtml;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -111,7 +112,19 @@ class TabResolver
         }
 
         if ($tab->content_type === 'testimonials') {
-            $payload['testimonials'] = data_get($tab->settings, 'testimonials', []);
+            $rows = data_get($tab->settings, 'testimonials', []);
+            $payload['testimonials'] = is_array($rows)
+                ? array_values(array_map(function ($row) {
+                    if (! is_array($row)) {
+                        return ['name' => '', 'role' => '', 'quote' => ''];
+                    }
+
+                    return [
+                        ...$row,
+                        'quote' => SafeHtml::clean((string) ($row['quote'] ?? '')),
+                    ];
+                }, $rows))
+                : [];
         }
 
         return $payload;

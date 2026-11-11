@@ -69,6 +69,8 @@ trait ManagesOwnResume
             'items' => $items,
             'sections' => $profile['sections'],
             'profilePreview' => [
+                'id' => $profile['id'],
+                'uuid' => $profile['uuid'],
                 'fullName' => $profile['fullName'],
                 'headline' => $profile['headline'],
                 'bio' => $profile['bio'],

@@ -27,6 +27,7 @@ import {
 type CourseClassRow = {
     id: number;
     name: string;
+    description?: string | null;
     delivery_type_label: string;
     online_platform_label?: string | null;
     price: number | null;
@@ -312,6 +313,12 @@ export default function CourseShow({ course, structuredData }: Props) {
                                                             ? ` · ${row.online_platform_label}`
                                                             : ''}
                                                     </p>
+                                                    {row.description?.trim() ? (
+                                                        <SiteRichHtml
+                                                            html={row.description}
+                                                            className="mt-2 text-sm text-neutral-black/75"
+                                                        />
+                                                    ) : null}
                                                 </div>
                                                 {row.price !== null && row.price > 0 && (
                                                     <p className="shrink-0 rounded-xl bg-primary/8 px-3 py-2 text-sm font-extrabold text-primary">

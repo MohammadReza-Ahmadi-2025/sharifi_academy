@@ -1,6 +1,7 @@
 import { UserAvatarField } from '@/Components/Admin/Users/UserAvatarField';
 import { withAvatarPayload } from '@/Components/Admin/Users/user-form-submit';
 import { ProfileExtendedFields } from '@/Components/Profile/ProfileExtendedFields';
+import { SiteRichHtml } from '@/Components/Site/SiteRichHtml';
 import { useFileUploadState } from '@/Components/shared/FileUploader';
 import { extendedToFormDefaults, type LocationOptions, type ProfileExtendedData } from '@/types/profile-extended';
 import { useForm } from '@inertiajs/react';
@@ -82,7 +83,7 @@ export function ResumeProfileEditor({ profile, locations }: Props) {
                             {(profile.name || '؟').slice(0, 1)}
                         </div>
                     )}
-                    <div className="min-w-0 text-sm">
+                    <div className="min-w-0 flex-1 text-sm">
                         <p className="font-semibold text-slate-900">
                             {[profile.name, profile.family].filter(Boolean).join(' ')}
                         </p>
@@ -91,6 +92,12 @@ export function ResumeProfileEditor({ profile, locations }: Props) {
                         ) : (
                             <p className="mt-0.5 text-slate-400">تیتر حرفه‌ای ثبت نشده</p>
                         )}
+                        {profile.extended.bio ? (
+                            <SiteRichHtml
+                                html={profile.extended.bio}
+                                className="mt-2 text-slate-600"
+                            />
+                        ) : null}
                     </div>
                 </div>
             ) : (

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Profile;
 
+use App\Modules\Profile\Console\BackfillProfileUuidsCommand;
 use App\Modules\Profile\Models\Resume;
 use App\Modules\Profile\Policies\ResumePolicy;
 use Illuminate\Support\Facades\Gate;
@@ -13,5 +14,11 @@ class ProfileServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/Database/Migrations');
         Gate::policy(Resume::class, ResumePolicy::class);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                BackfillProfileUuidsCommand::class,
+            ]);
+        }
     }
 }

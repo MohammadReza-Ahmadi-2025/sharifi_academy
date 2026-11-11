@@ -5,6 +5,7 @@ namespace App\Modules\Profile\Http\Controllers\Site;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Profile\Support\InstructorPublicResumePresenter;
+use App\Modules\Profile\Support\InstructorPublicUuid;
 use App\Modules\Profile\Support\InstructorSeo;
 use App\Modules\Profile\Support\ResumeModeration;
 use Illuminate\Http\JsonResponse;
@@ -13,9 +14,9 @@ use Inertia\Response;
 
 class InstructorResumeController extends Controller
 {
-    public function showPage(User $user): Response
+    public function showPage(string $instructor): Response
     {
-        abort_unless(self::isPublicInstructor($user), 404);
+        $user = $this->resolvePublicInstructor($instructor);
 
         $profile = $this->loadPublicProfile($user);
         $appName = (string) config('app.name');
@@ -32,9 +33,9 @@ class InstructorResumeController extends Controller
         ]);
     }
 
-    public function show(User $user): JsonResponse
+    public function show(string $instructor): JsonResponse
     {
-        abort_unless(self::isPublicInstructor($user), 404);
+        $user = $this->resolvePublicInstructor($instructor);
 
         return response()->json($this->loadPublicProfile($user));
     }
@@ -54,6 +55,14 @@ class InstructorResumeController extends Controller
         ]);
 
         return InstructorPublicResumePresenter::forUser($user);
+    }
+
+    private function resolvePublicInstructor(string $instructor): User
+    {
+        $user = InstructorPublicUuid::findUserByPublicUuid($instructor);
+        abort_unless($user instanceof User && self::isPublicInstructor($user), 404);
+
+        return $user;
     }
 
     public static function isPublicInstructor(User $user): bool

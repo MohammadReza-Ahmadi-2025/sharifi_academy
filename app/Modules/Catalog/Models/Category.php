@@ -2,6 +2,7 @@
 
 namespace App\Modules\Catalog\Models;
 
+use App\Casts\PurifiedHtml;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Files\Models\File;
@@ -82,6 +83,7 @@ class Category extends Model
     protected function casts(): array
     {
         return [
+            'description' => PurifiedHtml::class,
             'meta_keywords' => 'array',
             'show_in_menu' => 'boolean',
             'status' => 'boolean',

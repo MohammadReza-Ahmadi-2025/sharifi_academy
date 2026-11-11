@@ -1,3 +1,4 @@
+import { SiteRichHtml } from '@/Components/Site/SiteRichHtml';
 import { Link } from '@inertiajs/react';
 
 export type ProductCatalogCard = {
@@ -74,13 +75,12 @@ export function ProductCatalogGrid({ products, variant = 'default' }: Props) {
                             {product.title}
                         </h3>
                         {product.description && (
-                            <p
-                                className={`mt-2 line-clamp-2 text-neutral-black/65 ${
+                            <SiteRichHtml
+                                html={product.description}
+                                className={`site-rich-html--card-preview mt-2 text-neutral-black/65 ${
                                     variant === 'category' ? 'text-sm sm:text-[15px]' : 'text-sm'
                                 }`}
-                            >
-                                {product.description}
-                            </p>
+                            />
                         )}
                         {typeof product.price === 'number' && product.price > 0 && (
                             <p

@@ -67,6 +67,7 @@ export default function CommentsEdit({ comment, statusOptions }: Props) {
                     </FormField>
                     <FormField label="متن" required error={form.errors.body}>
                         <Textarea
+                            plain
                             rows={6}
                             value={form.data.body}
                             disabled={form.processing}

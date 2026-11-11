@@ -2,6 +2,7 @@
 
 namespace App\Modules\Courses\Models;
 
+use App\Casts\PurifiedHtml;
 use App\Models\User;
 use App\Modules\AdobeConnect\Models\AdobeRecording;
 use App\Modules\AdobeConnect\Models\AdobeRoom;
@@ -90,6 +91,7 @@ class CourseClass extends Model
             'status' => CourseClassStatus::class,
             'delivery_type' => CourseClassDeliveryType::class,
             'online_platform' => CourseClassOnlinePlatform::class,
+            'description' => PurifiedHtml::class,
             'capacity' => 'integer',
             'price' => 'integer',
             'registration_starts_at' => 'datetime',

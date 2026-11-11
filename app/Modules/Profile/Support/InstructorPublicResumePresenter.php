@@ -5,6 +5,7 @@ namespace App\Modules\Profile\Support;
 use App\Models\User;
 use App\Modules\Profile\Models\Resume;
 use App\Modules\Users\Support\UserAvatarMedia;
+use App\Support\SafeHtml;
 
 final class InstructorPublicResumePresenter
 {
@@ -53,13 +54,16 @@ final class InstructorPublicResumePresenter
                 ->all();
         }
 
+        $uuid = InstructorPublicUuid::routeKey($user);
+
         return [
             'id' => $user->id,
+            'uuid' => $uuid,
             'fullName' => $fullName,
             'headline' => $user->profile?->headline,
-            'bio' => $user->profile?->bio,
+            'bio' => SafeHtml::nullable($user->profile?->bio),
             'avatar' => UserAvatarMedia::payload($user),
-            'profile_url' => route('instructors.show', $user),
+            'profile_url' => route('instructors.show', ['instructor' => $uuid]),
             'sections' => $sections,
             'skills' => $skills,
         ];

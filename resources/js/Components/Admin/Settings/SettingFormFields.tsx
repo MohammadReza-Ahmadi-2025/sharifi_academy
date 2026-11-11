@@ -26,6 +26,7 @@ export function SettingFormFields({
         return (
             <FormField label="مقدار" error={errors.value}>
                 <Textarea
+                    plain
                     rows={5}
                     value={typeof data.value === 'string' ? data.value : ''}
                     disabled={processing}

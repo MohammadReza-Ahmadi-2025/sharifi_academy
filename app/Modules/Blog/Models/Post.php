@@ -2,6 +2,7 @@
 
 namespace App\Modules\Blog\Models;
 
+use App\Casts\PurifiedHtml;
 use App\Models\User;
 use App\Modules\Blog\Enums\PostStatus;
 use App\Modules\Catalog\Models\Category;
@@ -78,6 +79,8 @@ class Post extends Model
     protected function casts(): array
     {
         return [
+            'excerpt' => PurifiedHtml::class,
+            'content' => PurifiedHtml::class,
             'published_at' => 'datetime',
             'meta_keywords' => 'array',
             'views' => 'integer',

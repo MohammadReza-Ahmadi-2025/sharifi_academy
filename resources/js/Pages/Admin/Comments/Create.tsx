@@ -97,6 +97,7 @@ export default function CommentsCreate({ statusOptions }: Props) {
                     </div>
                     <FormField label="متن نظر" required error={form.errors.body}>
                         <Textarea
+                            plain
                             rows={5}
                             value={form.data.body}
                             disabled={form.processing}

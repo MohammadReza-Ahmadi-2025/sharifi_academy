@@ -2,6 +2,7 @@
 
 namespace App\Modules\Catalog\Models;
 
+use App\Casts\PurifiedHtml;
 use App\Models\User;
 use App\Modules\Catalog\Enums\VariantDisplayMode;
 use App\Modules\Comments\Models\Comment;
@@ -91,6 +92,9 @@ class Product extends Model
         return [
             'status' => 'boolean',
             'is_visible' => 'boolean',
+            'short_description' => PurifiedHtml::class,
+            'description' => PurifiedHtml::class,
+            'features' => PurifiedHtml::class,
             'meta_keywords' => 'array',
             'sort' => 'integer',
             'sales_count' => 'integer',

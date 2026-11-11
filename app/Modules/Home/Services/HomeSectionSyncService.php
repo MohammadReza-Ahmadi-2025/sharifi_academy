@@ -4,6 +4,7 @@ namespace App\Modules\Home\Services;
 
 use App\Models\User;
 use App\Modules\Blog\Models\Post;
+use App\Support\SafeHtml;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Product;
@@ -159,7 +160,7 @@ class HomeSectionSyncService
                 return [
                     'name' => trim((string) ($row['name'] ?? '')),
                     'role' => trim((string) ($row['role'] ?? '')),
-                    'quote' => trim((string) ($row['quote'] ?? '')),
+                    'quote' => SafeHtml::clean((string) ($row['quote'] ?? '')),
                     'rating' => $rating,
                 ];
             }, $settings['testimonials']));

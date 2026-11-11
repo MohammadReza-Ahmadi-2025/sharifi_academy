@@ -10,6 +10,7 @@ use App\Modules\Courses\Enums\CourseLevel;
 use App\Modules\Courses\Enums\CourseStatus;
 use App\Modules\Files\Models\File;
 use App\Modules\Visits\Concerns\HasVisits;
+use App\Casts\PurifiedHtml;
 use App\Support\Concerns\ResolvesSeoSlugRouteBinding;
 use App\Support\SeoSlug;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -101,6 +102,7 @@ class Course extends Model
         return [
             'status' => CourseStatus::class,
             'level' => CourseLevel::class,
+            'description' => PurifiedHtml::class,
             'duration_minutes' => 'integer',
             'is_featured' => 'boolean',
             'display_order' => 'integer',

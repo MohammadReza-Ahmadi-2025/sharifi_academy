@@ -2,6 +2,7 @@
 
 namespace App\Modules\Courses\Models;
 
+use App\Casts\PurifiedHtml;
 use App\Models\User;
 use App\Modules\AdobeConnect\Models\AdobeRecording;
 use App\Modules\AdobeConnect\Models\AdobeRoom;
@@ -61,6 +62,7 @@ class ClassSession extends Model
         return [
             'session_number' => 'integer',
             'status' => ClassSessionStatus::class,
+            'description' => PurifiedHtml::class,
             'scheduled_start_at' => 'datetime',
             'scheduled_end_at' => 'datetime',
             'actual_start_at' => 'datetime',

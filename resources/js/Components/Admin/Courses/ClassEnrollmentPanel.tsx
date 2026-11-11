@@ -175,6 +175,7 @@ export function ClassEnrollmentPanel({
                         </FormField>
                         <FormField label="یادداشت ادمین" className="md:col-span-2" error={form.errors.admin_note}>
                             <Textarea
+                                plain
                                 rows={2}
                                 disabled={form.processing}
                                 value={form.data.admin_note}

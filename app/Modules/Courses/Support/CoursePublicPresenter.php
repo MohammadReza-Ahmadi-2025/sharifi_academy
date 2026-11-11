@@ -79,6 +79,7 @@ class CoursePublicPresenter
                 return [
                     'id' => $class->id,
                     'name' => $class->name,
+                    'description' => $class->description,
                     'delivery_type_label' => $class->delivery_type_label,
                     'online_platform_label' => $showOnlinePlatform
                         ? ($class->online_platform?->label() ?? CourseClassOnlinePlatform::AdobeConnect->label())

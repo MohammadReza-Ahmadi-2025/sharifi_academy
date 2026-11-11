@@ -10,6 +10,7 @@ use App\Modules\Blog\Support\PanelBlogEnumOptions;
 use App\Modules\Blog\Support\PostPresenter;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Files\Http\Concerns\SyncsMorphFilesFromRequest;
+use App\Support\SafeHtml;
 use App\Support\SeoSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -202,9 +203,11 @@ trait ManagesPanelBlogPosts
         $escaped = e($trimmed);
         $blocks = preg_split("/\R{2,}/", $escaped) ?: [$escaped];
 
-        return collect($blocks)
+        $html = collect($blocks)
             ->map(fn (string $block) => '<p>'.nl2br(trim($block), false).'</p>')
             ->implode('');
+
+        return SafeHtml::clean($html);
     }
 
     private function plainTextFromStoredContent(string $html): string

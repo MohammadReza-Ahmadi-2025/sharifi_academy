@@ -3,6 +3,7 @@
 namespace App\Modules\Profile\Support;
 
 use App\Models\User;
+use App\Support\SafeHtml;
 
 class UserProfileSync
 {
@@ -15,7 +16,9 @@ class UserProfileSync
             ['user_id' => $user->id],
             [
                 'headline' => $validated['headline'] ?? null,
-                'bio' => $validated['bio'] ?? null,
+                'bio' => SafeHtml::nullable(
+                    isset($validated['bio']) ? (string) $validated['bio'] : null,
+                ),
                 'birth_date' => $validated['birth_date'] ?? null,
                 'national_code' => $validated['national_code'] ?? null,
                 'province_city_id' => $validated['province_city_id'] ?? null,

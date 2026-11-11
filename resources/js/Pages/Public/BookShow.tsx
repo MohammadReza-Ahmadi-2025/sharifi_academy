@@ -1,6 +1,7 @@
 import { SiteCatalogSeoHead, type CatalogSeo } from '@/Components/Site/SiteCatalogSeoHead';
 import { SiteDefaultHead } from '@/Components/Site/SiteDefaultHead';
 import { SitePublicBreadcrumb } from '@/Components/Site/SitePublicBreadcrumb';
+import { SiteRichHtml } from '@/Components/Site/SiteRichHtml';
 import AppLayout from '@/Layouts/AppLayout';
 import { Link } from '@inertiajs/react';
 
@@ -10,6 +11,7 @@ type ProductPayload = {
     slug: string;
     short_description?: string | null;
     description?: string | null;
+    features?: string | null;
     sku?: string | null;
     brand?: { id: number; title: string; slug: string; url: string } | null;
     categories: { id: number; title: string; slug: string }[];
@@ -77,9 +79,10 @@ export default function BookShow({ product, structuredData }: Props) {
                             </h1>
 
                             {product.short_description ? (
-                                <p className="mt-4 text-base leading-relaxed text-neutral-black/75">
-                                    {product.short_description}
-                                </p>
+                                <SiteRichHtml
+                                    html={product.short_description}
+                                    className="mt-4 text-base leading-relaxed text-neutral-black/75"
+                                />
                             ) : null}
 
                             <div className="mt-6 flex flex-wrap items-end gap-3">
@@ -120,7 +123,14 @@ export default function BookShow({ product, structuredData }: Props) {
 
                     {product.description?.trim() ? (
                         <section className="prose prose-slate mt-10 max-w-none" aria-label="توضیحات محصول">
-                            <div dangerouslySetInnerHTML={{ __html: product.description }} />
+                            <SiteRichHtml html={product.description} />
+                        </section>
+                    ) : null}
+
+                    {product.features?.trim() ? (
+                        <section className="prose prose-slate mt-8 max-w-none" aria-label="ویژگی‌های محصول">
+                            <h2 className="mb-3 text-lg font-bold text-neutral-black">ویژگی‌ها</h2>
+                            <SiteRichHtml html={product.features} />
                         </section>
                     ) : null}
                 </div>

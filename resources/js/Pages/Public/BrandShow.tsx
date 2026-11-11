@@ -2,6 +2,7 @@ import { ProductCatalogGrid, type ProductCatalogCard } from '@/Components/Catalo
 import { SiteCatalogSeoHead, type CatalogSeo } from '@/Components/Site/SiteCatalogSeoHead';
 import { SiteDefaultHead } from '@/Components/Site/SiteDefaultHead';
 import { SitePublicBreadcrumb } from '@/Components/Site/SitePublicBreadcrumb';
+import { SiteRichHtml } from '@/Components/Site/SiteRichHtml';
 import AppLayout from '@/Layouts/AppLayout';
 
 type Props = {
@@ -45,9 +46,10 @@ export default function BrandShow({ brand, products, structuredData }: Props) {
                         />
                         <h1 className="text-2xl font-bold text-neutral-black md:text-3xl">{brand.title}</h1>
                         {brand.description ? (
-                            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-black/60 md:text-base">
-                                {brand.description}
-                            </p>
+                            <SiteRichHtml
+                                html={brand.description}
+                                className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-black/60 md:text-base"
+                            />
                         ) : null}
                         {brand.website ? (
                             <a
