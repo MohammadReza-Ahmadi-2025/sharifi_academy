@@ -9,19 +9,42 @@ type NavLink = {
     match?: (path: string) => boolean;
 };
 
-const links: NavLink[] = [
-    { href: '/profile', label: 'پروفایل من', match: (p) => p.startsWith('/profile') },
-    { href: '/student/dashboard', label: 'پنل دانشجو', match: (p) => p.startsWith('/student') },
-];
-
 type Props = PropsWithChildren<{
     title: string;
     description?: string;
 }>;
 
 export default function AccountLayout({ title, description, children }: Props) {
-    const { url } = usePage<PageProps>().props;
+    const { url, auth } = usePage<PageProps>().props;
     const pathname = url.replace(/^https?:\/\/[^/]+/, '');
+
+    const panels = auth.account?.panels?.length
+        ? auth.account.panels
+        : auth.account?.panel
+          ? [auth.account.panel]
+          : [];
+
+    const links: NavLink[] = [
+        { href: '/profile', label: 'پروفایل من', match: (p) => p.startsWith('/profile') },
+        ...panels.map((panel) => ({
+            href: panel.url,
+            label: panel.label.replace(/^ورود به\s+/, ''),
+            match: (p: string) => {
+                const base = panel.url.split('?')[0];
+                if (base === '/admin') {
+                    return p.startsWith('/admin');
+                }
+                if (base.startsWith('/instructor')) {
+                    return p.startsWith('/instructor');
+                }
+                if (base.startsWith('/student')) {
+                    return p.startsWith('/student');
+                }
+
+                return p === base || p.startsWith(`${base}/`);
+            },
+        })),
+    ];
 
     return (
         <AppLayout>

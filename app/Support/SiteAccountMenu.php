@@ -91,7 +91,7 @@ class SiteAccountMenu
 
         $first = $user->getRoleNames()->first();
 
-        return $first !== null ? (string) $first : 'student';
+        return $first !== null ? (string) $first : 'user';
     }
 
     private static function canAccessPanel(User $user, string $role): bool

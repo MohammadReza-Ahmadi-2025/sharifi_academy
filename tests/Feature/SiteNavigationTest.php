@@ -156,4 +156,23 @@ class SiteNavigationTest extends TestCase
                 ->where('auth.account.panels.1.label', 'ورود به پنل دانشجو')
             );
     }
+
+    public function test_new_user_without_roles_does_not_see_student_panel(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $user = User::factory()->create(['name' => 'کاربر', 'family' => 'جدید']);
+
+        $this->assertFalse($user->hasRole('student'));
+
+        $this->actingAs($user)
+            ->get('/')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('auth.account.role_label', 'کاربر')
+                ->where('auth.account.role', 'user')
+                ->where('auth.account.panel', null)
+                ->has('auth.account.panels', 0)
+            );
+    }
 }

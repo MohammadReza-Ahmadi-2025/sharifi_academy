@@ -152,14 +152,27 @@ export function InertiaFlashToasts() {
 
         const onValidationError = (event: Event) => {
             const custom = event as CustomEvent<{ errors: Record<string, string | string[]> }>;
-            const values = Object.values(custom.detail?.errors ?? {}).flat();
-            const first = values.find((value) => typeof value === 'string' && value.length > 0);
+            const messages = Object.values(custom.detail?.errors ?? {})
+                .flat()
+                .map((value) => (typeof value === 'string' ? value.trim() : ''))
+                .filter((value) => value.length > 0);
 
-            if (first) {
-                toast.error(String(first));
-            } else {
+            if (messages.length === 0) {
                 toast.error('لطفاً خطاهای فرم را بررسی کنید.');
+
+                return;
             }
+
+            if (messages.length === 1) {
+                toast.error(messages[0]);
+
+                return;
+            }
+
+            toast.error({
+                title: `${messages.length.toLocaleString('fa-IR')} خطا در فرم`,
+                description: messages.map((message, index) => `${index + 1}. ${message}`).join('\n'),
+            });
         };
 
         const onHttpException = (event: Event) => {

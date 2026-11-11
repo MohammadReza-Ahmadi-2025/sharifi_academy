@@ -111,4 +111,31 @@ class SiteProfileTest extends TestCase
         $this->assertStringNotContainsString('<script', $bio);
         $this->assertStringNotContainsString('onclick', $bio);
     }
+
+    public function test_inertia_profile_validation_returns_session_errors_not_plain_json(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        config(['app.debug' => false]);
+
+        $student = User::where('mobile', '09120000003')->firstOrFail();
+
+        $response = $this->actingAs($student)
+            ->from('/profile')
+            ->withHeaders([
+                'X-Inertia' => 'true',
+                'X-Requested-With' => 'XMLHttpRequest',
+                'Accept' => 'text/html, application/xhtml+xml',
+            ])
+            ->put('/profile', [
+                'name' => '',
+                'family' => $student->family,
+                'mobile' => $student->mobile,
+                'email' => $student->email,
+                'gender' => $student->gender,
+            ]);
+
+        $response->assertRedirect('/profile');
+        $response->assertSessionHasErrors('name');
+        $this->assertNotSame(422, $response->status());
+    }
 }

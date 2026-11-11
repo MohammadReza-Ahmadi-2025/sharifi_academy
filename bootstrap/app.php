@@ -91,9 +91,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 return true;
             }
 
-            // در حالت debug، Inertia همان صفحهٔ خطای Laravel (Ignition) را در مودال نشان می‌دهد.
+            // درخواست‌های Inertia هرگز نباید JSON خام بگیرند؛
+            // وگرنه ValidationException به جای redirect+errors، 422 JSON می‌دهد
+            // و کلاینت پیام «All Inertia requests must receive a valid Inertia response» نشان می‌دهد.
             if ($request->header('X-Inertia')) {
-                return ! config('app.debug');
+                return false;
             }
 
             return $request->expectsJson();
