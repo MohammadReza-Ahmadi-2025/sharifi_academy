@@ -3,6 +3,8 @@
 namespace App\Modules\Courses\Services;
 
 use App\Modules\Catalog\Models\Category;
+use App\Modules\Catalog\Support\CategoryBrowsePriceFilter;
+use App\Modules\Courses\Enums\CourseClassDeliveryType;
 use App\Modules\Courses\Enums\CourseLevel;
 use App\Modules\Courses\Enums\CourseStatus;
 use App\Modules\Courses\Models\Course;
@@ -40,12 +42,19 @@ class CourseCategoryBrowseService
         $featured = $request->query('featured');
         $featuredOnly = $featured === '1' || $featured === 'true';
 
+        $delivery = trim((string) $request->query('delivery', ''));
+        if (! in_array($delivery, ['online', 'in_person'], true)) {
+            $delivery = '';
+        }
+
         return [
             'q' => trim((string) $request->query('q', '')),
             'level' => $level,
             'featured' => $featuredOnly,
+            'delivery' => $delivery,
             'sort' => $sort,
             'per_page' => $this->perPage($request),
+            ...CategoryBrowsePriceFilter::stateFromRequest($request),
         ];
     }
 
@@ -95,6 +104,41 @@ class CourseCategoryBrowseService
 
         if (($filters['featured'] ?? false) === true) {
             $query->where('courses.is_featured', true);
+        }
+
+        $delivery = (string) ($filters['delivery'] ?? '');
+        if ($delivery === 'online') {
+            $query->whereHas(
+                'courseClasses',
+                fn (Builder $classes) => $classes
+                    ->where('is_public', true)
+                    ->whereIn('delivery_type', [
+                        CourseClassDeliveryType::Online,
+                        CourseClassDeliveryType::Hybrid,
+                    ]),
+            );
+        } elseif ($delivery === 'in_person') {
+            $query->whereHas(
+                'courseClasses',
+                fn (Builder $classes) => $classes
+                    ->where('is_public', true)
+                    ->whereIn('delivery_type', [
+                        CourseClassDeliveryType::InPerson,
+                        CourseClassDeliveryType::Hybrid,
+                    ]),
+            );
+        }
+
+        $priceMin = $filters['price_min'] ?? null;
+        $priceMax = $filters['price_max'] ?? null;
+        if ($priceMin !== null || $priceMax !== null) {
+            $minPriceSql = '(SELECT MIN(cc.price) FROM course_classes cc WHERE cc.course_id = courses.id AND cc.is_public = 1 AND cc.deleted_at IS NULL)';
+            if ($priceMin !== null) {
+                $query->whereRaw("COALESCE({$minPriceSql}, 0) >= ?", [$priceMin]);
+            }
+            if ($priceMax !== null) {
+                $query->whereRaw("COALESCE({$minPriceSql}, 0) <= ?", [$priceMax]);
+            }
         }
     }
 
@@ -147,6 +191,43 @@ class CourseCategoryBrowseService
             ['value' => self::SORT_PRICE_ASC, 'label' => 'ارزان‌ترین'],
             ['value' => self::SORT_PRICE_DESC, 'label' => 'گران‌ترین'],
         ];
+    }
+
+    /**
+     * @return array<int, array{value: string, label: string}>
+     */
+    public function deliveryOptions(): array
+    {
+        return [
+            ['value' => 'online', 'label' => 'آنلاین'],
+            ['value' => 'in_person', 'label' => 'حضوری (آفلاین)'],
+        ];
+    }
+
+    /**
+     * @return array{min: int, max: int}
+     */
+    public function priceBoundsInCategory(Category $category): array
+    {
+        $sub = '(SELECT MIN(cc.price) FROM course_classes cc WHERE cc.course_id = courses.id AND cc.is_public = 1 AND cc.deleted_at IS NULL)';
+
+        // Aggregate via Course query (not BelongsToMany) so pivot columns are not selected under ONLY_FULL_GROUP_BY.
+        $row = Course::query()
+            ->where('courses.status', CourseStatus::Published)
+            ->whereNull('courses.deleted_at')
+            ->whereHas('categories', fn (Builder $categories) => $categories->whereKey($category->id))
+            ->toBase()
+            ->selectRaw("MIN({$sub}) as price_min, MAX({$sub}) as price_max")
+            ->first();
+
+        $min = (int) ($row?->price_min ?? 0);
+        $max = (int) ($row?->price_max ?? 0);
+
+        if ($max < $min) {
+            $max = $min;
+        }
+
+        return ['min' => max(0, $min), 'max' => max(0, $max)];
     }
 
     private function perPage(Request $request): int

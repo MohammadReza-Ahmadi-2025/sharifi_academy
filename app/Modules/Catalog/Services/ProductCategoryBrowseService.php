@@ -2,6 +2,7 @@
 
 namespace App\Modules\Catalog\Services;
 
+use App\Modules\Catalog\Support\CategoryBrowsePriceFilter;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Product;
@@ -37,6 +38,7 @@ class ProductCategoryBrowseService
             'brand' => trim((string) $request->query('brand', '')),
             'sort' => $sort,
             'per_page' => $this->perPage($request),
+            ...CategoryBrowsePriceFilter::stateFromRequest($request),
         ];
     }
 
@@ -98,6 +100,15 @@ class ProductCategoryBrowseService
         if ($brandSlug !== '') {
             $query->whereHas('brand', fn (Builder $brandQuery) => $brandQuery->where('slug', $brandSlug));
         }
+
+        $priceMin = $filters['price_min'] ?? null;
+        $priceMax = $filters['price_max'] ?? null;
+        if ($priceMin !== null) {
+            $query->where('products.min_effective_price', '>=', $priceMin);
+        }
+        if ($priceMax !== null) {
+            $query->where('products.min_effective_price', '<=', $priceMax);
+        }
     }
 
     /**
@@ -137,6 +148,31 @@ class ProductCategoryBrowseService
             ['value' => self::SORT_PRICE_ASC, 'label' => 'ارزان‌ترین'],
             ['value' => self::SORT_PRICE_DESC, 'label' => 'گران‌ترین'],
         ];
+    }
+
+    /**
+     * @return array{min: int, max: int}
+     */
+    public function priceBoundsInCategory(Category $category): array
+    {
+        // Aggregate via Product query (not BelongsToMany) so pivot columns are not selected under ONLY_FULL_GROUP_BY.
+        $row = Product::query()
+            ->active()
+            ->visible()
+            ->whereNull('products.deleted_at')
+            ->whereHas('categories', fn (Builder $categories) => $categories->whereKey($category->id))
+            ->toBase()
+            ->selectRaw('MIN(products.min_effective_price) as price_min, MAX(products.min_effective_price) as price_max')
+            ->first();
+
+        $min = (int) ($row?->price_min ?? 0);
+        $max = (int) ($row?->price_max ?? 0);
+
+        if ($max < $min) {
+            $max = $min;
+        }
+
+        return ['min' => max(0, $min), 'max' => max(0, $max)];
     }
 
     private function perPage(Request $request): int

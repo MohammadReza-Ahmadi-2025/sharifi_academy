@@ -13,7 +13,7 @@ final class SiteSearchUrls
 {
     public static function course(Course $course): string
     {
-        return '/courses/'.$course->publicSlug();
+        return '/courses/'.$course->getKey().'/'.$course->publicSlug();
     }
 
     public static function product(Product $product): string
@@ -23,7 +23,7 @@ final class SiteSearchUrls
 
     public static function post(Post $post): string
     {
-        return '/blog/'.$post->publicSlug();
+        return '/blog/'.$post->getKey().'/'.$post->publicSlug();
     }
 
     public static function brand(Brand $brand): string

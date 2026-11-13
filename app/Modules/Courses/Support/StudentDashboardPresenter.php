@@ -50,7 +50,9 @@ final class StudentDashboardPresenter
                 'id' => (int) ($course?->id ?? 0),
                 'title' => (string) ($course?->title ?? 'دوره'),
                 'slug' => $course !== null ? $course->publicSlug() : '',
-                'public_url' => $course !== null ? route('courses.show', $course) : null,
+                'public_url' => $course !== null
+                    ? route('courses.show', ['course' => $course->id, 'slug' => $course->publicSlug()])
+                    : null,
             ],
             'class_name' => (string) ($courseClass?->name ?? ''),
             'class_code' => (string) ($courseClass?->code ?? ''),

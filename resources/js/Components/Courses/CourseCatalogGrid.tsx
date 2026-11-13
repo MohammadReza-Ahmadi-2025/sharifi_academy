@@ -1,3 +1,4 @@
+import { coursePath } from '@/lib/public-entity-urls';
 import { Link } from '@inertiajs/react';
 
 export type CourseCatalogCard = {
@@ -40,7 +41,7 @@ export function CourseCatalogGrid({ courses, variant = 'default' }: Props) {
             {courses.map((course) => (
                 <Link
                     key={course.id}
-                    href={`/courses/${course.slug}`}
+                    href={coursePath(course.id, course.slug)}
                     className={cardClass}
                 >
                     <div

@@ -64,27 +64,35 @@ class BlogCategoryBrowseService
     }
 
     /**
-     * @return list<array{id: int, title: string, slug: string, items_count: int}>
+     * @return list<array{id: int, title: string, slug: string, items_count: int, image_url: string|null}>
      */
     public function subcategories(Category $category): array
     {
         $category->load([
             'image',
             'activeChildren' => function ($query) {
-                $query->where('type', Category::TYPE_BLOG)->withCount([
-                    'posts as items_count' => fn ($postQuery) => $postQuery->published(),
-                ]);
+                $query->where('type', Category::TYPE_BLOG)
+                    ->with('image')
+                    ->withCount([
+                        'posts as items_count' => fn ($postQuery) => $postQuery->published(),
+                    ]);
             },
         ]);
 
         return $category->activeChildren
-            ->filter(fn (Category $child) => (int) $child->items_count > 0)
-            ->map(fn (Category $child) => [
-                'id' => $child->id,
-                'title' => $child->title,
-                'slug' => $child->publicSlug(),
-                'items_count' => (int) $child->items_count,
-            ])
+            ->map(function (Category $child) {
+                $imageUrl = $child->relationLoaded('image') && $child->image
+                    ? $child->image->publicUrl()
+                    : null;
+
+                return [
+                    'id' => $child->id,
+                    'title' => $child->title,
+                    'slug' => $child->publicSlug(),
+                    'items_count' => (int) ($child->items_count ?? 0),
+                    'image_url' => $imageUrl !== '' && $imageUrl !== null ? $imageUrl : null,
+                ];
+            })
             ->values()
             ->all();
     }

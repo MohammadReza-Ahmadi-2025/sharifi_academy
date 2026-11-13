@@ -18,6 +18,7 @@ class SyncAdobeConnectEnrollmentService
         private readonly AdobeConnectConfig $config,
         private readonly EnsureAdobeConnectPrincipalService $principals,
         private readonly GrantAdobeMeetingAccessService $meetingAccess,
+        private readonly AdobeConnectApi $api,
     ) {}
 
     public function sync(Enrollment $enrollment): AdobeEnrollmentSyncResult
@@ -40,15 +41,14 @@ class SyncAdobeConnectEnrollmentService
 
         $credentials = AdobeConnectUserCredentials::forUser($user);
         if ($credentials === null) {
-            return AdobeEnrollmentSyncResult::skipped('');
+            return AdobeEnrollmentSyncResult::failed(
+                (string) ($user->mobile ?: $user->id),
+                'شماره موبایل معتبر برای login ادوب لازم است.',
+            );
         }
 
         try {
             [$principalId, $created] = $this->principals->ensure($user, $credentials);
-            if ($principalId === null) {
-                return AdobeEnrollmentSyncResult::failed($credentials->login);
-            }
-
             $this->meetingAccess->grantForClass($courseClass, $principalId, 'view');
 
             return $created
@@ -61,7 +61,52 @@ class SyncAdobeConnectEnrollmentService
                 'message' => $exception->getMessage(),
             ]);
 
-            return AdobeEnrollmentSyncResult::failed($credentials->login);
+            return AdobeEnrollmentSyncResult::failed($credentials->login, $exception->getMessage());
+        }
+    }
+
+    public function revoke(Enrollment $enrollment): AdobeEnrollmentSyncResult
+    {
+        if (! $this->config->isApiConfigured()) {
+            return AdobeEnrollmentSyncResult::skipped('');
+        }
+
+        $enrollment->loadMissing(['user', 'courseClass']);
+        $user = $enrollment->user;
+        $courseClass = $enrollment->courseClass;
+
+        if ($user === null || $courseClass === null || ! $courseClass->usesAdobeConnect()) {
+            return AdobeEnrollmentSyncResult::skipped('');
+        }
+
+        $credentials = AdobeConnectUserCredentials::forUser($user);
+        $login = $credentials?->login ?? (string) ($user->mobile ?: $user->id);
+        $principalId = trim((string) ($user->adobe_connect_principal_id ?? ''));
+
+        if ($principalId === '' && $credentials !== null) {
+            try {
+                $principalId = (string) ($this->api->findPrincipalIdByLogin($credentials->login) ?? '');
+            } catch (Throwable) {
+                return AdobeEnrollmentSyncResult::skipped('');
+            }
+        }
+
+        if ($principalId === '') {
+            return AdobeEnrollmentSyncResult::skipped('');
+        }
+
+        try {
+            $this->meetingAccess->revokeForClass($courseClass, $principalId);
+
+            return AdobeEnrollmentSyncResult::revoked($login);
+        } catch (Throwable $exception) {
+            Log::warning('Adobe Connect enrollment revoke failed', [
+                'enrollment_id' => $enrollment->id,
+                'user_id' => $user->id,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return AdobeEnrollmentSyncResult::revokeFailed($login, $exception->getMessage());
         }
     }
 

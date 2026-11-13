@@ -75,6 +75,8 @@ class CategoryBrowseService
                 'levels' => $this->courseBrowse->levelOptions(),
                 'sorts' => $this->courseBrowse->sortOptions(),
                 'brands' => [],
+                'delivery_types' => $this->courseBrowse->deliveryOptions(),
+                'price_bounds' => $this->courseBrowse->priceBoundsInCategory($category),
             ],
             'subcategories' => $this->mapSubcategories($category),
         ];
@@ -114,6 +116,8 @@ class CategoryBrowseService
                 'levels' => [],
                 'sorts' => $this->productBrowse->sortOptions(),
                 'brands' => $brands,
+                'delivery_types' => [],
+                'price_bounds' => $this->productBrowse->priceBoundsInCategory($category),
             ],
             'subcategories' => $this->mapSubcategories($category),
         ];
@@ -124,7 +128,7 @@ class CategoryBrowseService
         $category->load([
             'image',
             'activeChildren' => function ($query) use ($type, $relation) {
-                $query->where('type', $type);
+                $query->where('type', $type)->with('image');
 
                 if ($relation === 'courses') {
                     $query->withCount([
@@ -175,18 +179,24 @@ class CategoryBrowseService
     }
 
     /**
-     * @return list<array{id: int, title: string, slug: string, items_count: int}>
+     * @return list<array{id: int, title: string, slug: string, items_count: int, image_url: string|null}>
      */
     private function mapSubcategories(Category $category): array
     {
         return $category->activeChildren
-            ->filter(fn (Category $child) => (int) $child->items_count > 0)
-            ->map(fn (Category $child) => [
-                'id' => $child->id,
-                'title' => $child->title,
-                'slug' => $child->publicSlug(),
-                'items_count' => (int) $child->items_count,
-            ])
+            ->map(function (Category $child) {
+                $imageUrl = $child->relationLoaded('image') && $child->image
+                    ? $child->image->publicUrl()
+                    : null;
+
+                return [
+                    'id' => $child->id,
+                    'title' => $child->title,
+                    'slug' => $child->publicSlug(),
+                    'items_count' => (int) ($child->items_count ?? 0),
+                    'image_url' => $imageUrl !== '' && $imageUrl !== null ? $imageUrl : null,
+                ];
+            })
             ->values()
             ->all();
     }

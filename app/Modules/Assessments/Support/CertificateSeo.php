@@ -3,6 +3,7 @@
 namespace App\Modules\Assessments\Support;
 
 use App\Modules\Assessments\Models\Certificate;
+use App\Support\Search\SiteSearchUrls;
 
 class CertificateSeo
 {
@@ -57,7 +58,7 @@ class CertificateSeo
             $data['about'] = [
                 '@type' => 'Course',
                 'name' => $certificate->course->title,
-                'url' => url('/courses/'.$certificate->course->publicSlug()),
+                'url' => url(SiteSearchUrls::course($certificate->course)),
             ];
         }
 

@@ -298,10 +298,15 @@ class CourseClassController extends Controller
                 $message .= " {$instructorTouched} استاد به عنوان host اتاق Adobe وصل شد.";
             }
             if ($instructorStats['failed'] > 0) {
-                $message .= " {$instructorStats['failed']} استاد در Adobe ساخته/وصل نشد.";
+                $message .= " {$instructorStats['failed']} استاد در Adobe host نشد.";
+                $firstError = $instructorStats['errors'][0] ?? null;
+                if (is_string($firstError) && $firstError !== '') {
+                    $message .= ' '.$firstError;
+                }
             }
         } catch (\Throwable $exception) {
             report($exception);
+            $message .= ' همگام‌سازی host اساتید با Adobe انجام نشد.';
         }
 
         return $message;

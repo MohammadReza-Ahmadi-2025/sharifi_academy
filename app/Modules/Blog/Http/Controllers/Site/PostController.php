@@ -7,7 +7,9 @@ use App\Modules\Blog\Models\Post;
 use App\Modules\Blog\Support\PostPublicPresenter;
 use App\Modules\Blog\Support\PostSeo;
 use App\Modules\Settings\Services\SiteSettingsService;
-use App\Support\Http\CanonicalSeoSlugRedirect;
+use App\Support\Http\CanonicalIdSlugRedirect;
+use App\Support\Search\SiteSearchUrls;
+use App\Support\SeoSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,31 +45,19 @@ class PostController extends Controller
         ]);
     }
 
-    public function show(Request $request, Post $post): Response|RedirectResponse
+    public function show(Request $request, Post $post, string $slug): Response|RedirectResponse
     {
         PostPublicPresenter::ensurePublished($post);
 
-        $redirect = CanonicalSeoSlugRedirect::awayIfMismatched(
+        $redirect = CanonicalIdSlugRedirect::awayIfSlugMismatched(
             $request,
             $post,
             'blog.show',
             'post',
-            2,
+            $slug,
         );
         if ($redirect !== null) {
             return $redirect;
-        }
-
-        $canonicalSlug = $post->publicSlug();
-        $requestedSlug = rawurldecode((string) $request->segment(2));
-        if ($requestedSlug !== '' && $requestedSlug !== $canonicalSlug) {
-            $url = route('blog.show', ['post' => $canonicalSlug]);
-            $query = $request->getQueryString();
-            if ($query !== null && $query !== '') {
-                $url .= '?'.$query;
-            }
-
-            return redirect()->to($url, 301);
         }
 
         $post->load(['featuredImage', 'categories', 'author']);
@@ -90,5 +80,15 @@ class PostController extends Controller
                 'webPage' => PostSeo::postWebPageJsonLd($payload['seo'], $appName),
             ],
         ]);
+    }
+
+    public function redirectLegacySlug(string $slug): RedirectResponse
+    {
+        $post = SeoSlug::resolveModel(Post::query(), $slug, 'slug');
+        abort_if($post === null, 404);
+
+        PostPublicPresenter::ensurePublished($post);
+
+        return redirect()->to(url(SiteSearchUrls::post($post)), 301);
     }
 }

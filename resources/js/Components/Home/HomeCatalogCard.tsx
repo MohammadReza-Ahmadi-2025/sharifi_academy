@@ -13,7 +13,12 @@ type Props = {
 };
 
 export function HomeCatalogCard({ item, hrefPrefix, showPrice, contentType, className }: Props) {
-    const href = item.slug ? `${hrefPrefix}${item.slug}` : hrefPrefix;
+    const usesIdSlug = contentType === 'course' || contentType === 'post';
+    const href = item.slug
+        ? usesIdSlug
+            ? `${hrefPrefix}${item.id}/${item.slug}`
+            : `${hrefPrefix}${item.slug}`
+        : hrefPrefix;
     const descriptionIsHtml =
         item.description_format === 'html' || contentType === 'post' || contentType === 'product';
     const hasDescription = Boolean(item.description?.trim());

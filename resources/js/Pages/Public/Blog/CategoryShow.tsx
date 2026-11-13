@@ -1,13 +1,17 @@
+import { BlogHero } from '@/Components/Blog/BlogHero';
 import { BlogPostListing } from '@/Components/Blog/BlogPostListing';
 import { SiteCatalogSeoHead, type CatalogSeo } from '@/Components/Site/SiteCatalogSeoHead';
 import { SiteDefaultHead } from '@/Components/Site/SiteDefaultHead';
-import { SitePublicBreadcrumb } from '@/Components/Site/SitePublicBreadcrumb';
-import { SiteRichHtml } from '@/Components/Site/SiteRichHtml';
 import AppLayout from '@/Layouts/AppLayout';
 import { Link, router } from '@inertiajs/react';
-import { FolderTree } from 'lucide-react';
 
-type Subcategory = { id: number; title: string; slug: string; items_count: number };
+type Subcategory = {
+    id: number;
+    title: string;
+    slug: string;
+    items_count: number;
+    image_url?: string | null;
+};
 
 type Props = {
     blog_list_label: string;
@@ -55,57 +59,39 @@ export default function BlogCategoryShow({
                 structuredData={[structuredData.breadcrumb, structuredData.webPage, structuredData.itemList]}
             />
 
-            <div className="home-page min-h-full">
-                <section className="border-b border-secondary/50 bg-gradient-to-b from-primary/[0.05] to-neutral-white">
-                    <div className="mx-auto max-w-[88rem] px-4 py-8 sm:px-6 md:py-10 lg:px-8">
-                        <SitePublicBreadcrumb
-                            className="mb-5"
-                            items={[
-                                { label: 'خانه', href: '/' },
-                                { label: blog_list_label, href: '/blog' },
-                                { label: category.title },
-                            ]}
-                        />
-                        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                            <div className="min-w-0 flex-1">
-                                <p className="mb-2 text-sm font-medium text-primary">
-                                    {posts.total.toLocaleString('fa-IR')} مقاله
-                                </p>
-                                <h1 className="text-2xl font-bold text-neutral-black md:text-3xl">{category.title}</h1>
-                                {category.description?.trim() ? (
-                                    <div className="mt-4 max-w-3xl text-sm leading-relaxed text-neutral-black/65 md:text-base">
-                                        <SiteRichHtml html={category.description} />
-                                    </div>
-                                ) : null}
-                            </div>
-                            {category.image_url ? (
-                                <div className="aspect-[16/10] w-full max-w-md shrink-0 overflow-hidden rounded-2xl border border-secondary/50 lg:w-80">
-                                    <img src={category.image_url} alt="" className="size-full object-cover" />
-                                </div>
-                            ) : null}
+            <div className="min-h-full">
+                <BlogHero
+                    title={category.title}
+                    breadcrumb={[
+                        { label: 'خانه', href: '/' },
+                        { label: blog_list_label, href: '/blog' },
+                        { label: category.title },
+                    ]}
+                    eyebrow={`${posts.total.toLocaleString('fa-IR')} مقاله`}
+                    descriptionHtml={category.description}
+                    imageUrl={category.image_url}
+                />
+
+                <section className="mx-auto max-w-6xl px-4 pb-14 sm:px-6 lg:px-8 lg:pb-16">
+                    {subcategories.length > 0 ? (
+                        <div className="mb-7 flex flex-wrap gap-2" aria-label="زیردسته‌ها">
+                            {subcategories.map((sub) => (
+                                <Link
+                                    key={sub.id}
+                                    href={`/blog/categories/${sub.slug}`}
+                                    className="inline-flex items-center gap-2 rounded-full border border-secondary/60 bg-surface-muted/40 px-3.5 py-2 text-sm font-semibold text-neutral-black/75 transition hover:border-primary/35 hover:text-primary"
+                                >
+                                    {sub.title}
+                                    <span className="text-[11px] font-bold text-primary">
+                                        {sub.items_count.toLocaleString('fa-IR')}
+                                    </span>
+                                </Link>
+                            ))}
                         </div>
+                    ) : null}
 
-                        {subcategories.length > 0 ? (
-                            <div className="mt-6 flex flex-wrap gap-2">
-                                {subcategories.map((sub) => (
-                                    <Link
-                                        key={sub.id}
-                                        href={`/blog/categories/${sub.slug}`}
-                                        className="inline-flex items-center gap-1.5 rounded-full border border-secondary/55 bg-neutral-white px-3 py-1.5 text-xs font-medium text-neutral-black/70 transition hover:border-primary/30 hover:text-primary"
-                                    >
-                                        <FolderTree className="size-3.5 text-primary/80" aria-hidden />
-                                        {sub.title}
-                                        <span className="text-neutral-black/40">({sub.items_count})</span>
-                                    </Link>
-                                ))}
-                            </div>
-                        ) : null}
-                    </div>
-                </section>
-
-                <section className="mx-auto max-w-[88rem] px-4 py-8 sm:px-6 md:py-10 lg:px-8">
                     <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                        <p className="text-sm text-neutral-black/55">مرتب‌سازی</p>
+                        <p className="text-sm font-semibold text-neutral-black/55">مقالات این دسته</p>
                         <select
                             value={filters.sort}
                             onChange={(e) => {
@@ -115,7 +101,7 @@ export default function BlogCategoryShow({
                                     { preserveState: true, preserveScroll: true },
                                 );
                             }}
-                            className="rounded-lg border border-secondary/60 bg-neutral-white px-3 py-2 text-sm text-neutral-black"
+                            className="rounded-lg border border-secondary/60 bg-neutral-white px-3 py-2 text-sm font-semibold text-neutral-black outline-none focus:border-primary"
                         >
                             {sortOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
@@ -125,7 +111,10 @@ export default function BlogCategoryShow({
                         </select>
                     </div>
 
-                    <BlogPostListing posts={posts} emptyMessage="در این دسته هنوز مقاله‌ای منتشر نشده است." />
+                    <BlogPostListing
+                        posts={posts}
+                        emptyMessage="در این دسته هنوز مقاله‌ای منتشر نشده است."
+                    />
                 </section>
             </div>
         </AppLayout>

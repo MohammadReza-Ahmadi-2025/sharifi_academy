@@ -43,7 +43,7 @@ class PublicBlogTest extends TestCase
             'published_at' => now()->subDay(),
         ]);
 
-        $this->get('/blog/'.$post->slug)
+        $this->get('/blog/'.$post->id.'/'.$post->slug)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Public/Blog/Show')
@@ -52,6 +52,38 @@ class PublicBlogTest extends TestCase
                 ->has('structuredData.breadcrumb')
                 ->has('structuredData.blogPosting')
             );
+    }
+
+    public function test_legacy_blog_slug_url_redirects_to_id_slug(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $post = Post::query()->create([
+            'author_id' => User::where('mobile', '09120000001')->firstOrFail()->id,
+            'title' => 'مقاله قدیمی',
+            'slug' => 'legacy-post-slug',
+            'status' => PostStatus::Published,
+            'published_at' => now()->subDay(),
+        ]);
+
+        $this->get('/blog/'.$post->slug)
+            ->assertRedirect('/blog/'.$post->id.'/'.$post->slug);
+    }
+
+    public function test_wrong_blog_slug_with_valid_id_redirects_to_canonical(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $post = Post::query()->create([
+            'author_id' => User::where('mobile', '09120000001')->firstOrFail()->id,
+            'title' => 'مقاله ریدایرکت',
+            'slug' => 'canonical-post-slug',
+            'status' => PostStatus::Published,
+            'published_at' => now()->subDay(),
+        ]);
+
+        $this->get('/blog/'.$post->id.'/old-outdated-slug')
+            ->assertRedirect('/blog/'.$post->id.'/canonical-post-slug');
     }
 
     public function test_draft_post_is_not_public(): void
@@ -64,6 +96,6 @@ class PublicBlogTest extends TestCase
             'status' => PostStatus::Draft,
         ]);
 
-        $this->get('/blog/'.$post->slug)->assertNotFound();
+        $this->get('/blog/'.$post->id.'/'.$post->slug)->assertNotFound();
     }
 }

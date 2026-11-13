@@ -119,8 +119,9 @@ export function ClassEnrollmentPanel({
                 <div>
                     <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">ثبت‌نام‌ها</h2>
                     <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        ثبت‌نام دستی هر کاربر فعال. با وضعیت «قطعی»، در کلاس Adobe Connect کاربر با{' '}
-                        <strong>نام کاربری و رمز = موبایل</strong> ساخته یا وصل می‌شود (نام و نام خانوادگی از پروفایل).{' '}
+                        ثبت‌نام دستی هر کاربر فعال. با وضعیت «قطعی»، در Adobe کاربر با{' '}
+                        <strong>نام کاربری و رمز = موبایل</strong> ساخته و به اتاق کلاس دسترسی view می‌گیرد. اگر خطا
+                        آمد، متن خطا را بخوانید یا «وصل Adobe» را دوباره بزنید.{' '}
                         <a href="/admin/course-enrollments/create" className="text-indigo-600 hover:underline">
                             ثبت‌نام از بخش مرکزی
                         </a>

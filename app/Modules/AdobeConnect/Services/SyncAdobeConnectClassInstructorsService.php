@@ -18,11 +18,11 @@ class SyncAdobeConnectClassInstructorsService
     ) {}
 
     /**
-     * @return array{linked: int, created: int, failed: int, skipped: int}
+     * @return array{linked: int, created: int, failed: int, skipped: int, errors: list<string>}
      */
     public function sync(CourseClass $courseClass): array
     {
-        $stats = ['linked' => 0, 'created' => 0, 'failed' => 0, 'skipped' => 0];
+        $stats = ['linked' => 0, 'created' => 0, 'failed' => 0, 'skipped' => 0, 'errors' => []];
 
         if (! $courseClass->usesAdobeConnect() || ! $this->config->isApiConfigured()) {
             return $stats;
@@ -39,35 +39,40 @@ class SyncAdobeConnectClassInstructorsService
             }
 
             $outcome = $this->syncUser($courseClass, $user);
-            $stats[$outcome]++;
+            $stats[$outcome['status']]++;
+            if ($outcome['error'] !== null) {
+                $stats['errors'][] = $outcome['error'];
+            }
         }
 
         return $stats;
     }
 
     /**
-     * @return 'linked'|'created'|'failed'|'skipped'
+     * @return array{status: 'linked'|'created'|'failed'|'skipped', error: ?string}
      */
-    public function syncUser(CourseClass $courseClass, User $user): string
+    public function syncUser(CourseClass $courseClass, User $user): array
     {
         if (! $courseClass->usesAdobeConnect() || ! $this->config->isApiConfigured()) {
-            return 'skipped';
+            return ['status' => 'skipped', 'error' => null];
         }
 
         $credentials = AdobeConnectUserCredentials::forUser($user);
         if ($credentials === null) {
-            return 'skipped';
+            return [
+                'status' => 'failed',
+                'error' => "استاد #{$user->id}: موبایل معتبر برای login ادوب ندارد.",
+            ];
         }
 
         try {
             [$principalId, $created] = $this->principals->ensure($user, $credentials);
-            if ($principalId === null) {
-                return 'failed';
-            }
-
             $this->meetingAccess->grantForClass($courseClass, $principalId, 'host');
 
-            return $created ? 'created' : 'linked';
+            return [
+                'status' => $created ? 'created' : 'linked',
+                'error' => null,
+            ];
         } catch (Throwable $exception) {
             Log::warning('Adobe Connect instructor sync failed', [
                 'course_class_id' => $courseClass->id,
@@ -75,7 +80,10 @@ class SyncAdobeConnectClassInstructorsService
                 'message' => $exception->getMessage(),
             ]);
 
-            return 'failed';
+            return [
+                'status' => 'failed',
+                'error' => "استاد {$credentials->login}: ".$exception->getMessage(),
+            ];
         }
     }
 }

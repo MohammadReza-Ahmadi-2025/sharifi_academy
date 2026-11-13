@@ -2,19 +2,22 @@ import {
     CategoryFilterMobile,
     CategoryFilterSidebar,
     type CategoryBrowseFilterState,
+    type CategoryPriceBounds,
 } from '@/Components/Catalog/CategoryBrowseFilters';
 import { categoryFilterQueryParams } from '@/Components/Catalog/category-filter-params';
+import { CategoryPageHeader } from '@/Components/Catalog/CategoryPageHeader';
+import {
+    CategorySubcategoryGrid,
+    type CategorySubcategoryCard,
+} from '@/Components/Catalog/CategorySubcategoryGrid';
 import { ProductCatalogGrid, type ProductCatalogCard } from '@/Components/Catalog/ProductCatalogGrid';
 import { CourseCatalogGrid, type CourseCatalogCard } from '@/Components/Courses/CourseCatalogGrid';
 import { SiteCatalogSeoHead, type CatalogSeo } from '@/Components/Site/SiteCatalogSeoHead';
 import { SiteDefaultHead } from '@/Components/Site/SiteDefaultHead';
-import { CategoryPageHeader } from '@/Components/Catalog/CategoryPageHeader';
 import AppLayout from '@/Layouts/AppLayout';
-import { Link, router } from '@inertiajs/react';
-import { FolderTree, Loader2 } from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-
-type Subcategory = { id: number; title: string; slug: string; items_count: number };
 
 type Paginator<T> = {
     data: T[];
@@ -36,12 +39,14 @@ type Props = {
     listing: 'courses' | 'products';
     items_label: string;
     items: Paginator<CourseCatalogCard | ProductCatalogCard>;
-    subcategories: Subcategory[];
+    subcategories: CategorySubcategoryCard[];
     filters: CategoryBrowseFilterState;
     filterOptions: {
         levels: { value: string; label: string }[];
         sorts: { value: string; label: string }[];
         brands: { value: string; label: string }[];
+        delivery_types: { value: string; label: string }[];
+        price_bounds: CategoryPriceBounds;
     };
     structuredData: {
         breadcrumb: Record<string, unknown>;
@@ -66,11 +71,23 @@ export default function CategoryShow({
             JSON.stringify({
                 q: filters.q,
                 level: filters.level,
+                delivery: filters.delivery,
                 featured: filters.featured,
                 brand: filters.brand,
+                price_min: filters.price_min,
+                price_max: filters.price_max,
                 sort: filters.sort,
             }),
-        [filters.q, filters.level, filters.featured, filters.brand, filters.sort],
+        [
+            filters.q,
+            filters.level,
+            filters.delivery,
+            filters.featured,
+            filters.brand,
+            filters.price_min,
+            filters.price_max,
+            filters.sort,
+        ],
     );
 
     const [displayItems, setDisplayItems] = useState(items.data);
@@ -109,15 +126,28 @@ export default function CategoryShow({
         });
     };
 
+    const filterProps = {
+        basePath,
+        listing,
+        filters,
+        levelOptions: filterOptions.levels,
+        deliveryOptions: filterOptions.delivery_types,
+        brandOptions: filterOptions.brands,
+        sortOptions: filterOptions.sorts,
+        priceBounds: filterOptions.price_bounds,
+        totalCount: items.total,
+        itemsLabel: items_label,
+    };
+
     return (
-        <AppLayout>
+        <AppLayout fullWidth mainClassName="bg-surface-muted">
             <SiteDefaultHead title={category.seo.title} description={category.seo.description ?? undefined} />
             <SiteCatalogSeoHead
                 seo={category.seo}
                 structuredData={[structuredData.breadcrumb, structuredData.webPage, structuredData.itemList]}
             />
 
-            <div className="mx-auto max-w-[88rem] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            <div className="category-browse-page min-h-full">
                 <CategoryPageHeader
                     title={category.title}
                     imageUrl={category.image_url}
@@ -125,96 +155,82 @@ export default function CategoryShow({
                     itemsLabel={items_label}
                     description={category.description}
                 />
-                {subcategories.length > 0 && (
-                    <section className="mb-8" aria-label="زیردسته‌ها">
-                        <div className="mb-3 flex items-center gap-2 text-sm font-bold text-neutral-black">
-                            <FolderTree className="size-4 text-primary" />
-                            زیردسته‌ها
-                        </div>
-                        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-thin">
-                            {subcategories.map((sub) => (
-                                <Link
-                                    key={sub.id}
-                                    href={`/categories/${sub.slug}`}
-                                    className="shrink-0 rounded-2xl border border-secondary/80 bg-neutral-white px-4 py-2.5 text-sm font-semibold text-neutral-black/80 shadow-sm transition hover:border-primary/40 hover:text-primary"
-                                >
-                                    {sub.title}
-                                    <span className="ms-1.5 text-xs font-bold text-primary/80">
-                                        {sub.items_count.toLocaleString('fa-IR')}
-                                    </span>
-                                </Link>
-                            ))}
-                        </div>
-                    </section>
-                )}
 
-                <div className="lg:grid lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:items-start lg:gap-10">
-                    <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start">
-                        <CategoryFilterSidebar
-                            basePath={basePath}
-                            listing={listing}
-                            filters={filters}
-                            levelOptions={filterOptions.levels}
-                            brandOptions={filterOptions.brands}
-                            sortOptions={filterOptions.sorts}
-                            totalCount={items.total}
-                            itemsLabel={items_label}
-                        />
-                    </aside>
+                <CategorySubcategoryGrid subcategories={subcategories} itemsLabel={items_label} />
 
-                    <div className="min-w-0">
-                        <CategoryFilterMobile
-                            basePath={basePath}
-                            listing={listing}
-                            filters={filters}
-                            levelOptions={filterOptions.levels}
-                            brandOptions={filterOptions.brands}
-                            sortOptions={filterOptions.sorts}
-                            totalCount={items.total}
-                            itemsLabel={items_label}
-                        />
+                <section className="relative">
+                    <div
+                        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-neutral-white to-transparent"
+                        aria-hidden
+                    />
 
-                        <p className="mb-5 hidden text-sm text-neutral-black/55 lg:block">
-                            <span className="font-extrabold text-neutral-black">
-                                {items.total.toLocaleString('fa-IR')}
-                            </span>
-                            {' '}
-                            {items_label}
-                        </p>
+                    <div className="relative mx-auto max-w-[88rem] px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+                        <div className="lg:grid lg:grid-cols-[minmax(0,17.5rem)_minmax(0,1fr)] lg:items-start lg:gap-8 xl:gap-10">
+                            <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start">
+                                <CategoryFilterSidebar {...filterProps} />
+                            </aside>
 
-                        {listing === 'courses' ? (
-                            <CourseCatalogGrid courses={displayItems as CourseCatalogCard[]} variant="category" />
-                        ) : (
-                            <ProductCatalogGrid products={displayItems as ProductCatalogCard[]} variant="category" />
-                        )}
+                            <div className="min-w-0">
+                                <CategoryFilterMobile {...filterProps} />
 
-                        {hasMore && (
-                            <div className="mt-10 flex justify-center">
-                                <button
-                                    type="button"
-                                    onClick={loadMore}
-                                    disabled={loadingMore}
-                                    className="inline-flex min-w-[12rem] items-center justify-center gap-2 rounded-2xl bg-primary px-8 py-3.5 text-sm font-bold text-on-primary shadow-md shadow-primary/20 transition hover:opacity-95 disabled:opacity-70"
-                                >
-                                    {loadingMore ? (
-                                        <>
-                                            <Loader2 className="size-4 animate-spin" />
-                                            در حال بارگذاری...
-                                        </>
+                                <div className="mb-6 hidden items-center justify-between gap-3 lg:flex">
+                                    <div>
+                                        <h2 className="text-lg font-extrabold text-neutral-black">
+                                            {listing === 'courses' ? 'دوره‌ها' : 'محصولات'}
+                                        </h2>
+                                        <p className="mt-0.5 text-sm text-neutral-black/50">
+                                            <span className="font-bold text-neutral-black/75">
+                                                {items.total.toLocaleString('fa-IR')}
+                                            </span>
+                                            {' '}
+                                            {items_label} در این دسته
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-[1.75rem] border border-secondary/60 bg-neutral-white/80 p-3 shadow-[0_20px_50px_-28px_rgba(0,40,90,0.2)] backdrop-blur-sm sm:p-5 lg:p-6">
+                                    {listing === 'courses' ? (
+                                        <CourseCatalogGrid
+                                            courses={displayItems as CourseCatalogCard[]}
+                                            variant="category"
+                                        />
                                     ) : (
-                                        <>نمایش بیشتر</>
+                                        <ProductCatalogGrid
+                                            products={displayItems as ProductCatalogCard[]}
+                                            variant="category"
+                                        />
                                     )}
-                                </button>
-                            </div>
-                        )}
+                                </div>
 
-                        {displayItems.length > 0 && !hasMore && items.last_page > 1 && (
-                            <p className="mt-8 text-center text-xs font-medium text-neutral-black/45">
-                                همه {items.total.toLocaleString('fa-IR')} مورد نمایش داده شد
-                            </p>
-                        )}
+                                {hasMore ? (
+                                    <div className="mt-10 flex justify-center">
+                                        <button
+                                            type="button"
+                                            onClick={loadMore}
+                                            disabled={loadingMore}
+                                            className="inline-flex min-w-[13rem] items-center justify-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-bold text-on-primary shadow-lg shadow-primary/25 transition hover:opacity-95 disabled:opacity-70"
+                                        >
+                                            {loadingMore ? (
+                                                <>
+                                                    <Loader2 className="size-4 animate-spin" />
+                                                    در حال بارگذاری...
+                                                </>
+                                            ) : (
+                                                <>نمایش بیشتر</>
+                                            )}
+                                        </button>
+                                    </div>
+                                ) : null}
+
+                                {displayItems.length > 0 && !hasMore && items.last_page > 1 ? (
+                                    <p className="mt-8 text-center text-xs font-medium text-neutral-black/40">
+                                        همه {items.total.toLocaleString('fa-IR')} مورد نمایش داده شد
+                                    </p>
+                                ) : null}
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </section>
             </div>
         </AppLayout>
     );

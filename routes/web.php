@@ -38,14 +38,24 @@ Route::redirect('/categories', '/');
 Route::redirect('/courses/categories', '/');
 Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
 Route::get('/courses/categories/{category:slug}', fn (Category $category) => redirect()->route('categories.show', $category, 301));
-Route::get('/courses/{course:slug}', [CourseController::class, 'show'])->name('courses.show');
+Route::get('/courses/{course}/{slug}', [CourseController::class, 'show'])
+    ->whereNumber('course')
+    ->name('courses.show');
+Route::get('/courses/{slug}', [CourseController::class, 'redirectLegacySlug'])
+    ->where('slug', '^(?!categories$).+')
+    ->name('courses.show.legacy');
 Route::get('/books/{product:slug}', [ProductController::class, 'show'])->name('books.show');
 Route::get('/brands/{brand}', [BrandController::class, 'show'])->name('brands.show');
 
 Route::get('/blog', [BlogPostController::class, 'index'])->name('blog.index');
 Route::get('/blog/categories/{category:slug}', [BlogCategoryController::class, 'show'])
     ->name('blog.categories.show');
-Route::get('/blog/{post:slug}', [BlogPostController::class, 'show'])->name('blog.show');
+Route::get('/blog/{post}/{slug}', [BlogPostController::class, 'show'])
+    ->whereNumber('post')
+    ->name('blog.show');
+Route::get('/blog/{slug}', [BlogPostController::class, 'redirectLegacySlug'])
+    ->where('slug', '^(?!categories$).+')
+    ->name('blog.show.legacy');
 
 Route::get('/pages/{page:slug}', [SitePageController::class, 'show'])->name('pages.show');
 
@@ -59,11 +69,14 @@ Route::get('/instructors/{instructor}/resume', [InstructorResumeController::clas
     ->name('instructors.resume');
 
 Route::middleware('auth')->group(function () {
-    Route::post('/courses/{course:slug}/enrollments', [CourseEnrollmentController::class, 'store'])
+    Route::post('/courses/{course}/{slug}/enrollments', [CourseEnrollmentController::class, 'store'])
+        ->whereNumber('course')
         ->name('courses.enrollments.store');
-    Route::post('/courses/{course:slug}/comments', [CourseCommentController::class, 'store'])
+    Route::post('/courses/{course}/{slug}/comments', [CourseCommentController::class, 'store'])
+        ->whereNumber('course')
         ->name('courses.comments.store');
-    Route::post('/blog/{post:slug}/comments', [PostCommentController::class, 'store'])
+    Route::post('/blog/{post}/{slug}/comments', [PostCommentController::class, 'store'])
+        ->whereNumber('post')
         ->name('blog.comments.store');
     Route::post('/stories/{story}/views', [StoryController::class, 'recordView'])->name('stories.views');
     Route::get('/profile', [AccountProfileController::class, 'edit'])->name('site.profile.edit');

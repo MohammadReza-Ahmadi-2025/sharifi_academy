@@ -6,11 +6,16 @@ import { useCallback, useEffect, useState } from 'react';
 export type CategoryBrowseFilterState = {
     q: string;
     level?: string;
+    delivery?: string;
     featured?: boolean;
     brand?: string;
     sort: string;
+    price_min?: number | null;
+    price_max?: number | null;
     per_page?: number;
 };
+
+export type CategoryPriceBounds = { min: number; max: number };
 
 type Option = { value: string; label: string };
 
@@ -19,8 +24,10 @@ type PanelProps = {
     listing: 'courses' | 'products';
     filters: CategoryBrowseFilterState;
     levelOptions?: Option[];
+    deliveryOptions?: Option[];
     brandOptions?: Option[];
     sortOptions: Option[];
+    priceBounds?: CategoryPriceBounds;
     onApplied?: () => void;
 };
 
@@ -29,9 +36,30 @@ function activeFilterCount(filters: CategoryBrowseFilterState, listing: 'courses
     if (filters.q.trim()) n++;
     if (filters.sort !== 'newest') n++;
     if (listing === 'courses' && filters.level) n++;
+    if (listing === 'courses' && filters.delivery) n++;
     if (listing === 'courses' && filters.featured) n++;
     if (listing === 'products' && filters.brand) n++;
+    if (filters.price_min != null && filters.price_min > 0) n++;
+    if (filters.price_max != null && filters.price_max > 0) n++;
     return n;
+}
+
+function formatTomanHint(amount: number): string {
+    if (amount <= 0) {
+        return '۰';
+    }
+
+    return amount.toLocaleString('fa-IR');
+}
+
+function parsePriceInput(raw: string): number | null {
+    const digits = raw.replace(/[^\d]/g, '');
+    if (digits === '') {
+        return null;
+    }
+
+    const value = Number.parseInt(digits, 10);
+    return Number.isFinite(value) && value > 0 ? value : null;
 }
 
 function CategoryFilterPanel({
@@ -39,15 +67,30 @@ function CategoryFilterPanel({
     listing,
     filters,
     levelOptions = [],
+    deliveryOptions = [],
     brandOptions = [],
     sortOptions,
+    priceBounds = { min: 0, max: 0 },
     onApplied,
 }: PanelProps) {
     const [q, setQ] = useState(filters.q);
+    const [priceMinInput, setPriceMinInput] = useState(
+        filters.price_min ? String(filters.price_min) : '',
+    );
+    const [priceMaxInput, setPriceMaxInput] = useState(
+        filters.price_max ? String(filters.price_max) : '',
+    );
 
     useEffect(() => {
         setQ(filters.q);
     }, [filters.q]);
+
+    useEffect(() => {
+        setPriceMinInput(filters.price_min ? String(filters.price_min) : '');
+        setPriceMaxInput(filters.price_max ? String(filters.price_max) : '');
+    }, [filters.price_min, filters.price_max]);
+
+    const showPriceRange = priceBounds.max > 0;
 
     const apply = useCallback(
         (patch: Partial<CategoryBrowseFilterState>) => {
@@ -120,6 +163,45 @@ function CategoryFilterPanel({
                 </ul>
             </div>
 
+            {listing === 'courses' && deliveryOptions.length > 0 && (
+                <div>
+                    <p className="mb-2 text-xs font-bold text-neutral-black/50">نوع برگزاری</p>
+                    <ul className="space-y-1">
+                        <li>
+                            <button
+                                type="button"
+                                onClick={() => apply({ delivery: '' })}
+                                className={`w-full rounded-xl px-3 py-2 text-sm font-medium transition ${
+                                    !filters.delivery
+                                        ? 'bg-surface-muted font-bold text-primary'
+                                        : 'text-neutral-black/70 hover:bg-surface-muted/80'
+                                }`}
+                            >
+                                همه
+                            </button>
+                        </li>
+                        {deliveryOptions.map((opt) => {
+                            const active = filters.delivery === opt.value;
+                            return (
+                                <li key={opt.value}>
+                                    <button
+                                        type="button"
+                                        onClick={() => apply({ delivery: opt.value })}
+                                        className={`w-full rounded-xl px-3 py-2 text-sm font-medium transition ${
+                                            active
+                                                ? 'bg-surface-muted font-bold text-primary'
+                                                : 'text-neutral-black/70 hover:bg-surface-muted/80'
+                                        }`}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
+            )}
+
             {listing === 'courses' && levelOptions.length > 0 && (
                 <div>
                     <p className="mb-2 text-xs font-bold text-neutral-black/50">سطح</p>
@@ -190,6 +272,51 @@ function CategoryFilterPanel({
                 </div>
             )}
 
+            {showPriceRange && (
+                <div className="rounded-xl border border-secondary/80 bg-surface-muted/25 p-3">
+                    <p className="mb-2 text-xs font-bold text-neutral-black/50">بازه قیمت (تومان)</p>
+                    <p className="mb-3 text-[11px] leading-relaxed text-neutral-black/45">
+                        از {formatTomanHint(priceBounds.min)} تا {formatTomanHint(priceBounds.max)}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                        <label className="block text-[11px] font-semibold text-neutral-black/55">
+                            حداقل
+                            <input
+                                type="text"
+                                inputMode="numeric"
+                                value={priceMinInput}
+                                onChange={(e) => setPriceMinInput(e.target.value)}
+                                placeholder="از"
+                                className="mt-1 w-full rounded-lg border border-secondary/90 bg-neutral-white px-2.5 py-2 text-sm outline-none focus:border-primary"
+                            />
+                        </label>
+                        <label className="block text-[11px] font-semibold text-neutral-black/55">
+                            حداکثر
+                            <input
+                                type="text"
+                                inputMode="numeric"
+                                value={priceMaxInput}
+                                onChange={(e) => setPriceMaxInput(e.target.value)}
+                                placeholder="تا"
+                                className="mt-1 w-full rounded-lg border border-secondary/90 bg-neutral-white px-2.5 py-2 text-sm outline-none focus:border-primary"
+                            />
+                        </label>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() =>
+                            apply({
+                                price_min: parsePriceInput(priceMinInput),
+                                price_max: parsePriceInput(priceMaxInput),
+                            })
+                        }
+                        className="mt-3 w-full rounded-xl border border-secondary/90 bg-neutral-white py-2 text-sm font-semibold text-neutral-black transition hover:border-primary/40 hover:text-primary"
+                    >
+                        اعمال بازه قیمت
+                    </button>
+                </div>
+            )}
+
             {listing === 'courses' && (
                 <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-secondary/80 bg-surface-muted/30 px-3 py-3">
                     <input
@@ -207,11 +334,16 @@ function CategoryFilterPanel({
                     type="button"
                     onClick={() => {
                         setQ('');
+                        setPriceMinInput('');
+                        setPriceMaxInput('');
                         apply({
                             q: '',
                             level: '',
+                            delivery: '',
                             featured: false,
                             brand: '',
+                            price_min: null,
+                            price_max: null,
                             sort: 'newest',
                         });
                     }}
@@ -233,9 +365,11 @@ type LayoutProps = PanelProps & {
 /** سایدبار دسکتاپ — داخل ستون چپ صفحه دسته */
 export function CategoryFilterSidebar(props: LayoutProps) {
     return (
-        <div className="rounded-2xl border border-secondary/80 bg-neutral-white p-5 shadow-sm">
-            <div className="mb-5 flex items-center gap-2 border-b border-secondary/70 pb-4">
-                <SlidersHorizontal className="size-4 text-primary" />
+        <div className="overflow-hidden rounded-[1.5rem] border border-secondary/55 bg-neutral-white/90 p-5 shadow-[0_16px_40px_-24px_rgba(0,40,90,0.35)] backdrop-blur-sm">
+            <div className="mb-5 flex items-center gap-2 border-b border-secondary/50 pb-4">
+                <span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <SlidersHorizontal className="size-4" />
+                </span>
                 <span className="text-sm font-extrabold text-neutral-black">فیلتر نتایج</span>
             </div>
             <CategoryFilterPanel {...props} />
@@ -259,7 +393,7 @@ export function CategoryFilterMobile({ totalCount, itemsLabel, ...panelProps }: 
 
     return (
         <>
-            <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-secondary/80 bg-neutral-white px-4 py-3 shadow-sm lg:hidden">
+            <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-secondary/55 bg-neutral-white/90 px-4 py-3 shadow-[0_12px_28px_-18px_rgba(0,40,90,0.3)] backdrop-blur-sm lg:hidden">
                 <p className="text-sm text-neutral-black/65">
                     <span className="font-extrabold text-neutral-black">{totalCount.toLocaleString('fa-IR')}</span>
                     {' '}
@@ -268,7 +402,7 @@ export function CategoryFilterMobile({ totalCount, itemsLabel, ...panelProps }: 
                 <button
                     type="button"
                     onClick={() => setOpen(true)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-on-primary shadow-sm"
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-on-primary shadow-md shadow-primary/20"
                 >
                     <SlidersHorizontal className="size-4" />
                     فیلتر

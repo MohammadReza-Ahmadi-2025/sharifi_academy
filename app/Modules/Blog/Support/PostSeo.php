@@ -7,6 +7,7 @@ use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Support\CategorySeo;
 use App\Modules\Settings\Services\SiteSettingsService;
 use App\Support\HtmlExcerpt;
+use App\Support\Search\SiteSearchUrls;
 use App\Support\Storage\PublicStorageUrl;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -128,7 +129,7 @@ class PostSeo
     {
         $canonical = filled($post->canonical)
             ? (string) $post->canonical
-            : url('/blog/'.$post->publicSlug());
+            : url(SiteSearchUrls::post($post));
 
         $imageUrl = $post->relationLoaded('featuredImage') && $post->featuredImage
             ? $post->featuredImage->publicUrl()
@@ -224,7 +225,7 @@ class PostSeo
                 fn (array $row, int $index) => [
                     '@type' => 'ListItem',
                     'position' => $index + 1,
-                    'url' => url('/blog/'.$row['slug']),
+                    'url' => url('/blog/'.$row['id'].'/'.$row['slug']),
                     'name' => $row['title'],
                 ],
             )->all(),
@@ -240,7 +241,7 @@ class PostSeo
             ? (string) $settings->get('blogs_header_title')
             : 'وبلاگ';
 
-        $postUrl = url('/blog/'.$post->publicSlug());
+        $postUrl = url(SiteSearchUrls::post($post));
         $category = $post->relationLoaded('categories')
             ? $post->categories->first()
             : null;

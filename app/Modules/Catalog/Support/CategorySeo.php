@@ -51,7 +51,7 @@ class CategorySeo
             : collect($items);
 
         $itemUrl = match ($category->type) {
-            Category::TYPE_COURSE => fn (array $row) => url('/courses/'.$row['slug']),
+            Category::TYPE_COURSE => fn (array $row) => url('/courses/'.$row['id'].'/'.$row['slug']),
             Category::TYPE_PRODUCT => fn (array $row) => url('/books/'.$row['slug']),
             default => fn (array $row) => $canonical,
         };

@@ -210,38 +210,24 @@ class AdobeConnectApi
 
         $email ??= $login.'@students.academy-sharifi.ir';
 
-        $folderIds = $this->config->usersFolderIds();
-        if ($folderIds === []) {
-            $folderIds = $this->discoverUsersFolderIds();
+        // مطابق مستند رسمی Adobe: has-children=0 الزامی است؛ folder-id برای principal-update تعریف نشده.
+        $xml = $this->client->get('principal-update', [
+            'first-name' => $firstName !== '' ? $firstName : 'Student',
+            'last-name' => $lastName !== '' ? $lastName : 'User',
+            'login' => $login,
+            'password' => $password,
+            'type' => 'user',
+            'has-children' => '0',
+            'send-email' => 'false',
+            'email' => $email,
+        ]);
+
+        $principalId = (string) ($xml->principal['principal-id'] ?? '');
+        if ($principalId === '') {
+            throw new \RuntimeException('Adobe Connect principal-update returned empty principal-id.');
         }
 
-        $lastException = null;
-        foreach ($folderIds as $folderId) {
-            try {
-                $xml = $this->client->get('principal-update', [
-                    'first-name' => $firstName !== '' ? $firstName : 'Student',
-                    'last-name' => $lastName !== '' ? $lastName : 'User',
-                    'login' => $login,
-                    'password' => $password,
-                    'confirm-password' => $password,
-                    'type' => 'user',
-                    'send-email' => 'false',
-                    'email' => $email,
-                    'folder-id' => $folderId,
-                ]);
-
-                $principalId = (string) ($xml->principal['principal-id'] ?? '');
-                if ($principalId === '') {
-                    continue;
-                }
-
-                return ['principal_id' => $principalId, 'login' => $login];
-            } catch (\Throwable $exception) {
-                $lastException = $exception;
-            }
-        }
-
-        throw $lastException ?? new \RuntimeException('Adobe Connect user registration failed.');
+        return ['principal_id' => $principalId, 'login' => $login];
     }
 
     public function updateUserPassword(string $principalId, string $password): void
@@ -249,7 +235,6 @@ class AdobeConnectApi
         $this->client->get('principal-update', [
             'principal-id' => $principalId,
             'password' => $password,
-            'confirm-password' => $password,
         ]);
     }
 
@@ -264,7 +249,6 @@ class AdobeConnectApi
             'first-name' => $firstName,
             'last-name' => $lastName,
             'password' => $password,
-            'confirm-password' => $password,
         ]);
     }
 
@@ -329,8 +313,13 @@ class AdobeConnectApi
         $this->grantMeetingPermission($meetingScoId, $principalId, 'host');
     }
 
+    public function revokeMeetingAccess(string $meetingScoId, string $principalId): void
+    {
+        $this->grantMeetingPermission($meetingScoId, $principalId, 'remove');
+    }
+
     /**
-     * @param  'view'|'host'|'mini-host'  $permission
+     * @param  'view'|'host'|'mini-host'|'remove'  $permission
      */
     public function grantMeetingPermission(string $meetingScoId, string $principalId, string $permission = 'view'): void
     {
@@ -341,32 +330,4 @@ class AdobeConnectApi
         ]);
     }
 
-    /**
-     * @return list<string>
-     */
-    private function discoverUsersFolderIds(): array
-    {
-        try {
-            $xml = $this->client->get('sco-shortcuts');
-        } catch (\Throwable) {
-            return ['11001', '11000', '7'];
-        }
-
-        $ids = [];
-        if (isset($xml->shortcuts->sco)) {
-            foreach ($xml->shortcuts->sco as $sco) {
-                $type = (string) ($sco['type'] ?? '');
-                if (preg_match('/user|content|account|custom/i', $type) === 1) {
-                    $id = (string) ($sco['sco-id'] ?? '');
-                    if ($id !== '') {
-                        $ids[] = $id;
-                    }
-                }
-            }
-        }
-
-        $ids = array_values(array_unique($ids));
-
-        return $ids !== [] ? $ids : ['11001', '11000', '7'];
-    }
 }

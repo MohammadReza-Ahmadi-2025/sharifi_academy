@@ -56,7 +56,7 @@ class PanelBlogPostsTest extends TestCase
         $this->assertSame(PostStatus::PendingReview, $post->status);
         $this->assertNull($post->published_at);
 
-        $this->get('/blog/'.$post->slug)->assertNotFound();
+        $this->get('/blog/'.$post->id.'/'.$post->slug)->assertNotFound();
 
         $admin = User::where('mobile', '09120000001')->firstOrFail();
         $this->actingAs($admin)
@@ -72,7 +72,7 @@ class PanelBlogPostsTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame(PostStatus::Published, $post->fresh()->status);
-        $this->get('/blog/'.$post->slug)->assertOk();
+        $this->get('/blog/'.$post->id.'/'.$post->slug)->assertOk();
     }
 
     public function test_instructor_can_manage_own_posts_only(): void

@@ -44,7 +44,7 @@ export default function PageShow({ page, structuredData }: Props) {
                     </div>
                 </header>
 
-                <div className="mx-auto max-w-[88rem] px-4 py-8 sm:px-6 lg:px-8">
+                <div className="mx-auto min-w-0 max-w-[88rem] overflow-x-clip px-4 py-8 sm:px-6 lg:px-8">
                     {bodyHtml ? (
                         <SiteRichHtml html={bodyHtml} className="site-rich-html--blog max-w-none" />
                     ) : (

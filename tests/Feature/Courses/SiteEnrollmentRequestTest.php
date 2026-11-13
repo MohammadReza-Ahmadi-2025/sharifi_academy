@@ -53,7 +53,7 @@ class SiteEnrollmentRequestTest extends TestCase
         ]);
 
         $this->actingAs($student)
-            ->post("/courses/{$course->slug}/enrollments", [
+            ->post("/courses/{$course->id}/{$course->slug}/enrollments", [
                 'course_class_id' => $class->id,
             ])
             ->assertRedirect()
@@ -93,7 +93,7 @@ class SiteEnrollmentRequestTest extends TestCase
         ]);
 
         $this->actingAs($student)
-            ->post("/courses/{$course->slug}/enrollments", [
+            ->post("/courses/{$course->id}/{$course->slug}/enrollments", [
                 'course_class_id' => $class->id,
             ])
             ->assertNotFound();
@@ -126,7 +126,7 @@ class SiteEnrollmentRequestTest extends TestCase
         ]);
 
         $this->actingAs($student)
-            ->post("/courses/{$course->slug}/enrollments", [
+            ->post("/courses/{$course->id}/{$course->slug}/enrollments", [
                 'course_class_id' => $class->id,
             ])
             ->assertNotFound();
@@ -163,7 +163,7 @@ class SiteEnrollmentRequestTest extends TestCase
         ]);
 
         $this->actingAs($student)
-            ->post("/courses/{$course->slug}/enrollments", [
+            ->post("/courses/{$course->id}/{$course->slug}/enrollments", [
                 'course_class_id' => $class->id,
             ])
             ->assertRedirect()

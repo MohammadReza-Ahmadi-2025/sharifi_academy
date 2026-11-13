@@ -14,7 +14,9 @@ class EnsureAdobeConnectPrincipalService
     ) {}
 
     /**
-     * @return array{0: ?string, 1: bool} principal id, was newly created via API
+     * @return array{0: string, 1: bool} principal id, was newly created via API
+     *
+     * @throws Throwable when Adobe cannot create or resolve the user
      */
     public function ensure(User $user, AdobeConnectUserCredentials $credentials): array
     {
@@ -87,7 +89,7 @@ class EnsureAdobeConnectPrincipalService
                 return [$retryFind, false];
             }
 
-            return [null, false];
+            throw $exception;
         }
     }
 

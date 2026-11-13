@@ -12,7 +12,7 @@ use Illuminate\Http\RedirectResponse;
 
 class CourseCommentController extends Controller
 {
-    public function store(StoreCourseCommentRequest $request, Course $course): RedirectResponse
+    public function store(StoreCourseCommentRequest $request, Course $course, string $slug): RedirectResponse
     {
         abort_unless($course->status === CourseStatus::Published && ! $course->trashed(), 404);
 

@@ -26,10 +26,12 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
+use Tests\Support\FakesAdobeConnectHttp;
 use Tests\TestCase;
 
 class AdobeConnectAttendanceSyncTest extends TestCase
 {
+    use FakesAdobeConnectHttp;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -72,6 +74,10 @@ class AdobeConnectAttendanceSyncTest extends TestCase
 
         Http::fake(function ($request) {
             $url = $request->url();
+            if (($auth = $this->adobeAuthResponse($url)) !== null) {
+                return $auth;
+            }
+
             if (str_contains($url, 'action=login')) {
                 return Http::response(
                     '<?xml version="1.0"?><results><status code="ok"/></results>',
@@ -136,6 +142,10 @@ XML);
 
         Http::fake(function ($request) {
             $url = $request->url();
+            if (($auth = $this->adobeAuthResponse($url)) !== null) {
+                return $auth;
+            }
+
             if (str_contains($url, 'action=login')) {
                 return Http::response(
                     '<?xml version="1.0"?><results><status code="ok"/></results>',
@@ -195,6 +205,10 @@ XML);
 
         Http::fake(function ($request) {
             $url = $request->url();
+            if (($auth = $this->adobeAuthResponse($url)) !== null) {
+                return $auth;
+            }
+
             if (str_contains($url, 'action=login')) {
                 return Http::response(
                     '<?xml version="1.0"?><results><status code="ok"/></results>',

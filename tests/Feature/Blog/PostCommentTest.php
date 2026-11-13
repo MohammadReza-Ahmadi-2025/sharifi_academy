@@ -34,7 +34,7 @@ class PostCommentTest extends TestCase
         ]);
 
         $this->actingAs($student)
-            ->post("/blog/{$post->slug}/comments", [
+            ->post("/blog/{$post->id}/{$post->slug}/comments", [
                 'body' => 'نظر خوبی بود',
             ])
             ->assertRedirect()

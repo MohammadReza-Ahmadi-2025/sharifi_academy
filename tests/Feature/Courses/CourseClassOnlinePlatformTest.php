@@ -91,7 +91,7 @@ class CourseClassOnlinePlatformTest extends TestCase
             'ends_at' => now()->addMonths(2),
         ]);
 
-        $this->get('/courses/'.$course->publicSlug())
+        $this->get('/courses/'.$course->id.'/'.$course->publicSlug())
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('course.classes.0.online_platform_label', 'لینک ویدیو (آنلاین)'));

@@ -79,6 +79,9 @@ class EnrollmentController extends Controller
             $enrollment->loadMissing('user');
             $adobe = $studentAccess->grantStudentRoleIfConfirmed($enrollment);
             InstructorModerationNotifier::enrollmentConfirmed($enrollment);
+        } elseif ($wasConfirmed && ! $enrollment->isConfirmed()) {
+            $enrollment->loadMissing('user');
+            $adobe = $studentAccess->revokeAdobeAccess($enrollment);
         }
 
         $flash = 'ثبت‌نام به‌روزرسانی شد.';
@@ -86,13 +89,19 @@ class EnrollmentController extends Controller
             $flash = $adobe->appendToFlash($flash);
         }
 
+        $flashKey = $adobe?->status === 'revoke_failed' ? 'error' : 'success';
+
         return redirect()
             ->route('admin.courses.classes.edit', [$course, $courseClass])
-            ->with('success', $flash);
+            ->with($flashKey, $flash);
     }
 
-    public function destroy(Course $course, CourseClass $courseClass, Enrollment $enrollment): RedirectResponse
-    {
+    public function destroy(
+        Course $course,
+        CourseClass $courseClass,
+        Enrollment $enrollment,
+        EnrollmentStudentAccessService $studentAccess,
+    ): RedirectResponse {
         abort_unless(auth()->user()?->can('enrollments-delete'), 403);
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
 
@@ -100,11 +109,23 @@ class EnrollmentController extends Controller
             abort(404);
         }
 
+        $enrollment->loadMissing('user');
+        $adobe = $enrollment->isConfirmed()
+            ? $studentAccess->revokeAdobeAccess($enrollment)
+            : null;
+
         $enrollment->delete();
+
+        $flash = 'ثبت‌نام حذف شد.';
+        if ($adobe !== null) {
+            $flash = $adobe->appendToFlash($flash);
+        }
+
+        $flashKey = $adobe?->status === 'revoke_failed' ? 'error' : 'success';
 
         return redirect()
             ->route('admin.courses.classes.edit', [$course, $courseClass])
-            ->with('success', 'ثبت‌نام حذف شد.');
+            ->with($flashKey, $flash);
     }
 
     public function syncAdobe(

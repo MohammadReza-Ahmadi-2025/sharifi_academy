@@ -14,6 +14,7 @@ class CourseEnrollmentController extends Controller
     public function store(
         StoreSiteEnrollmentRequest $request,
         Course $course,
+        string $slug,
         SiteEnrollmentRequestService $enrollmentRequests,
     ): RedirectResponse {
         abort_unless($course->status === CourseStatus::Published && ! $course->trashed(), 404);

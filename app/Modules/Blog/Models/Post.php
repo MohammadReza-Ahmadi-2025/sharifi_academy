@@ -48,11 +48,6 @@ class Post extends Model
         return SeoSlug::forUrl((string) $this->slug);
     }
 
-    public function getRouteKeyName(): string
-    {
-        return 'slug';
-    }
-
     /**
      * @return array<string, mixed>
      */

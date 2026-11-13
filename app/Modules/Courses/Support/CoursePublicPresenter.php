@@ -9,6 +9,7 @@ use App\Modules\Courses\Enums\CourseClassOnlinePlatform;
 use App\Modules\Courses\Enums\CourseStatus;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
+use App\Support\Search\SiteSearchUrls;
 use Illuminate\Support\Collection;
 
 class CoursePublicPresenter
@@ -35,7 +36,7 @@ class CoursePublicPresenter
         $imageUrl = $course->mainImage?->publicUrl();
         $canonical = filled($course->canonical)
             ? (string) $course->canonical
-            : url('/courses/'.$course->publicSlug());
+            : url(SiteSearchUrls::course($course));
 
         $instructors = self::uniqueInstructors($publicClasses);
         $comments = PublicCommentThreads::approvedFor($course);

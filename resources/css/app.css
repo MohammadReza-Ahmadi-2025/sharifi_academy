@@ -593,14 +593,84 @@ body {
     word-wrap: break-word;
 }
 
-.site-rich-html.site-rich-html--blog {
+.site-rich-html.site-rich-html--blog,
+.site-rich-html.site-rich-html--blog-contained,
+.blog-post-content {
     width: 100%;
-    max-width: none;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
 }
 
-.site-rich-html.site-rich-html--blog img,
-.site-rich-html.site-rich-html--blog table {
+.site-rich-html.site-rich-html--article {
+    font-size: 1.05rem;
+    line-height: 2;
+}
+
+.site-rich-html.site-rich-html--article p {
+    margin-bottom: 1.15rem;
+}
+
+.site-rich-html.site-rich-html--article h2 {
+    margin-top: 2rem;
+    margin-bottom: 0.9rem;
+    font-size: 1.35rem;
+}
+
+.site-rich-html.site-rich-html--article h3 {
+    margin-top: 1.6rem;
+    margin-bottom: 0.7rem;
+    font-size: 1.15rem;
+}
+
+.site-rich-html.site-rich-html--blog img {
     max-width: 100%;
+}
+
+.site-rich-html__table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    margin: 1rem 0;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-neutral-white);
+}
+
+.site-rich-html__table-scroll table {
+    width: max-content;
+    min-width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.site-rich-html__table-scroll th,
+.site-rich-html__table-scroll td {
+    border: 1px solid var(--color-border);
+    padding: 0.5rem 0.75rem;
+    white-space: nowrap;
+}
+
+.site-rich-html__heading-anchor {
+    scroll-margin-top: 5.5rem;
+}
+
+@keyframes blog-heading-highlight {
+    0% {
+        background-color: rgb(var(--color-primary-rgb) / 0.28);
+        box-shadow: 0 0 0 2px rgb(var(--color-primary-rgb) / 0.15);
+    }
+
+    100% {
+        background-color: transparent;
+        box-shadow: none;
+    }
+}
+
+.site-rich-html__heading--highlight {
+    border-radius: 0.4rem;
+    animation: blog-heading-highlight 2.2s ease-out;
 }
 
 .site-rich-html.site-rich-html--card-preview {
@@ -782,6 +852,23 @@ body {
 
 .home-testimonials-swiper .swiper-pagination-bullet-active {
     background: var(--color-primary);
+}
+
+@keyframes category-hero-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.75rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.category-browse-page,
+.blog-browse-page {
+    isolation: isolate;
 }
 
 /* ——— صفحهٔ اصلی: پس‌زمینه نرم و ریتم سکشن‌ها ——— */

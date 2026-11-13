@@ -36,6 +36,8 @@ class AdobeConnectXmlClient
                 throw $exception;
             }
 
+            // فقط خطای سشن؛ invalid پارامتر سشن را خراب نمی‌کند.
+            $this->forgetSession();
             $query['session'] = $this->session();
 
             return $this->parseResponse(
@@ -63,22 +65,48 @@ class AdobeConnectXmlClient
             return $cached;
         }
 
-        $response = $this->http()->get('/api/xml', [
+        // Enhanced Security (Hosted پیش‌فرض): common-info → login → common-info دوباره
+        $preSession = $this->commonInfoSession();
+
+        $loginResponse = $this->http()->get('/api/xml', array_filter([
             'action' => 'login',
             'login' => $this->config->login(),
             'password' => $this->config->apiToken(),
-        ]);
+            'session' => $preSession !== '' ? $preSession : null,
+        ], static fn ($value) => $value !== null && $value !== ''));
 
-        $this->parseResponse($response, 'login');
-        $session = $this->extractBreezeSession($response);
+        $this->parseResponse($loginResponse, 'login');
 
-        if ($session === '') {
+        $postSession = $this->commonInfoSession($preSession !== '' ? $preSession : $this->extractBreezeSession($loginResponse));
+        if ($postSession === '') {
+            $postSession = $this->extractBreezeSession($loginResponse);
+        }
+
+        if ($postSession === '') {
             throw new RuntimeException('Adobe Connect login succeeded but BREEZESESSION cookie was not returned.');
         }
 
-        Cache::put($cacheKey, $session, now()->addMinutes($this->config->sessionTtlMinutes()));
+        Cache::put($cacheKey, $postSession, now()->addMinutes($this->config->sessionTtlMinutes()));
 
-        return $session;
+        return $postSession;
+    }
+
+    private function commonInfoSession(?string $existingSession = null): string
+    {
+        $query = ['action' => 'common-info'];
+        if ($existingSession !== null && $existingSession !== '') {
+            $query['session'] = $existingSession;
+        }
+
+        $response = $this->http()->get('/api/xml', $query);
+        $xml = $this->parseResponse($response, 'common-info');
+
+        $fromXml = trim((string) ($xml->cookie ?? ''));
+        if ($fromXml !== '') {
+            return $fromXml;
+        }
+
+        return $this->extractBreezeSession($response);
     }
 
     private function http(): PendingRequest
@@ -115,11 +143,14 @@ class AdobeConnectXmlClient
 
         $code = (string) ($xml->status['code'] ?? '');
         if ($code !== '' && $code !== 'ok') {
-            if ($action !== 'login' && in_array($code, ['no-access', 'invalid', 'expired'], true)) {
+            $subcode = (string) ($xml->status['subcode'] ?? '');
+            if ($action !== 'login' && $action !== 'common-info' && $this->isSessionStatusCode($code)) {
                 $this->forgetSession();
             }
 
-            throw new RuntimeException("Adobe Connect API action [{$action}] failed with status [{$code}].");
+            $detail = $subcode !== '' ? "{$code}/{$subcode}" : $code;
+
+            throw new RuntimeException("Adobe Connect API action [{$action}] failed with status [{$detail}].");
         }
 
         return $xml;
@@ -141,7 +172,13 @@ class AdobeConnectXmlClient
         $message = $exception->getMessage();
 
         return str_contains($message, 'status [no-access]')
-            || str_contains($message, 'status [invalid]')
-            || str_contains($message, 'status [expired]');
+            || str_contains($message, 'status [no-access/')
+            || str_contains($message, 'status [expired]')
+            || str_contains($message, 'status [expired/]');
+    }
+
+    private function isSessionStatusCode(string $code): bool
+    {
+        return in_array($code, ['no-access', 'expired'], true);
     }
 }

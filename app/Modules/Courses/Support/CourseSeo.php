@@ -4,6 +4,7 @@ namespace App\Modules\Courses\Support;
 
 use App\Modules\Courses\Models\Course;
 use App\Support\HtmlExcerpt;
+use App\Support\Search\SiteSearchUrls;
 use App\Support\Storage\PublicStorageUrl;
 
 class CourseSeo
@@ -19,7 +20,7 @@ class CourseSeo
 
         $canonical = filled($course->canonical)
             ? (string) $course->canonical
-            : url('/courses/'.$course->publicSlug());
+            : url(SiteSearchUrls::course($course));
 
         $description = filled($course->meta_description)
             ? (string) $course->meta_description
@@ -48,7 +49,7 @@ class CourseSeo
      */
     public static function breadcrumbJsonLd(Course $course): array
     {
-        $courseUrl = url('/courses/'.$course->publicSlug());
+        $courseUrl = url(SiteSearchUrls::course($course));
         $category = $course->relationLoaded('categories')
             ? $course->categories->first()
             : null;
@@ -103,7 +104,7 @@ class CourseSeo
     ): array {
         $canonical = filled($course->canonical)
             ? (string) $course->canonical
-            : url('/courses/'.$course->publicSlug());
+            : url(SiteSearchUrls::course($course));
 
         $imageUrl = $course->relationLoaded('mainImage') && $course->mainImage
             ? $course->mainImage->publicUrl()
@@ -168,7 +169,7 @@ class CourseSeo
     {
         $canonical = filled($course->canonical)
             ? (string) $course->canonical
-            : url('/courses/'.$course->publicSlug());
+            : url(SiteSearchUrls::course($course));
 
         $title = filled($course->meta_title) ? $course->meta_title : $course->title;
 

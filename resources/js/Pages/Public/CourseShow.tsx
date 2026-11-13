@@ -6,6 +6,7 @@ import { SiteCatalogSeoHead } from '@/Components/Site/SiteCatalogSeoHead';
 import { SiteDefaultHead } from '@/Components/Site/SiteDefaultHead';
 import { SiteRichHtml } from '@/Components/Site/SiteRichHtml';
 import AppLayout from '@/Layouts/AppLayout';
+import { coursePath } from '@/lib/public-entity-urls';
 import { siteSettingsFromPage } from '@/lib/site-settings';
 import type { PageProps } from '@/types';
 import { Link, useForm, usePage } from '@inertiajs/react';
@@ -407,7 +408,7 @@ export default function CourseShow({ course, structuredData }: Props) {
                                         <form
                                             onSubmit={(e) => {
                                                 e.preventDefault();
-                                                enrollForm.post(`/courses/${course.slug}/enrollments`, {
+                                                enrollForm.post(`${coursePath(course.id, course.slug)}/enrollments`, {
                                                     preserveScroll: true,
                                                 });
                                             }}
@@ -489,7 +490,7 @@ export default function CourseShow({ course, structuredData }: Props) {
 
                 <section className="mt-12 rounded-2xl border border-secondary bg-surface-muted/50 p-6 sm:mt-14 sm:p-8">
                     <CourseCommentsSection
-                        courseSlug={course.slug}
+                        submitUrl={`${coursePath(course.id, course.slug)}/comments`}
                         comments={course.comments}
                         summary={course.comments_summary}
                     />

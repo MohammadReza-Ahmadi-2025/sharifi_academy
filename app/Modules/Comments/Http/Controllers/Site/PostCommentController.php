@@ -12,7 +12,7 @@ use Illuminate\Http\RedirectResponse;
 
 class PostCommentController extends Controller
 {
-    public function store(StorePostCommentRequest $request, Post $post): RedirectResponse
+    public function store(StorePostCommentRequest $request, Post $post, string $slug): RedirectResponse
     {
         PostPublicPresenter::ensurePublished($post);
 

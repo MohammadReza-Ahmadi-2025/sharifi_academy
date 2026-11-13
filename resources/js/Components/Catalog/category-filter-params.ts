@@ -13,8 +13,17 @@ export function categoryFilterQueryParams(
     if (listing === 'courses' && filters.level) {
         params.level = filters.level;
     }
+    if (listing === 'courses' && filters.delivery) {
+        params.delivery = filters.delivery;
+    }
     if (listing === 'courses' && filters.featured) {
         params.featured = '1';
+    }
+    if (filters.price_min != null && filters.price_min > 0) {
+        params.price_min = String(filters.price_min);
+    }
+    if (filters.price_max != null && filters.price_max > 0) {
+        params.price_max = String(filters.price_max);
     }
     if (listing === 'products' && filters.brand) {
         params.brand = filters.brand;

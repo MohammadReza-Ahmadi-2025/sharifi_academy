@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Support\CoursePublicPresenter;
 use App\Modules\Courses\Support\CourseSeo;
-use App\Support\Http\CanonicalSeoSlugRedirect;
+use App\Support\Http\CanonicalIdSlugRedirect;
+use App\Support\Search\SiteSearchUrls;
+use App\Support\SeoSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,32 +16,21 @@ use Inertia\Response;
 
 class CourseController extends Controller
 {
-    public function show(Request $request, Course $course): Response|RedirectResponse
+    public function show(Request $request, Course $course, string $slug): Response|RedirectResponse
     {
         CoursePublicPresenter::ensurePublished($course);
 
-        $redirect = CanonicalSeoSlugRedirect::awayIfMismatched(
+        $redirect = CanonicalIdSlugRedirect::awayIfSlugMismatched(
             $request,
             $course,
             'courses.show',
             'course',
-            2,
+            $slug,
         );
         if ($redirect !== null) {
             return $redirect;
         }
 
-        $canonicalSlug = $course->publicSlug();
-        $requestedSlug = rawurldecode((string) $request->segment(2));
-        if ($requestedSlug !== '' && $requestedSlug !== $canonicalSlug) {
-            $url = route('courses.show', ['course' => $canonicalSlug]);
-            $query = $request->getQueryString();
-            if ($query !== null && $query !== '') {
-                $url .= '?'.$query;
-            }
-
-            return redirect()->to($url, 301);
-        }
         $course->recordVisit();
 
         $payload = CoursePublicPresenter::forPage($course, $request->user());
@@ -58,5 +49,15 @@ class CourseController extends Controller
                 'webPage' => CourseSeo::webPageJsonLd($course, $appName),
             ],
         ]);
+    }
+
+    public function redirectLegacySlug(string $slug): RedirectResponse
+    {
+        $course = SeoSlug::resolveModel(Course::query(), $slug, 'slug');
+        abort_if($course === null, 404);
+
+        CoursePublicPresenter::ensurePublished($course);
+
+        return redirect()->to(url(SiteSearchUrls::course($course)), 301);
     }
 }

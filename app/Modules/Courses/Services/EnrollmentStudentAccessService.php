@@ -31,4 +31,13 @@ class EnrollmentStudentAccessService
 
         return $this->adobeEnrollmentSync->sync($enrollment);
     }
+
+    public function revokeAdobeAccess(Enrollment $enrollment): ?AdobeEnrollmentSyncResult
+    {
+        $enrollment->loadMissing(['user', 'courseClass']);
+
+        $result = $this->adobeEnrollmentSync->revoke($enrollment);
+
+        return $result->status === 'skipped' ? null : $result;
+    }
 }

@@ -112,9 +112,9 @@ class SitemapTest extends TestCase
         $this->assertStringContainsString('<urlset', $body);
         $this->assertStringContainsString(route('home'), $body);
         $this->assertStringContainsString(route('blog.index'), $body);
-        $this->assertStringContainsString('/courses/'.$publishedCourse->publicSlug(), $body);
+        $this->assertStringContainsString('/courses/'.$publishedCourse->id.'/'.$publishedCourse->publicSlug(), $body);
         $this->assertStringContainsString('/categories/'.$courseCategory->publicSlug(), $body);
-        $this->assertStringContainsString('/blog/'.$publishedPost->publicSlug(), $body);
+        $this->assertStringContainsString('/blog/'.$publishedPost->id.'/'.$publishedPost->publicSlug(), $body);
         $this->assertStringContainsString(route('pages.show', $activePage), $body);
         $instructorUuid = InstructorPublicUuid::routeKey($instructor);
         $this->assertStringContainsString(route('instructors.show', ['instructor' => $instructorUuid]), $body);

@@ -14,6 +14,14 @@ class PublicCourseShowTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function courseShowUrl(Course $course, ?string $slug = null): string
+    {
+        return route('courses.show', [
+            'course' => $course->id,
+            'slug' => $slug ?? $course->publicSlug(),
+        ]);
+    }
+
     public function test_course_show_redirects_legacy_slug_with_spaces_to_canonical(): void
     {
         $course = Course::query()->create([
@@ -24,10 +32,23 @@ class PublicCourseShowTest extends TestCase
         ]);
 
         $this->get('/courses/CATIA%20Training')
-            ->assertRedirect('/courses/catia-training');
+            ->assertRedirect('/courses/'.$course->id.'/catia-training');
 
-        $this->get('/courses/catia-training')
+        $this->get($this->courseShowUrl($course))
             ->assertOk();
+    }
+
+    public function test_wrong_course_slug_with_valid_id_redirects_to_canonical(): void
+    {
+        $course = Course::query()->create([
+            'title' => 'دوره ریدایرکت',
+            'slug' => 'canonical-course-slug',
+            'status' => CourseStatus::Published,
+            'published_at' => now(),
+        ]);
+
+        $this->get('/courses/'.$course->id.'/old-outdated-slug')
+            ->assertRedirect('/courses/'.$course->id.'/canonical-course-slug');
     }
 
     public function test_published_course_show_page_renders(): void
@@ -41,7 +62,7 @@ class PublicCourseShowTest extends TestCase
             'published_at' => now(),
         ]);
 
-        $this->get(route('courses.show', $course))
+        $this->get($this->courseShowUrl($course))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Public/CourseShow')
@@ -65,7 +86,7 @@ class PublicCourseShowTest extends TestCase
             'status' => CourseStatus::Draft,
         ]);
 
-        $this->get(route('courses.show', $course))->assertNotFound();
+        $this->get($this->courseShowUrl($course))->assertNotFound();
     }
 
     public function test_authenticated_user_can_submit_course_comment(): void
@@ -79,7 +100,10 @@ class PublicCourseShowTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('courses.comments.store', $course), [
+            ->post(route('courses.comments.store', [
+                'course' => $course->id,
+                'slug' => $course->publicSlug(),
+            ]), [
                 'body' => 'دوره عالی بود',
                 'rating' => 5,
             ])
@@ -110,7 +134,7 @@ class PublicCourseShowTest extends TestCase
             'status' => CommentStatus::Approved,
         ]);
 
-        $this->get(route('courses.show', $course))
+        $this->get($this->courseShowUrl($course))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->has('course.comments', 1)
