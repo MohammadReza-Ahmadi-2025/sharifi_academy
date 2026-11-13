@@ -1,7 +1,7 @@
 export type RichHtmlTocItem = {
     id: string;
     title: string;
-    level: 2 | 3 | 4;
+    level: 1 | 2 | 3 | 4;
 };
 
 function slugifyHeading(title: string, used: Set<string>): string {
@@ -39,14 +39,15 @@ function assignHeadingIds(root: ParentNode): RichHtmlTocItem[] {
     const used = new Set<string>();
     const toc: RichHtmlTocItem[] = [];
 
-    root.querySelectorAll('h2, h3, h4').forEach((node) => {
+    // CKEditor often uses h1 for section titles inside the body — include them in TOC.
+    root.querySelectorAll('h1, h2, h3, h4').forEach((node) => {
         const el = node as HTMLElement;
         const title = el.textContent?.trim() ?? '';
         if (title === '') {
             return;
         }
 
-        const level = Number(el.tagName.charAt(1)) as 2 | 3 | 4;
+        const level = Number(el.tagName.charAt(1)) as 1 | 2 | 3 | 4;
         if (!el.id) {
             el.id = slugifyHeading(title, used);
         } else {

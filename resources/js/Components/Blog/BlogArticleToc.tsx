@@ -10,8 +10,9 @@ type Props = {
 };
 
 function indentClass(level: RichHtmlTocItem['level']): string {
-    if (level === 3) return 'pr-3';
-    if (level === 4) return 'pr-5';
+    if (level === 2) return 'pr-2';
+    if (level === 3) return 'pr-4';
+    if (level === 4) return 'pr-6';
     return '';
 }
 
