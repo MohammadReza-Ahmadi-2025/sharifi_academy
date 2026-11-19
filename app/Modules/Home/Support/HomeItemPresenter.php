@@ -9,6 +9,7 @@ use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Courses\Enums\CourseClassStatus;
 use App\Modules\Courses\Models\Course;
+use App\Modules\Courses\Support\CourseClassPricing;
 use App\Modules\Home\Models\Banner;
 use App\Modules\Profile\Support\InstructorPublicUuid;
 use App\Modules\Users\Support\UserAvatarMedia;
@@ -52,9 +53,13 @@ class HomeItemPresenter
         }
 
         if ($item instanceof Course) {
-            $minPrice = $item->relationLoaded('courseClasses')
-                ? $item->courseClasses->min('price')
-                : null;
+            $minPrice = null;
+            if ($item->relationLoaded('courseClasses')) {
+                $effective = $item->courseClasses
+                    ->map(fn ($class) => CourseClassPricing::effectivePrice($class))
+                    ->filter(fn (int $price) => $price > 0);
+                $minPrice = $effective->isNotEmpty() ? $effective->min() : null;
+            }
 
             return [
                 'id' => $item->id,

@@ -11,6 +11,7 @@ use App\Modules\Courses\Models\CourseClass;
 use App\Modules\Courses\Models\Enrollment;
 use App\Modules\Courses\Services\AdminEnrollmentService;
 use App\Modules\Courses\Support\AdminEnumOptions;
+use App\Modules\Courses\Support\CourseClassPricing;
 use App\Modules\Courses\Support\EnrollableUserOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -103,20 +104,23 @@ class CourseEnrollmentAdminController extends Controller
             $classes = CourseClass::query()
                 ->where('course_id', $selectedCourseId)
                 ->orderBy('name')
-                ->get(['id', 'name', 'price'])
+                ->get(['id', 'name', 'price', 'discount_percent'])
                 ->map(fn (CourseClass $class) => [
                     'value' => $class->id,
                     'label' => $class->name,
-                    'price' => (int) ($class->price ?? 0),
+                    'price' => CourseClassPricing::chargeableAmount($class),
                 ])
                 ->values()
                 ->all();
 
             if ($selectedClassId > 0) {
-                $defaultPrice = (int) (CourseClass::query()
+                $selectedClass = CourseClass::query()
                     ->where('course_id', $selectedCourseId)
                     ->whereKey($selectedClassId)
-                    ->value('price') ?? 0);
+                    ->first(['id', 'price', 'discount_percent']);
+                $defaultPrice = $selectedClass
+                    ? CourseClassPricing::chargeableAmount($selectedClass)
+                    : 0;
             }
         }
 

@@ -7,6 +7,7 @@ use App\Modules\Courses\Enums\EnrollmentStatus;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
 use App\Modules\Courses\Models\Enrollment;
+use App\Modules\Courses\Support\CourseClassPricing;
 use App\Support\Notifications\InstructorModerationNotifier;
 use Illuminate\Validation\ValidationException;
 
@@ -41,7 +42,7 @@ class SiteEnrollmentRequestService
 
             $existing->update([
                 'status' => EnrollmentStatus::Pending,
-                'price_amount' => is_numeric($courseClass->price) ? (int) $courseClass->price : 0,
+                'price_amount' => CourseClassPricing::chargeableAmount($courseClass),
                 'confirmed_at' => null,
                 'cancelled_at' => null,
             ]);
@@ -52,7 +53,7 @@ class SiteEnrollmentRequestService
                 'course_class_id' => $courseClass->id,
                 'user_id' => $user->id,
                 'status' => EnrollmentStatus::Pending,
-                'price_amount' => is_numeric($courseClass->price) ? (int) $courseClass->price : 0,
+                'price_amount' => CourseClassPricing::chargeableAmount($courseClass),
             ]);
         }
 

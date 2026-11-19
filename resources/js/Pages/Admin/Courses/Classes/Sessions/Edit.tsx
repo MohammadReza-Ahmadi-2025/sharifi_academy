@@ -1,7 +1,7 @@
 import { SessionFormFields } from '@/Components/Admin/Courses/SessionFormFields';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
-import AdminLayout from '@/Layouts/AdminLayout';
+import { CourseManageLayout } from '@/Components/Courses/CourseManageLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import { Trash2 } from 'lucide-react';
 import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
@@ -54,7 +54,7 @@ export default function SessionsEdit({ routePrefix, course, courseClass, session
     const recForm = useForm({ sco_id: '', name: '', playback_url: '', duration_seconds: 0, is_public: true });
 
     return (
-        <AdminLayout>
+        <CourseManageLayout routePrefix={routePrefix} title="ویرایش جلسه">
             <Head title="ویرایش جلسه" />
             <PageHeader title="ویرایش جلسه" backHref={`${routePrefix}/courses/${course.id}/classes/${courseClass.id}/sessions`} />
             <AdminFormPage onSubmit={(e) => { e.preventDefault(); form.put(base); }}>
@@ -173,6 +173,6 @@ export default function SessionsEdit({ routePrefix, course, courseClass, session
                     )}
                 </section>
             )}
-        </AdminLayout>
+        </CourseManageLayout>
     );
 }

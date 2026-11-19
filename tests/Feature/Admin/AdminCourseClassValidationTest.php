@@ -52,4 +52,44 @@ class AdminCourseClassValidationTest extends TestCase
             ])
             ->assertSessionHasErrors('code');
     }
+
+    public function test_discount_percent_must_be_between_zero_and_hundred(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $admin = User::where('mobile', '09120000001')->firstOrFail();
+
+        $course = Course::query()->create([
+            'title' => 'دوره تخفیف',
+            'slug' => 'class-discount-course',
+            'status' => CourseStatus::Published,
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/admin/courses/'.$course->id.'/classes', [
+                'name' => 'کلاس تخفیف نامعتبر',
+                'code' => 'CLS-DISC-BAD',
+                'status' => CourseClassStatus::Upcoming->value,
+                'price' => 1_000_000,
+                'discount_percent' => 101,
+                'is_public' => true,
+            ])
+            ->assertSessionHasErrors('discount_percent');
+
+        $this->actingAs($admin)
+            ->post('/admin/courses/'.$course->id.'/classes', [
+                'name' => 'کلاس تخفیف معتبر',
+                'code' => 'CLS-DISC-OK',
+                'status' => CourseClassStatus::Upcoming->value,
+                'price' => 1_000_000,
+                'discount_percent' => 10,
+                'is_public' => true,
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('course_classes', [
+            'code' => 'CLS-DISC-OK',
+            'price' => 1_000_000,
+            'discount_percent' => 10,
+        ]);
+    }
 }

@@ -2,7 +2,7 @@ import { Badge } from '@/Components/Admin/shared/ui/badge';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/Admin/shared/ui/table';
-import AdminLayout from '@/Layouts/AdminLayout';
+import { CourseManageLayout } from '@/Components/Courses/CourseManageLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { ExternalLink, Pencil, Plus, Trash2 } from 'lucide-react';
@@ -27,7 +27,7 @@ export default function SessionsIndex({ routePrefix, course, courseClass, sessio
     const confirmToast = useConfirmToast();
     const base = `${routePrefix}/courses/${course.id}/classes/${courseClass.id}/sessions`;
     return (
-        <AdminLayout>
+        <CourseManageLayout routePrefix={routePrefix} title={`جلسات — ${courseClass.name}`}>
             <Head title="جلسات" />
             <PageHeader
                 title={`جلسات — ${courseClass.name}`}
@@ -74,12 +74,14 @@ export default function SessionsIndex({ routePrefix, course, courseClass, sessio
                                         href={s.join_url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
+                                        className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white hover:bg-emerald-700"
                                     >
                                         <ExternalLink className="h-3.5 w-3.5" />
-                                        {s.join_label ?? 'ورود'}
+                                        {s.join_label ?? 'ورود به کلاس'}
                                     </a>
-                                ) : null}
+                                ) : s.join_configured ? null : (
+                                    <span className="text-xs text-amber-700">اتاق/لینک تنظیم نشده</span>
+                                )}
                                 {abilities.update && (
                                     <Link href={`${base}/${s.id}/edit`} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100">
                                         <Pencil className="h-4 w-4" />
@@ -91,6 +93,6 @@ export default function SessionsIndex({ routePrefix, course, courseClass, sessio
                     ))}
                 </TableBody>
             </Table>
-        </AdminLayout>
+        </CourseManageLayout>
     );
 }

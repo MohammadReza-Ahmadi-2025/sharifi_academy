@@ -33,9 +33,9 @@ export const studentPanelLinks: StudentPanelLink[] = [
     },
     {
         href: '/student/sessions',
-        label: 'جلسات',
+        label: 'ورود به کلاس',
         icon: CalendarDays,
-        hint: 'برنامه کلاس‌ها',
+        hint: 'جلسات و Adobe',
     },
     {
         href: '/student/attendance',

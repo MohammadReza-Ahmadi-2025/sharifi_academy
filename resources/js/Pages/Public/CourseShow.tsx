@@ -31,6 +31,8 @@ type CourseClassRow = {
     description?: string | null;
     delivery_type_label: string;
     online_platform_label?: string | null;
+    list_price?: number | null;
+    discount_percent?: number;
     price: number | null;
     location: string | null;
     schedule_status: 'unscheduled' | 'upcoming' | 'ongoing' | 'finished';
@@ -322,9 +324,23 @@ export default function CourseShow({ course, structuredData }: Props) {
                                                     ) : null}
                                                 </div>
                                                 {row.price !== null && row.price > 0 && (
-                                                    <p className="shrink-0 rounded-xl bg-primary/8 px-3 py-2 text-sm font-extrabold text-primary">
-                                                        {formatPrice(row.price)}
-                                                    </p>
+                                                    <div className="shrink-0 rounded-xl bg-primary/8 px-3 py-2 text-end">
+                                                        {(row.discount_percent ?? 0) > 0 &&
+                                                        row.list_price &&
+                                                        row.list_price > row.price ? (
+                                                            <div className="mb-0.5 flex items-center justify-end gap-2">
+                                                                <span className="text-xs text-neutral-black/45 line-through">
+                                                                    {formatPrice(row.list_price)}
+                                                                </span>
+                                                                <span className="rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">
+                                                                    ٪{(row.discount_percent ?? 0).toLocaleString('fa-IR')}-
+                                                                </span>
+                                                            </div>
+                                                        ) : null}
+                                                        <p className="text-sm font-extrabold text-primary">
+                                                            {formatPrice(row.price)}
+                                                        </p>
+                                                    </div>
                                                 )}
                                             </div>
                                             <ul className="mt-4 space-y-2.5 pr-3 text-sm text-neutral-black/75">

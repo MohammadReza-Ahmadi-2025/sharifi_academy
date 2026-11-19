@@ -1,3 +1,4 @@
+import { SessionActions } from '@/Components/Student/SessionActions';
 import { cn } from '@/lib/utils';
 import InstructorLayout from '@/Layouts/InstructorLayout';
 import { PageProps } from '@/types';
@@ -23,6 +24,17 @@ type CourseRow = {
     classes_url: string;
 };
 
+type UpcomingSession = {
+    id: number;
+    title: string;
+    starts_at: string | null;
+    course_title: string | null;
+    class_name: string | null;
+    join_url: string | null;
+    join_label: string | null;
+    join_hint: string | null;
+};
+
 type Stats = {
     courses_total: number;
     courses_published: number;
@@ -35,6 +47,7 @@ type Stats = {
 
 type Props = {
     courses: CourseRow[];
+    upcomingSessions?: UpcomingSession[];
     stats: Stats;
     canCreateCourse: boolean;
 };
@@ -50,7 +63,12 @@ function statusBadgeClass(status: string): string {
     }
 }
 
-export default function InstructorDashboard({ courses, stats, canCreateCourse }: Props) {
+export default function InstructorDashboard({
+    courses,
+    upcomingSessions = [],
+    stats,
+    canCreateCourse,
+}: Props) {
     const { auth } = usePage<PageProps>().props;
     const firstName = auth.account?.display_name?.split(/\s+/)[0] ?? 'استاد';
 
@@ -172,6 +190,46 @@ export default function InstructorDashboard({ courses, stats, canCreateCourse }:
                             </div>
                         );
                     })}
+                </section>
+
+                <section className="instructor-fade-up instructor-fade-up-delay-1 overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_32px_rgb(15_42_74_/_0.05)]">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 md:px-6">
+                        <div>
+                            <h3 className="text-base font-bold text-slate-900">جلسات پیش‌رو</h3>
+                            <p className="mt-0.5 text-xs text-slate-500">ورود سریع به کلاس / Adobe Connect</p>
+                        </div>
+                        <Link
+                            href="/instructor/session-attendances"
+                            className="text-sm font-semibold text-primary transition hover:text-primary-hover"
+                        >
+                            همه جلسات
+                        </Link>
+                    </div>
+                    {upcomingSessions.length === 0 ? (
+                        <p className="px-5 py-8 text-sm text-slate-500 md:px-6">
+                            جلسهٔ پیش‌رویی نیست. وقتی جلسه‌ای برای کلاس‌های شما تعریف شود، دکمه ورود اینجا می‌آید.
+                        </p>
+                    ) : (
+                        <ul className="divide-y divide-slate-100">
+                            {upcomingSessions.map((session) => (
+                                <li
+                                    key={session.id}
+                                    className="flex flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between md:px-6"
+                                >
+                                    <div className="min-w-0">
+                                        <p className="font-semibold text-slate-900">{session.title}</p>
+                                        <p className="mt-1 text-xs text-slate-500">
+                                            {[session.course_title, session.class_name].filter(Boolean).join(' · ')}
+                                            {session.starts_at
+                                                ? ` · ${new Date(session.starts_at).toLocaleString('fa-IR')}`
+                                                : ''}
+                                        </p>
+                                    </div>
+                                    <SessionActions session={session} />
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </section>
 
                 <section className="instructor-fade-up instructor-fade-up-delay-2 overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_32px_rgb(15_42_74_/_0.05)]">

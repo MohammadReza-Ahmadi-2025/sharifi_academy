@@ -146,7 +146,7 @@ export default function InstructorSessionAttendancesIndex({ summary, sessions }:
                                         href={session.join_url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100"
+                                        className="rounded-xl bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
                                     >
                                         {session.join_label ?? 'ورود به کلاس'}
                                     </a>

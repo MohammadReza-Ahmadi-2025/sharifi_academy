@@ -202,6 +202,7 @@ class CourseClassController extends Controller
             'online_platform' => $data['online_platform'] ?? CourseClassOnlinePlatform::AdobeConnect->value,
             'capacity' => $data['capacity'] ?? null,
             'price' => $data['price'] ?? 0,
+            'discount_percent' => $data['discount_percent'] ?? 0,
             'registration_starts_at' => $data['registration_starts_at'] ?? null,
             'registration_ends_at' => $data['registration_ends_at'] ?? null,
             'starts_at' => $data['starts_at'] ?? null,

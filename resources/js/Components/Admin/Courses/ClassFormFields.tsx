@@ -31,6 +31,7 @@ type ClassFormData = {
     online_platform: string;
     capacity: number | '';
     price: number;
+    discount_percent: number | '';
     registration_starts_at: string;
     registration_ends_at: string;
     starts_at: string;
@@ -167,6 +168,33 @@ export function ClassFormFields({
                             disabled={processing}
                             onChange={(value) => onChange('price', value ? Number(value) : 0)}
                         />
+                    </FormField>
+                    <FormField label="تخفیف درصدی" htmlFor="class-discount" error={errors.discount_percent}>
+                        <AdminInput
+                            id="class-discount"
+                            type="number"
+                            min={0}
+                            max={100}
+                            dir="ltr"
+                            className="text-left"
+                            value={data.discount_percent}
+                            disabled={processing}
+                            onChange={(e) =>
+                                onChange(
+                                    'discount_percent',
+                                    e.target.value === '' ? '' : Math.min(100, Math.max(0, Number(e.target.value))),
+                                )
+                            }
+                        />
+                        {Number(data.price) > 0 && Number(data.discount_percent) > 0 ? (
+                            <p className="mt-1 text-xs text-slate-500">
+                                مبلغ پس از تخفیف:{' '}
+                                {Math.ceil(
+                                    Number(data.price) - (Number(data.price) * Number(data.discount_percent)) / 100,
+                                ).toLocaleString('fa-IR')}{' '}
+                                ریال
+                            </p>
+                        ) : null}
                     </FormField>
                     <FormField label="محل برگزاری" htmlFor="class-location" className="md:col-span-2" error={errors.location}>
                         <AdminInput

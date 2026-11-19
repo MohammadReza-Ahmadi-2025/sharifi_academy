@@ -6,6 +6,7 @@ use App\Modules\AdobeConnect\Support\AdobeEnrollmentSyncResult;
 use App\Modules\Courses\Enums\EnrollmentStatus;
 use App\Modules\Courses\Models\CourseClass;
 use App\Modules\Courses\Models\Enrollment;
+use App\Modules\Courses\Support\CourseClassPricing;
 use App\Support\Notifications\InstructorModerationNotifier;
 
 class AdminEnrollmentService
@@ -26,7 +27,7 @@ class AdminEnrollmentService
             'course_class_id' => $courseClass->id,
             'user_id' => $data['user_id'],
             'status' => $status,
-            'price_amount' => $data['price_amount'] ?? $courseClass->price ?? 0,
+            'price_amount' => $data['price_amount'] ?? CourseClassPricing::chargeableAmount($courseClass),
             'admin_note' => $data['admin_note'] ?? null,
             'confirmed_at' => $status === EnrollmentStatus::Confirmed ? now() : null,
             'cancelled_at' => $status === EnrollmentStatus::Cancelled ? now() : null,

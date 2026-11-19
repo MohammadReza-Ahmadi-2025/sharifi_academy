@@ -30,7 +30,9 @@ class CoursePublicPresenter
         ]);
 
         $publicClasses = $course->courseClasses;
-        $prices = $publicClasses->pluck('price')->filter(fn ($price) => is_numeric($price) && $price > 0);
+        $prices = $publicClasses
+            ->map(fn (CourseClass $class) => CourseClassPricing::effectivePrice($class))
+            ->filter(fn (int $price) => $price > 0);
         $priceFrom = $prices->isNotEmpty() ? (int) $prices->min() : null;
 
         $imageUrl = $course->mainImage?->publicUrl();
@@ -85,7 +87,13 @@ class CoursePublicPresenter
                     'online_platform_label' => $showOnlinePlatform
                         ? ($class->online_platform?->label() ?? CourseClassOnlinePlatform::AdobeConnect->label())
                         : null,
-                    'price' => is_numeric($class->price) ? (int) $class->price : null,
+                    'list_price' => CourseClassPricing::listPrice($class) > 0
+                        ? CourseClassPricing::listPrice($class)
+                        : null,
+                    'discount_percent' => CourseClassPricing::discountPercent($class),
+                    'price' => CourseClassPricing::effectivePrice($class) > 0
+                        ? CourseClassPricing::effectivePrice($class)
+                        : null,
                     'location' => $class->location,
                     'schedule_status' => $schedule['status'],
                     'schedule_status_label' => $schedule['status_label'],

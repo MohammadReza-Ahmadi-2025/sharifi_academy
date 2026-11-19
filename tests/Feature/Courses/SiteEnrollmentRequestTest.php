@@ -132,6 +132,44 @@ class SiteEnrollmentRequestTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_enrollment_price_uses_percentage_discount(): void
+    {
+        Notification::fake();
+
+        $student = User::where('mobile', '09120000003')->firstOrFail();
+        $this->ensureCompleteProfile($student);
+
+        $course = Course::query()->create([
+            'title' => 'Discounted class',
+            'slug' => 'discounted-enroll-course',
+            'status' => CourseStatus::Published,
+        ]);
+
+        $class = CourseClass::query()->create([
+            'course_id' => $course->id,
+            'name' => 'گروه تخفیف',
+            'code' => 'DISC-10',
+            'status' => CourseClassStatus::Upcoming,
+            'price' => 2_000_000,
+            'discount_percent' => 10,
+            'is_public' => true,
+        ]);
+
+        $this->actingAs($student)
+            ->post("/courses/{$course->id}/{$course->slug}/enrollments", [
+                'course_class_id' => $class->id,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('enrollments', [
+            'course_class_id' => $class->id,
+            'user_id' => $student->id,
+            'status' => EnrollmentStatus::Pending->value,
+            'price_amount' => 1_800_000,
+        ]);
+    }
+
     public function test_cancelled_enrollment_can_be_requested_again(): void
     {
         Notification::fake();

@@ -17,9 +17,15 @@ export const instructorPanelLinks: InstructorPanelLink[] = [
     },
     {
         href: '/instructor/courses',
-        label: 'دوره‌ها',
+        label: 'دوره‌های من',
         icon: BookOpen,
         hint: 'محتوا و کلاس‌ها',
+    },
+    {
+        href: '/instructor/session-attendances',
+        label: 'ورود به کلاس',
+        icon: ClipboardCheck,
+        hint: 'جلسات و Adobe',
     },
     {
         href: '/instructor/resume',
@@ -32,11 +38,5 @@ export const instructorPanelLinks: InstructorPanelLink[] = [
         label: 'پست‌های من',
         icon: Newspaper,
         hint: 'بعد از تکمیل پروفایل',
-    },
-    {
-        href: '/instructor/session-attendances',
-        label: 'حضور و غیاب',
-        icon: ClipboardCheck,
-        hint: 'وضعیت کلاس‌ها',
     },
 ];

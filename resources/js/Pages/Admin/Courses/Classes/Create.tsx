@@ -1,7 +1,7 @@
 import { ClassFormFields } from '@/Components/Admin/Courses/ClassFormFields';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
-import AdminLayout from '@/Layouts/AdminLayout';
+import { CourseManageLayout } from '@/Components/Courses/CourseManageLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
@@ -25,6 +25,7 @@ export default function CourseClassesCreate(props: Props) {
         online_platform: 'adobe_connect',
         capacity: '' as number | '',
         price: 0,
+        discount_percent: 0 as number | '',
         registration_starts_at: '',
         registration_ends_at: '',
         starts_at: '',
@@ -39,7 +40,7 @@ export default function CourseClassesCreate(props: Props) {
     });
 
     return (
-        <AdminLayout>
+        <CourseManageLayout routePrefix={routePrefix} title="ایجاد کلاس">
             <Head title="ایجاد کلاس" />
             <PageHeader title="ایجاد کلاس" backHref={`${routePrefix}/courses/${course.id}/classes`} />
             <AdminFormPage onSubmit={(e) => { e.preventDefault(); form.post(`${routePrefix}/courses/${course.id}/classes`); }}>
@@ -55,6 +56,6 @@ export default function CourseClassesCreate(props: Props) {
                     <AdminButton type="submit" disabled={form.processing}>ذخیره</AdminButton>
                 </AdminFormActions>
 </AdminFormPage>
-        </AdminLayout>
+        </CourseManageLayout>
     );
 }

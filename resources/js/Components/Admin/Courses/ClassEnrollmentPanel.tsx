@@ -32,6 +32,7 @@ type EnrollmentRow = {
 };
 
 type Props = {
+    routePrefix?: string;
     courseId: number;
     classId: number;
     enrollments: EnrollmentRow[];
@@ -45,6 +46,7 @@ type Props = {
 };
 
 export function ClassEnrollmentPanel({
+    routePrefix = '/admin',
     courseId,
     classId,
     enrollments,
@@ -64,7 +66,7 @@ export function ClassEnrollmentPanel({
         return null;
     }
 
-    const baseUrl = `/admin/courses/${courseId}/classes/${classId}/enrollments`;
+    const baseUrl = `${routePrefix}/courses/${courseId}/classes/${classId}/enrollments`;
     const userSelectOptions = mapToSelectOptions(userOptions);
     const statusSelectOptions = mapToSelectOptions(enrollmentStatusOptions);
     const pendingAdobeCount = showAdobeConnect

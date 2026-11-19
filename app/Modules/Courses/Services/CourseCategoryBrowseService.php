@@ -9,6 +9,7 @@ use App\Modules\Courses\Enums\CourseLevel;
 use App\Modules\Courses\Enums\CourseStatus;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Support\CourseCatalogPresenter;
+use App\Modules\Courses\Support\CourseClassPricing;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -63,14 +64,14 @@ class CourseCategoryBrowseService
      */
     public function paginateCoursesInCategory(Category $category, array $filters): LengthAwarePaginator
     {
+        $minSql = CourseClassPricing::sqlMinPublicEffectiveSubquery('courses.id');
+
         $query = $category->courses()
             ->where('courses.status', CourseStatus::Published)
             ->whereNull('courses.deleted_at')
             ->with(['mainImage'])
-            ->withMin(
-                ['courseClasses as min_public_price' => fn (Builder $classes) => $classes->where('is_public', true)],
-                'price',
-            );
+            ->select('courses.*')
+            ->selectRaw("{$minSql} as min_public_price");
 
         $this->applyFilters($query, $filters);
         $this->applySort($query, (string) $filters['sort']);
@@ -132,7 +133,7 @@ class CourseCategoryBrowseService
         $priceMin = $filters['price_min'] ?? null;
         $priceMax = $filters['price_max'] ?? null;
         if ($priceMin !== null || $priceMax !== null) {
-            $minPriceSql = '(SELECT MIN(cc.price) FROM course_classes cc WHERE cc.course_id = courses.id AND cc.is_public = 1 AND cc.deleted_at IS NULL)';
+            $minPriceSql = CourseClassPricing::sqlMinPublicEffectiveSubquery('courses.id');
             if ($priceMin !== null) {
                 $query->whereRaw("COALESCE({$minPriceSql}, 0) >= ?", [$priceMin]);
             }
@@ -154,10 +155,6 @@ class CourseCategoryBrowseService
         }
 
         if ($sort === self::SORT_PRICE_ASC || $sort === self::SORT_PRICE_DESC) {
-            $query->withMin(
-                ['courseClasses as min_public_price' => fn (Builder $classes) => $classes->where('is_public', true)],
-                'price',
-            );
             $query->orderBy(
                 'min_public_price',
                 $sort === self::SORT_PRICE_ASC ? 'asc' : 'desc',
@@ -209,7 +206,7 @@ class CourseCategoryBrowseService
      */
     public function priceBoundsInCategory(Category $category): array
     {
-        $sub = '(SELECT MIN(cc.price) FROM course_classes cc WHERE cc.course_id = courses.id AND cc.is_public = 1 AND cc.deleted_at IS NULL)';
+        $sub = CourseClassPricing::sqlMinPublicEffectiveSubquery('courses.id');
 
         // Aggregate via Course query (not BelongsToMany) so pivot columns are not selected under ONLY_FULL_GROUP_BY.
         $row = Course::query()

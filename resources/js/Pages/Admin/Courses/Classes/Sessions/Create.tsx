@@ -1,7 +1,7 @@
 import { SessionFormFields } from '@/Components/Admin/Courses/SessionFormFields';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
-import AdminLayout from '@/Layouts/AdminLayout';
+import { CourseManageLayout } from '@/Components/Courses/CourseManageLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
@@ -27,7 +27,7 @@ export default function SessionsCreate({ routePrefix, course, courseClass, statu
     const showVideoUrl = courseClass.online_platform === 'video_link';
 
     return (
-        <AdminLayout>
+        <CourseManageLayout routePrefix={routePrefix} title="جلسه جدید">
             <Head title="جلسه جدید" />
             <PageHeader title="جلسه جدید" backHref={base} />
             <AdminFormPage onSubmit={(e) => { e.preventDefault(); form.post(base); }}>
@@ -44,6 +44,6 @@ export default function SessionsCreate({ routePrefix, course, courseClass, statu
                     <AdminButton type="submit">ذخیره</AdminButton>
                 </AdminFormActions>
 </AdminFormPage>
-        </AdminLayout>
+        </CourseManageLayout>
     );
 }

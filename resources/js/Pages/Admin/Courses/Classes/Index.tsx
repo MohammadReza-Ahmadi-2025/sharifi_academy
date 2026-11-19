@@ -2,7 +2,7 @@ import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import { Card } from '@/Components/Admin/shared/ui/card';
 import { Table, TableBody, TableCell, TableEmptyState, TableHead, TableHeader, TableRow } from '@/Components/Admin/shared/ui/table';
-import AdminLayout from '@/Layouts/AdminLayout';
+import { CourseManageLayout } from '@/Components/Courses/CourseManageLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
@@ -26,7 +26,7 @@ type Props = {
 export default function CourseClassesIndex({ routePrefix, course, classes, abilities }: Props) {
     const confirmToast = useConfirmToast();
     return (
-        <AdminLayout>
+        <CourseManageLayout routePrefix={routePrefix} title={`کلاس‌های ${course.title}`}>
             <Head title={`کلاس‌های ${course.title}`} />
             <PageHeader
                 title={`کلاس‌های ${course.title}`}
@@ -93,6 +93,6 @@ export default function CourseClassesIndex({ routePrefix, course, classes, abili
                 </TableBody>
             </Table>
             </Card>
-        </AdminLayout>
+        </CourseManageLayout>
     );
 }

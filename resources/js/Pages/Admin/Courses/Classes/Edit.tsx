@@ -3,7 +3,7 @@ import { ClassEnrollmentPanel } from '@/Components/Admin/Courses/ClassEnrollment
 import { ClassFormFields } from '@/Components/Admin/Courses/ClassFormFields';
 import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
-import AdminLayout from '@/Layouts/AdminLayout';
+import { CourseManageLayout } from '@/Components/Courses/CourseManageLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
 
@@ -47,6 +47,7 @@ export default function CourseClassesEdit(props: Props) {
         online_platform: String(courseClass.online_platform ?? 'adobe_connect'),
         capacity: (courseClass.capacity as number | null) ?? '',
         price: Number(courseClass.price ?? 0),
+        discount_percent: Number(courseClass.discount_percent ?? 0),
         registration_starts_at: String(courseClass.registration_starts_at ?? ''),
         registration_ends_at: String(courseClass.registration_ends_at ?? ''),
         starts_at: String(courseClass.starts_at ?? ''),
@@ -63,7 +64,7 @@ export default function CourseClassesEdit(props: Props) {
     });
 
     return (
-        <AdminLayout>
+        <CourseManageLayout routePrefix={routePrefix} title="ویرایش کلاس">
             <Head title="ویرایش کلاس" />
             <PageHeader
                 title="ویرایش کلاس"
@@ -96,17 +97,19 @@ export default function CourseClassesEdit(props: Props) {
                 </AdminFormActions>
 </AdminFormPage>
 
-            {(abilities.enrollmentsIndex ||
-                abilities.enrollmentsCreate ||
-                abilities.enrollmentsUpdate ||
-                abilities.enrollmentsDelete) && (
+            {routePrefix === '/admin' &&
+                (abilities.enrollmentsIndex ||
+                    abilities.enrollmentsCreate ||
+                    abilities.enrollmentsUpdate ||
+                    abilities.enrollmentsDelete) && (
                 <ClassEnrollmentPanel
+                    routePrefix={routePrefix}
                     courseId={course.id}
                     classId={classId}
                     enrollments={enrollments}
                     userOptions={props.enrollmentUserOptions}
                     enrollmentStatusOptions={props.enrollmentStatusOptions}
-                    defaultPrice={Number(courseClass.price ?? 0)}
+                    defaultPrice={Number(courseClass.effective_price ?? courseClass.price ?? 0)}
                     showAdobeConnect={showAdobePanels}
                     canCreate={abilities.enrollmentsCreate}
                     canUpdate={abilities.enrollmentsUpdate}
@@ -127,6 +130,6 @@ export default function CourseClassesEdit(props: Props) {
                     canDelete={abilities.adobeDelete}
                 />
             )}
-        </AdminLayout>
+        </CourseManageLayout>
     );
 }
