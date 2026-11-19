@@ -226,6 +226,21 @@ return [
                     ],
                 ],
             ],
+            'users' => [
+                'searchableAttributes' => [
+                    'title',
+                    'name',
+                    'family',
+                    'headline',
+                ],
+                'typoTolerance' => [
+                    'enabled' => true,
+                    'minWordSizeForTypos' => [
+                        'oneTypo' => 3,
+                        'twoTypos' => 6,
+                    ],
+                ],
+            ],
         ],
         'model-settings' => [
             //

@@ -131,4 +131,72 @@ class SiteSearchAutocompleteTest extends TestCase
                 'title' => 'Special searchable post',
             ]);
     }
+
+    public function test_autocomplete_finds_public_user_profile(): void
+    {
+        User::withoutSyncingToSearch(function (): void {
+            $user = User::factory()->create([
+                'name' => 'نرگس',
+                'family' => 'کاظمی‌سرچ',
+                'status' => 1,
+            ]);
+            $user->profile()->updateOrCreate([], [
+                'headline' => 'طراح محصول',
+                'is_public' => true,
+            ]);
+        });
+
+        $this->get('/search/autocomplete?q='.urlencode('کاظمی'))
+            ->assertOk()
+            ->assertJsonFragment([
+                'kind' => 'profile',
+                'title' => 'نرگس کاظمی‌سرچ',
+            ]);
+    }
+
+    public function test_autocomplete_hides_private_user_profile(): void
+    {
+        User::withoutSyncingToSearch(function (): void {
+            $user = User::factory()->create([
+                'name' => 'پنهان',
+                'family' => 'خصوصی‌سرچ',
+                'status' => 1,
+            ]);
+            $user->profile()->updateOrCreate([], [
+                'headline' => 'مخفی',
+                'is_public' => false,
+            ]);
+        });
+
+        $this->get('/search/autocomplete?q='.urlencode('خصوصی'))
+            ->assertOk()
+            ->assertJsonMissing([
+                'kind' => 'profile',
+                'title' => 'پنهان خصوصی‌سرچ',
+            ]);
+    }
+
+    public function test_search_results_include_public_profiles_group(): void
+    {
+        User::withoutSyncingToSearch(function (): void {
+            $user = User::factory()->create([
+                'name' => 'آیدا',
+                'family' => 'ProfileSearchPage',
+                'status' => 1,
+            ]);
+            $user->profile()->updateOrCreate([], [
+                'headline' => 'مهندس نرم‌افزار',
+                'is_public' => true,
+            ]);
+        });
+
+        $this->get('/search?q=ProfileSearchPage')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Public/Search/Index')
+                ->where('total', 1)
+                ->has('groups.profile', 1)
+                ->where('groups.profile.0.title', 'آیدا ProfileSearchPage')
+                ->where('groups.profile.0.kind', 'profile'));
+    }
 }

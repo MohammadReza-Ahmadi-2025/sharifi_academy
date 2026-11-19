@@ -7,6 +7,7 @@ use App\Modules\Blog\Enums\PostStatus;
 use App\Modules\Blog\Http\Requests\Panel\StorePanelPostRequest;
 use App\Modules\Blog\Http\Requests\Panel\UpdatePanelPostRequest;
 use App\Modules\Blog\Models\Post;
+use App\Modules\Blog\Support\CommunityPostingEligibility;
 use App\Modules\Blog\Support\PanelBlogEnumOptions;
 use App\Modules\Blog\Support\PostPresenter;
 use App\Modules\Catalog\Models\Category;
@@ -44,18 +45,39 @@ trait ManagesPanelBlogPosts
             ->withQueryString()
             ->through(fn (Post $post) => PostPresenter::forList($post));
 
+        $canCreate = $user->can('create', Post::class);
+        $lacksEnrollment = ! $canCreate
+            && ! CommunityPostingEligibility::isInstructorOrAdmin($user)
+            && ! CommunityPostingEligibility::hasConfirmedEnrollment($user);
+
         return Inertia::render($this->blogInertiaPrefix().'/Index', [
             'posts' => $posts,
             'panel' => $this->blogPanelMeta(),
             'abilities' => [
-                'create' => $user->can('create', Post::class),
+                'create' => $canCreate,
             ],
+            // Full-page notice only when there are no existing posts to manage.
+            'needs_enrollment' => $lacksEnrollment && $posts->total() === 0,
         ]);
     }
 
-    public function create(Request $request): Response
+    public function create(Request $request): Response|RedirectResponse
     {
-        $this->authorize('create', Post::class);
+        $user = $request->user();
+        abort_if($user === null, 403);
+
+        if (! $user->can('create', Post::class)) {
+            if (
+                ! CommunityPostingEligibility::isInstructorOrAdmin($user)
+                && ! CommunityPostingEligibility::hasConfirmedEnrollment($user)
+            ) {
+                return redirect()
+                    ->route($this->blogRoutePrefix().'.index')
+                    ->with('error', 'شما در هیچ دوره‌ای ثبت‌نام نکرده‌اید.');
+            }
+
+            $this->authorize('create', Post::class);
+        }
 
         return Inertia::render($this->blogInertiaPrefix().'/Create', [
             'categoryOptions' => $this->blogCategoryOptions(),

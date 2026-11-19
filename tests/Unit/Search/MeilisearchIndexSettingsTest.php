@@ -10,7 +10,7 @@ class MeilisearchIndexSettingsTest extends TestCase
     {
         $settings = config('scout.meilisearch.index-settings');
 
-        foreach (['courses', 'products', 'brands', 'categories', 'posts'] as $index) {
+        foreach (['courses', 'products', 'brands', 'categories', 'posts', 'users'] as $index) {
             $this->assertArrayHasKey($index, $settings);
             $this->assertTrue($settings[$index]['typoTolerance']['enabled']);
             $this->assertLessThanOrEqual(

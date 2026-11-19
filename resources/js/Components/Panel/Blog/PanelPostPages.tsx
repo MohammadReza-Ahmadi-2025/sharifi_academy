@@ -54,13 +54,38 @@ export function PanelBlogIndex({
     posts,
     panel,
     abilities,
+    needs_enrollment = false,
 }: {
     posts: PaginatedPosts;
     panel: PanelMeta;
     abilities: { create: boolean };
+    needs_enrollment?: boolean;
 }) {
     const Layout = usePanelLayout(panel);
-    const { flash } = usePage().props as { flash?: { success?: string } };
+    const { flash } = usePage().props as { flash?: { success?: string; error?: string } };
+
+    if (needs_enrollment) {
+        return (
+            <Layout title="پست‌های من" description="برای ارسال پست باید در دوره ثبت‌نام کرده باشید" contentVariant="plain">
+                <Head title="پست‌های من" />
+
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-8 text-center shadow-sm sm:px-8">
+                    <p className="text-base font-semibold text-amber-950 sm:text-lg">
+                        شما در هیچ دوره‌ای ثبت‌نام نکرده‌اید
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-amber-900/80">
+                        بعد از ثبت‌نام قطعی در حداقل یک دوره می‌توانید پست کاربری بسازید و مدیریت کنید.
+                    </p>
+                    <Link
+                        href="/"
+                        className="mt-5 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700"
+                    >
+                        مشاهده دوره‌ها
+                    </Link>
+                </div>
+            </Layout>
+        );
+    }
 
     return (
         <Layout title="پست‌های من" description="پست‌های کاربری شما (جدا از مقالات وبلاگ سایت)" contentVariant="plain">
@@ -69,6 +94,11 @@ export function PanelBlogIndex({
             {flash?.success ? (
                 <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
                     {flash.success}
+                </p>
+            ) : null}
+            {flash?.error ? (
+                <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+                    {flash.error}
                 </p>
             ) : null}
 

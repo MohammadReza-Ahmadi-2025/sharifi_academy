@@ -2,12 +2,15 @@
 
 namespace App\Support\Search;
 
+use App\Models\User;
 use App\Modules\Blog\Enums\PostKind;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Courses\Models\Course;
+use App\Modules\Profile\Support\InstructorPublicUuid;
+use App\Modules\Profile\Support\UserPublicSlug;
 use App\Support\SeoSlug;
 
 final class SiteSearchUrls
@@ -43,5 +46,10 @@ final class SiteSearchUrls
         }
 
         return '/categories/'.$slug;
+    }
+
+    public static function profile(User $user): string
+    {
+        return UserPublicSlug::profileUrl($user, InstructorPublicUuid::routeKey($user));
     }
 }

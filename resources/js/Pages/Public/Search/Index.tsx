@@ -3,7 +3,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
 import { PageProps } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { BookOpen, GraduationCap, Layers, Newspaper, Search, Tag } from 'lucide-react';
+import { BookOpen, GraduationCap, Layers, Newspaper, Search, Tag, UserRound } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 type Item = {
@@ -39,6 +39,11 @@ const KIND_META: Record<string, { label: string; icon: typeof GraduationCap; chi
         icon: Newspaper,
         chip: 'bg-sky-500/10 text-sky-800',
     },
+    profile: {
+        label: 'افراد',
+        icon: UserRound,
+        chip: 'bg-emerald-500/10 text-emerald-800',
+    },
     category: {
         label: 'دسته‌ها',
         icon: Layers,
@@ -51,15 +56,15 @@ const KIND_META: Record<string, { label: string; icon: typeof GraduationCap; chi
     },
 };
 
-const GROUP_ORDER = ['course', 'book', 'post', 'category', 'brand'];
+const GROUP_ORDER = ['course', 'book', 'post', 'profile', 'category', 'brand'];
 
 export default function SearchIndex({ q, kind, total, groups, canonical, kindOptions }: Props) {
     const { app } = usePage<PageProps>().props;
     const [query, setQuery] = useState(q);
     const pageTitle = q.trim() ? `جستجو: ${q.trim()}` : 'جستجو';
     const pageDescription = q.trim()
-        ? `نتایج جستجو برای «${q.trim()}» در ${app.name} — دوره، محصول، وبلاگ، برند و دسته.`
-        : `جستجو در ${app.name} بین دوره‌ها، محصولات، مقالات، برندها و دسته‌ها.`;
+        ? `نتایج جستجو برای «${q.trim()}» در ${app.name} — دوره، محصول، وبلاگ، افراد، برند و دسته.`
+        : `جستجو در ${app.name} بین دوره‌ها، محصولات، مقالات، افراد، برندها و دسته‌ها.`;
 
     useEffect(() => {
         setQuery(q);

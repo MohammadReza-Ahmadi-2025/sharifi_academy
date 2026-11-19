@@ -87,7 +87,7 @@ class PublicUserProfileTest extends TestCase
 
         $this->actingAs($user->fresh())
             ->get('/account/posts/create')
-            ->assertNotFound();
+            ->assertRedirect(route('account.posts.index'));
 
         $this->confirmEnrollmentFor($user);
 

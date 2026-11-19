@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Scout\Searchable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -48,7 +49,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasMediaFiles, HasRoles, Notifiable, SoftDeletes;
+    use HasFactory, HasMediaFiles, HasRoles, Notifiable, Searchable, SoftDeletes;
 
     protected static function booted(): void
     {
@@ -67,6 +68,40 @@ class User extends Authenticatable implements HasMedia
                 'image/webp',
                 'image/gif',
             ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        $this->loadMissing('profile');
+
+        $fullName = trim(implode(' ', array_filter([
+            is_string($this->name) ? trim($this->name) : '',
+            is_string($this->family) ? trim($this->family) : '',
+        ], fn (string $part): bool => $part !== '')));
+
+        return [
+            'id' => $this->id,
+            'title' => $fullName,
+            'name' => $this->name,
+            'family' => $this->family,
+            'headline' => $this->profile?->headline,
+            'uuid' => $this->profile?->uuid,
+        ];
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        if ((int) $this->status !== 1) {
+            return false;
+        }
+
+        $this->loadMissing('profile');
+
+        // Match PublicUserProfileController::isPubliclyViewable
+        return (bool) ($this->profile?->is_public ?? true);
     }
 
     protected function casts(): array

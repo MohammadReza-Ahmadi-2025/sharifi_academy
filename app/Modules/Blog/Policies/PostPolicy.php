@@ -12,11 +12,9 @@ class PostPolicy
 {
     public function viewAny(User $user): bool
     {
-        if ($user->can('blog-posts-index')) {
-            return true;
-        }
-
-        return CommunityPostingEligibility::canManageOwnCommunityPosts($user);
+        // List page is always reachable in panel/account; create stays gated.
+        // Controllers only show the current user's community posts.
+        return true;
     }
 
     public function view(User $user, Post $post): bool

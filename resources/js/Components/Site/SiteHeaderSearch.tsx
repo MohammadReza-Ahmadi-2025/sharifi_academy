@@ -1,9 +1,9 @@
 import { cn } from '@/lib/utils';
 import { Link, router } from '@inertiajs/react';
-import { BookOpen, GraduationCap, Layers, Newspaper, Search, Tag, TrendingUp } from 'lucide-react';
+import { BookOpen, GraduationCap, Layers, Newspaper, Search, Tag, TrendingUp, UserRound } from 'lucide-react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
-type SuggestionKind = 'course' | 'book' | 'category' | 'brand' | 'post';
+type SuggestionKind = 'course' | 'book' | 'category' | 'brand' | 'post' | 'profile';
 
 type SearchSuggestion = {
     id: string;
@@ -22,6 +22,7 @@ const KIND_META: Record<
     category: { label: 'دسته', icon: Layers, iconClass: 'bg-slate-500/10 text-slate-700' },
     brand: { label: 'برند', icon: Tag, iconClass: 'bg-violet-500/10 text-violet-800' },
     post: { label: 'وبلاگ', icon: Newspaper, iconClass: 'bg-sky-500/10 text-sky-800' },
+    profile: { label: 'فرد', icon: UserRound, iconClass: 'bg-emerald-500/10 text-emerald-800' },
 };
 
 type Props = {

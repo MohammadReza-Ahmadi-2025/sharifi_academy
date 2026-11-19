@@ -12,9 +12,8 @@ class UserProfileCompleteness
             return false;
         }
 
-        $user->loadMissing('profile');
-
-        return $user->profile?->province_city_id !== null;
+        // Query fresh — in-memory profile may be stale after ensureFor / updateOrCreate.
+        return $user->profile()->whereNotNull('province_city_id')->exists();
     }
 
     public static function enrollmentBlockMessage(): string

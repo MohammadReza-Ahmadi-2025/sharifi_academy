@@ -2,11 +2,14 @@
 
 namespace App\Support\Search;
 
+use App\Models\User;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Courses\Models\Course;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class SiteSearchService
 {
@@ -28,6 +31,7 @@ class SiteSearchService
                     'course' => 4,
                     'book' => 4,
                     'post' => 3,
+                    'profile' => 3,
                     'category' => 3,
                     'brand' => 3,
                 ]);
@@ -40,6 +44,7 @@ class SiteSearchService
             'course' => 4,
             'book' => 4,
             'post' => 3,
+            'profile' => 3,
             'category' => 3,
             'brand' => 3,
         ]);
@@ -67,6 +72,7 @@ class SiteSearchService
             'course' => 24,
             'book' => 24,
             'post' => 24,
+            'profile' => 24,
             'category' => 12,
             'brand' => 12,
         ];
@@ -101,7 +107,8 @@ class SiteSearchService
     public function sanitize(string $q): string
     {
         $q = trim($q);
-        $q = preg_replace('/[^\p{L}\p{N}\s\-]/u', '', $q) ?? '';
+        // Keep Persian ZWNJ (نیم‌فاصله) so names like «کاظمی‌پور» still match.
+        $q = preg_replace('/[^\p{L}\p{N}\s\-\x{200C}]/u', '', $q) ?? '';
 
         return preg_replace('/\s+/u', ' ', $q) ?? $q;
     }
@@ -125,6 +132,10 @@ class SiteSearchService
 
         if (($limits['post'] ?? 0) > 0) {
             $items = [...$items, ...$this->scoutMap(Post::class, $queries, $limits['post'], fn (Post $m) => $this->postItem($m))];
+        }
+
+        if (($limits['profile'] ?? 0) > 0) {
+            $items = [...$items, ...$this->scoutMap(User::class, $queries, $limits['profile'], fn (User $m) => $this->profileItem($m))];
         }
 
         if (($limits['category'] ?? 0) > 0) {
@@ -211,6 +222,36 @@ class SiteSearchService
             }
         }
 
+        if (($limits['profile'] ?? 0) > 0) {
+            foreach (
+                User::query()
+                    ->where('status', 1)
+                    ->where(function (Builder $builder): void {
+                        $builder->whereDoesntHave('profile')
+                            ->orWhereHas('profile', function (Builder $profile): void {
+                                $profile->where(function (Builder $visibility): void {
+                                    $visibility->where('is_public', true)->orWhereNull('is_public');
+                                });
+                            });
+                    })
+                    ->where(function (Builder $builder) use ($queries): void {
+                        foreach ($queries as $query) {
+                            $builder->orWhere('name', 'like', "%{$query}%")
+                                ->orWhere('family', 'like', "%{$query}%")
+                                ->orWhereRaw($this->fullNameLikeSql(), ["%{$query}%"])
+                                ->orWhereHas('profile', function (Builder $profile) use ($query): void {
+                                    $profile->where('headline', 'like', "%{$query}%");
+                                });
+                        }
+                    })
+                    ->with('profile')
+                    ->limit($limits['profile'])
+                    ->get() as $user
+            ) {
+                $items[] = $this->profileItem($user);
+            }
+        }
+
         if (($limits['category'] ?? 0) > 0) {
             foreach (
                 Category::query()
@@ -241,6 +282,17 @@ class SiteSearchService
         }
 
         return $items;
+    }
+
+    private function fullNameLikeSql(): string
+    {
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'sqlite') {
+            return "TRIM(COALESCE(name, '') || ' ' || COALESCE(family, '')) LIKE ?";
+        }
+
+        return "TRIM(CONCAT(COALESCE(name, ''), ' ', COALESCE(family, ''))) LIKE ?";
     }
 
     /**
@@ -284,6 +336,32 @@ class SiteSearchService
             'title' => (string) $post->title,
             'subtitle' => (string) ($post->excerpt ?? ''),
             'url' => SiteSearchUrls::post($post),
+        ];
+    }
+
+    /**
+     * @return array{id: string, kind: string, title: string, subtitle: string, url: string}
+     */
+    private function profileItem(User $user): array
+    {
+        $user->loadMissing('profile');
+
+        $title = trim(implode(' ', array_filter([
+            is_string($user->name) ? trim($user->name) : '',
+            is_string($user->family) ? trim($user->family) : '',
+        ], fn (string $part): bool => $part !== '')));
+
+        $subtitle = trim((string) ($user->profile?->headline ?? ''));
+        if ($subtitle === '') {
+            $subtitle = $user->hasRole('instructor') ? 'مدرس' : 'پروفایل';
+        }
+
+        return [
+            'id' => 'profile-'.$user->id,
+            'kind' => 'profile',
+            'title' => $title !== '' ? $title : 'کاربر',
+            'subtitle' => $subtitle,
+            'url' => SiteSearchUrls::profile($user),
         ];
     }
 

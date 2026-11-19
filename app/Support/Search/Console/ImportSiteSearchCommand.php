@@ -2,6 +2,7 @@
 
 namespace App\Support\Search\Console;
 
+use App\Models\User;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
@@ -13,7 +14,7 @@ class ImportSiteSearchCommand extends Command
 {
     protected $signature = 'site:search:import {--fresh : Flush indexes before importing}';
 
-    protected $description = 'Import courses, brands, categories, products, and blog posts into Meilisearch';
+    protected $description = 'Import courses, brands, categories, products, blog posts, and public profiles into Meilisearch';
 
     public function handle(): int
     {
@@ -31,6 +32,7 @@ class ImportSiteSearchCommand extends Command
             'categories' => Category::class,
             'courses' => Course::class,
             'posts' => Post::class,
+            'users' => User::class,
         ];
 
         $fresh = (bool) $this->option('fresh');
@@ -45,7 +47,7 @@ class ImportSiteSearchCommand extends Command
             });
         }
 
-        $this->components->info('Site search indexes imported (courses, products, brands, categories, posts).');
+        $this->components->info('Site search indexes imported (courses, products, brands, categories, posts, users).');
 
         return self::SUCCESS;
     }

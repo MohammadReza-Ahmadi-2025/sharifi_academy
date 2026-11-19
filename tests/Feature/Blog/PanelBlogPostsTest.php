@@ -196,10 +196,28 @@ class PanelBlogPostsTest extends TestCase
             ->assertSessionHasErrors('status');
     }
 
+    public function test_student_without_enrollment_sees_message_on_posts_index(): void
+    {
+        $student = User::where('mobile', '09120000003')->firstOrFail();
+        $this->completeProfile($student);
+
+        $this->actingAs($student->fresh())
+            ->get('/student/posts')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Student/Blog/Posts/Index')
+                ->where('needs_enrollment', true)
+                ->where('abilities.create', false));
+    }
+
     public function test_student_without_enrollment_cannot_create_post(): void
     {
         $student = User::where('mobile', '09120000003')->firstOrFail();
         $this->completeProfile($student);
+
+        $this->actingAs($student)
+            ->get('/student/posts/create')
+            ->assertRedirect('/student/posts');
 
         $this->actingAs($student)
             ->post('/student/posts', [

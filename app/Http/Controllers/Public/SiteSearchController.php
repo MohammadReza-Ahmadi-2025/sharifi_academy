@@ -19,7 +19,7 @@ class SiteSearchController extends Controller
         $kind = $request->query('kind');
         $kind = is_string($kind) && $kind !== '' ? $kind : null;
 
-        $allowedKinds = ['course', 'book', 'post', 'category', 'brand'];
+        $allowedKinds = ['course', 'book', 'post', 'profile', 'category', 'brand'];
         if ($kind !== null && ! in_array($kind, $allowedKinds, true)) {
             $kind = null;
         }
@@ -37,6 +37,7 @@ class SiteSearchController extends Controller
                 ['value' => 'course', 'label' => 'دوره‌ها'],
                 ['value' => 'book', 'label' => 'محصولات'],
                 ['value' => 'post', 'label' => 'وبلاگ'],
+                ['value' => 'profile', 'label' => 'افراد'],
                 ['value' => 'category', 'label' => 'دسته‌ها'],
                 ['value' => 'brand', 'label' => 'برندها'],
             ],
