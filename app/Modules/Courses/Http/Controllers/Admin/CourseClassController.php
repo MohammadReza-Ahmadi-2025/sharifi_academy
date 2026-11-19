@@ -134,10 +134,12 @@ class CourseClassController extends Controller
 
         $prefix = $this->nestedCourseRoutePrefix($request);
         $classJoinUrl = null;
-        if ($prefix === 'instructor' && $actor?->can('joinClass', $courseClass)) {
+        if ($actor?->can('joinClass', $courseClass)) {
             $hasActiveRoom = $courseClass->classLevelAdobeRooms()->active()->exists();
             if ($hasActiveRoom && ! $courseClass->usesVideoLink()) {
-                $classJoinUrl = route('instructor.classes.join', ['courseClass' => $courseClass->id], absolute: false);
+                $classJoinUrl = $prefix === 'instructor'
+                    ? route('instructor.classes.join', ['courseClass' => $courseClass->id], absolute: false)
+                    : route('admin.classes.join', ['courseClass' => $courseClass->id], absolute: false);
             }
         }
 

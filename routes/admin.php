@@ -16,6 +16,7 @@ use App\Modules\Catalog\Http\Controllers\Admin\ProductController as CatalogProdu
 use App\Modules\Catalog\Http\Controllers\Admin\ProductVariantController as CatalogProductVariantController;
 use App\Modules\Catalog\Http\Controllers\Admin\WarehouseController;
 use App\Modules\Comments\Http\Controllers\Admin\CommentController;
+use App\Modules\Courses\Http\Controllers\Admin\ClassJoinController as AdminClassJoinController;
 use App\Modules\Courses\Http\Controllers\Admin\ClassSessionController;
 use App\Modules\Courses\Http\Controllers\Admin\CourseClassController;
 use App\Modules\Courses\Http\Controllers\Admin\CourseController;
@@ -135,6 +136,7 @@ Route::prefix('admin')
         Route::middleware('permission:course-classes-update')->group(function () {
             Route::get('courses/{course}/classes/{courseClass}/edit', [CourseClassController::class, 'edit'])->name('courses.classes.edit');
             Route::put('courses/{course}/classes/{courseClass}', [CourseClassController::class, 'update'])->name('courses.classes.update');
+            Route::get('classes/{courseClass}/join', AdminClassJoinController::class)->name('classes.join');
         });
 
         Route::middleware('permission:course-classes-delete')->group(function () {

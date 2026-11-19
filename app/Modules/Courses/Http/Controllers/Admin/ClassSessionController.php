@@ -56,18 +56,19 @@ class ClassSessionController extends Controller
         $actor = $request->user();
         $classJoinConfigured = AdobeConnectJoinUrl::forClass($courseClass) !== null
             && ! $courseClass->usesVideoLink();
+        $canJoinClass = $classJoinConfigured && ($actor?->can('joinClass', $courseClass) ?? false);
 
         return Inertia::render('Admin/Courses/Classes/Sessions/Index', [
             'course' => CoursePresenter::forShow($course),
             'courseClass' => CourseClassPresenter::forList($courseClass),
             'sessions' => $sessions,
             'routePrefix' => '/'.$prefix,
-            'class_join_url' => $includeInstructorJoin && $classJoinConfigured
-                ? route('instructor.classes.join', ['courseClass' => $courseClass->id], absolute: false)
-                : ($classJoinConfigured
-                    ? AdobeConnectJoinUrl::forClass($courseClass)
-                    : null),
-            'class_join_label' => $classJoinConfigured ? 'ورود به اتاق Adobe کلاس' : null,
+            'class_join_url' => $canJoinClass
+                ? ($includeInstructorJoin
+                    ? route('instructor.classes.join', ['courseClass' => $courseClass->id], absolute: false)
+                    : route('admin.classes.join', ['courseClass' => $courseClass->id], absolute: false))
+                : null,
+            'class_join_label' => $canJoinClass ? 'ورود به اتاق Adobe کلاس' : null,
             'abilities' => [
                 'create' => $actor?->can('class-sessions-create') ?? false,
                 'update' => $actor?->can('class-sessions-update') ?? false,

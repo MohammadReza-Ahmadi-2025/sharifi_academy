@@ -23,7 +23,10 @@ class CourseClassPolicy
      */
     public function joinClass(User $user, CourseClass $courseClass): bool
     {
-        if ($user->hasRole('super-admin')) {
+        $courseClass->loadMissing('course');
+
+        if ($courseClass->course !== null
+            && CourseOwnership::canManage($user, $courseClass->course)) {
             return true;
         }
 
