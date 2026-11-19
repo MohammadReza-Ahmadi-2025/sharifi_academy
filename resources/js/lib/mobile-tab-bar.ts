@@ -20,6 +20,7 @@ type SiteMenuGroup = PageProps['siteMenus'][string][number];
 type MobileTabBarOptions = {
     canCreatePost: boolean;
     createPostUrl: string | null;
+    needsEnrollment?: boolean;
 };
 
 const FALLBACK_TABS: MobileTabItem[] = [
@@ -186,7 +187,7 @@ function resolveCreatePostTab(tabs: MobileTabItem[], options: MobileTabBarOption
             href: options.createPostUrl || '/login',
             icon: 'plus',
             emphasized: true,
-            label: 'افزودن',
+            label: options.needsEnrollment ? 'دوره' : 'افزودن',
         };
     });
 }

@@ -6,6 +6,12 @@ use App\Models\User;
 use App\Modules\Blog\Enums\PostKind;
 use App\Modules\Blog\Enums\PostStatus;
 use App\Modules\Blog\Models\Post;
+use App\Modules\Courses\Enums\CourseClassStatus;
+use App\Modules\Courses\Enums\CourseStatus;
+use App\Modules\Courses\Enums\EnrollmentStatus;
+use App\Modules\Courses\Models\Course;
+use App\Modules\Courses\Models\CourseClass;
+use App\Modules\Courses\Models\Enrollment;
 use App\Modules\Locations\Models\ProvinceCity;
 use App\Modules\Profile\Support\InstructorPublicUuid;
 use App\Modules\Profile\Support\UserPublicSlug;
@@ -59,7 +65,7 @@ class PublicUserProfileTest extends TestCase
                 ->where('seo.title', 'سارا محمدی · طراح تجربه کاربری'));
     }
 
-    public function test_posting_requires_login_and_complete_profile(): void
+    public function test_posting_requires_login_complete_profile_and_enrollment(): void
     {
         $this->seed(DatabaseSeeder::class);
 
@@ -81,7 +87,56 @@ class PublicUserProfileTest extends TestCase
 
         $this->actingAs($user->fresh())
             ->get('/account/posts/create')
+            ->assertNotFound();
+
+        $this->confirmEnrollmentFor($user);
+
+        $this->actingAs($user->fresh())
+            ->get('/account/posts/create')
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component('Account/Blog/Posts/Create'));
+    }
+
+    public function test_instructor_can_create_post_without_enrollment(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $instructor = User::where('mobile', '09120000002')->firstOrFail();
+        $city = ProvinceCity::query()->firstOrFail();
+        $instructor->forceFill(['name' => 'استاد', 'family' => 'تست'])->save();
+        $instructor->profile()->updateOrCreate([], [
+            'province_city_id' => $city->id,
+            'is_public' => true,
+        ]);
+
+        $this->actingAs($instructor->fresh())
+            ->get('/account/posts/create')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Account/Blog/Posts/Create'));
+    }
+
+    private function confirmEnrollmentFor(User $user): void
+    {
+        $course = Course::query()->create([
+            'title' => 'دوره پست',
+            'slug' => 'course-for-posting',
+            'status' => CourseStatus::Published,
+        ]);
+
+        $class = CourseClass::query()->create([
+            'course_id' => $course->id,
+            'name' => 'گروه پست',
+            'code' => 'POST-01',
+            'status' => CourseClassStatus::Upcoming,
+            'price' => 0,
+        ]);
+
+        Enrollment::query()->create([
+            'course_class_id' => $class->id,
+            'user_id' => $user->id,
+            'status' => EnrollmentStatus::Confirmed,
+            'confirmed_at' => now(),
+            'price_amount' => 0,
+        ]);
     }
 }

@@ -18,6 +18,7 @@ type Props = {
     create_post_url: string | null;
     can_create_post: boolean;
     needs_profile?: boolean;
+    needs_enrollment?: boolean;
 };
 
 export default function CommunityPostsIndex({
@@ -27,7 +28,16 @@ export default function CommunityPostsIndex({
     create_post_url,
     can_create_post,
     needs_profile = false,
+    needs_enrollment = false,
 }: Props) {
+    const createLabel = needs_profile
+        ? 'تکمیل پروفایل'
+        : needs_enrollment
+          ? 'ثبت‌نام در دوره'
+          : can_create_post
+            ? 'پست جدید'
+            : 'ورود / پست جدید';
+
     return (
         <AppLayout fullWidth mainClassName="bg-surface-muted">
             <SiteDefaultHead title={seo.title} description={seo.description ?? undefined} />
@@ -40,6 +50,11 @@ export default function CommunityPostsIndex({
                         {page.subheader ? (
                             <p className="mt-1 text-sm text-neutral-black/55">{page.subheader}</p>
                         ) : null}
+                        {needs_enrollment ? (
+                            <p className="mt-2 text-xs text-amber-800">
+                                برای ارسال پست باید حداقل در یک دوره ثبت‌نام قطعی داشته باشید.
+                            </p>
+                        ) : null}
                     </div>
                     {create_post_url ? (
                         <Link
@@ -47,7 +62,7 @@ export default function CommunityPostsIndex({
                             className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-sm font-semibold text-on-primary shadow-sm"
                         >
                             <Plus className="size-4" aria-hidden />
-                            {needs_profile ? 'تکمیل پروفایل' : can_create_post ? 'پست جدید' : 'ورود / پست جدید'}
+                            {createLabel}
                         </Link>
                     ) : null}
                 </header>

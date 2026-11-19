@@ -134,7 +134,7 @@ class HandleInertiaRequests extends Middleware
             'mobileTabBar' => fn () => SafeCallable::run(
                 'share.mobileTabBar',
                 fn () => MobileTabBar::forUser($user),
-                ['can_create_post' => false, 'create_post_url' => null, 'needs_profile' => false],
+                ['can_create_post' => false, 'create_post_url' => null, 'needs_profile' => false, 'needs_enrollment' => false],
             ),
             'siteSocials' => fn () => SafeCallable::run(
                 'share.siteSocials',

@@ -18,8 +18,14 @@ export function SiteMobileTabBar() {
             mobileTabsFromSiteMenus(siteMenus?.mobile, {
                 canCreatePost: Boolean(mobileTabBar?.can_create_post),
                 createPostUrl: mobileTabBar?.create_post_url ?? null,
+                needsEnrollment: Boolean(mobileTabBar?.needs_enrollment),
             }),
-        [siteMenus?.mobile, mobileTabBar?.can_create_post, mobileTabBar?.create_post_url],
+        [
+            siteMenus?.mobile,
+            mobileTabBar?.can_create_post,
+            mobileTabBar?.create_post_url,
+            mobileTabBar?.needs_enrollment,
+        ],
     );
     const courseSlugs = useMemo(() => collectCourseCategorySlugs(courseCategories), [courseCategories]);
 

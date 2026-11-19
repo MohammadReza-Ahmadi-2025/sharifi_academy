@@ -127,6 +127,7 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
         can_create_post: boolean;
         create_post_url: string | null;
         needs_profile?: boolean;
+        needs_enrollment?: boolean;
     };
     url: string;
     otpPolicy: {

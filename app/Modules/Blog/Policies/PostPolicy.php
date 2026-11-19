@@ -6,15 +6,17 @@ use App\Models\User;
 use App\Modules\Blog\Enums\PostKind;
 use App\Modules\Blog\Enums\PostStatus;
 use App\Modules\Blog\Models\Post;
-use App\Modules\Profile\Support\UserProfileCompleteness;
+use App\Modules\Blog\Support\CommunityPostingEligibility;
 
 class PostPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->can('blog-posts-index')
-            || $user->can('panel-blog-posts-manage')
-            || UserProfileCompleteness::isComplete($user);
+        if ($user->can('blog-posts-index')) {
+            return true;
+        }
+
+        return CommunityPostingEligibility::canManageOwnCommunityPosts($user);
     }
 
     public function view(User $user, Post $post): bool
@@ -24,18 +26,12 @@ class PostPolicy
         }
 
         return $post->kind === PostKind::Community
-            && (int) $post->author_id === (int) $user->id
-            && (
-                $user->can('panel-blog-posts-manage')
-                || UserProfileCompleteness::isComplete($user)
-            );
+            && (int) $post->author_id === (int) $user->id;
     }
 
     public function create(User $user): bool
     {
-        return $user->can('blog-posts-create')
-            || $user->can('panel-blog-posts-manage')
-            || UserProfileCompleteness::isComplete($user);
+        return CommunityPostingEligibility::canCreate($user);
     }
 
     public function update(User $user, Post $post): bool
@@ -46,11 +42,7 @@ class PostPolicy
 
         // Articles (blog) are admin-only; authors may only edit their community posts.
         return $post->kind === PostKind::Community
-            && (int) $post->author_id === (int) $user->id
-            && (
-                $user->can('panel-blog-posts-manage')
-                || UserProfileCompleteness::isComplete($user)
-            );
+            && (int) $post->author_id === (int) $user->id;
     }
 
     public function delete(User $user, Post $post): bool
@@ -60,11 +52,7 @@ class PostPolicy
         }
 
         return $post->kind === PostKind::Community
-            && (int) $post->author_id === (int) $user->id
-            && (
-                $user->can('panel-blog-posts-manage')
-                || UserProfileCompleteness::isComplete($user)
-            );
+            && (int) $post->author_id === (int) $user->id;
     }
 
     public function comment(?User $user, Post $post): bool

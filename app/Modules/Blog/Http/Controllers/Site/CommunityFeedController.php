@@ -73,6 +73,7 @@ class CommunityFeedController extends Controller
             'create_post_url' => $tabBar['create_post_url'],
             'can_create_post' => $tabBar['can_create_post'],
             'needs_profile' => $tabBar['needs_profile'],
+            'needs_enrollment' => $tabBar['needs_enrollment'],
         ]);
     }
 

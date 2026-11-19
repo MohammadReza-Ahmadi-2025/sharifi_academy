@@ -3,9 +3,16 @@
 namespace Tests\Feature\Blog;
 
 use App\Models\User;
+use App\Modules\Blog\Enums\PostKind;
 use App\Modules\Blog\Enums\PostStatus;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Catalog\Models\Category;
+use App\Modules\Courses\Enums\CourseClassStatus;
+use App\Modules\Courses\Enums\CourseStatus;
+use App\Modules\Courses\Enums\EnrollmentStatus;
+use App\Modules\Courses\Models\Course;
+use App\Modules\Courses\Models\CourseClass;
+use App\Modules\Courses\Models\Enrollment;
 use App\Modules\Locations\Models\ProvinceCity;
 use App\Modules\Roles\Support\DefaultRolePermissions;
 use Database\Seeders\DatabaseSeeder;
@@ -38,10 +45,36 @@ class PanelBlogPostsTest extends TestCase
         ]);
     }
 
+    private function confirmEnrollmentFor(User $user): void
+    {
+        $course = Course::query()->create([
+            'title' => 'دوره تست پست',
+            'slug' => 'panel-post-course-'.uniqid(),
+            'status' => CourseStatus::Published,
+        ]);
+
+        $class = CourseClass::query()->create([
+            'course_id' => $course->id,
+            'name' => 'گروه A',
+            'code' => 'PP-'.strtoupper(substr(uniqid(), -6)),
+            'status' => CourseClassStatus::Upcoming,
+            'price' => 0,
+        ]);
+
+        Enrollment::query()->create([
+            'course_class_id' => $class->id,
+            'user_id' => $user->id,
+            'status' => EnrollmentStatus::Confirmed,
+            'confirmed_at' => now(),
+            'price_amount' => 0,
+        ]);
+    }
+
     public function test_student_can_create_pending_post_without_publishing(): void
     {
         $student = User::where('mobile', '09120000003')->firstOrFail();
         $this->completeProfile($student);
+        $this->confirmEnrollmentFor($student);
         $category = Category::query()->create([
             'type' => Category::TYPE_BLOG,
             'title' => 'دانشجویی',
@@ -112,6 +145,7 @@ class PanelBlogPostsTest extends TestCase
             'slug' => 'foreign-post',
             'content' => 'x',
             'status' => PostStatus::Draft,
+            'kind' => PostKind::Community,
         ]);
 
         $this->actingAs($instructor)
@@ -141,6 +175,7 @@ class PanelBlogPostsTest extends TestCase
     {
         $student = User::where('mobile', '09120000003')->firstOrFail();
         $this->completeProfile($student);
+        $this->confirmEnrollmentFor($student);
         $category = Category::query()->create([
             'type' => Category::TYPE_BLOG,
             'title' => 'محدود',
@@ -161,10 +196,25 @@ class PanelBlogPostsTest extends TestCase
             ->assertSessionHasErrors('status');
     }
 
+    public function test_student_without_enrollment_cannot_create_post(): void
+    {
+        $student = User::where('mobile', '09120000003')->firstOrFail();
+        $this->completeProfile($student);
+
+        $this->actingAs($student)
+            ->post('/student/posts', [
+                'title' => 'بدون ثبت‌نام',
+                'content' => 'متن',
+                'status' => PostStatus::Draft->value,
+            ])
+            ->assertNotFound();
+    }
+
     public function test_panel_plain_text_escapes_manual_html_and_scripts(): void
     {
         $student = User::where('mobile', '09120000003')->firstOrFail();
         $this->completeProfile($student);
+        $this->confirmEnrollmentFor($student);
 
         $response = $this->actingAs($student)
             ->post('/student/posts', [
