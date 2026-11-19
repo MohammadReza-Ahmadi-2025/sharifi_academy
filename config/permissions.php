@@ -243,7 +243,7 @@ return [
                 'blog-posts-create' => 'ایجاد پست',
                 'blog-posts-update' => 'ویرایش پست',
                 'blog-posts-delete' => 'حذف پست',
-                'panel-blog-posts-manage' => 'مدیریت پست وبلاگ در پنل استاد/دانشجو',
+                'panel-blog-posts-manage' => 'مدیریت پست‌های کاربری (جدا از مقالات وبلاگ)',
             ],
         ],
         'pages' => [

@@ -55,6 +55,15 @@ final class InstructorPublicResumePresenter
         }
 
         $uuid = InstructorPublicUuid::routeKey($user);
+        $user->loadMissing(['profile.provinceCity.parent']);
+        $city = $user->profile?->provinceCity;
+        $location = null;
+        if ($city !== null) {
+            $province = $city->parent?->title;
+            $location = filled($province) && $province !== $city->title
+                ? trim($city->title.'، '.$province)
+                : (string) $city->title;
+        }
 
         return [
             'id' => $user->id,
@@ -62,8 +71,9 @@ final class InstructorPublicResumePresenter
             'fullName' => $fullName,
             'headline' => $user->profile?->headline,
             'bio' => SafeHtml::nullable($user->profile?->bio),
+            'location' => $location,
             'avatar' => UserAvatarMedia::payload($user),
-            'profile_url' => route('instructors.show', ['instructor' => $uuid]),
+            'profile_url' => UserPublicSlug::profileUrl($user, $uuid),
             'sections' => $sections,
             'skills' => $skills,
         ];

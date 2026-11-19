@@ -7,84 +7,61 @@ import {
 } from '@/lib/mobile-tab-bar';
 import { PageProps } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import './SiteMobileTabBar.css';
 
-function setLineWidth(text: HTMLElement, item: HTMLElement) {
-    item.style.setProperty('--lineWidth', `${text.offsetWidth}px`);
-}
-
 export function SiteMobileTabBar() {
-    const { url, siteMenus, courseCategoryNav } = usePage<PageProps>().props;
+    const { url, siteMenus, courseCategoryNav, mobileTabBar } = usePage<PageProps>().props;
     const courseCategories = Array.isArray(courseCategoryNav) ? courseCategoryNav : [];
-    const tabs = useMemo(() => mobileTabsFromSiteMenus(siteMenus?.mobile), [siteMenus?.mobile]);
+    const tabs = useMemo(
+        () =>
+            mobileTabsFromSiteMenus(siteMenus?.mobile, {
+                canCreatePost: Boolean(mobileTabBar?.can_create_post),
+                createPostUrl: mobileTabBar?.create_post_url ?? null,
+            }),
+        [siteMenus?.mobile, mobileTabBar?.can_create_post, mobileTabBar?.create_post_url],
+    );
     const courseSlugs = useMemo(() => collectCourseCategorySlugs(courseCategories), [courseCategories]);
 
     const urlActiveIndex = useMemo(
         () => indexOfActiveMobileTab(tabs, url, courseSlugs),
         [tabs, url, courseSlugs],
     );
+
     const [activeIndex, setActiveIndex] = useState(urlActiveIndex);
-    const [textActiveIndex, setTextActiveIndex] = useState(urlActiveIndex);
     const [courseCategoriesOpen, setCourseCategoriesOpen] = useState(false);
-
-    const itemRefs = useRef<(HTMLAnchorElement | HTMLButtonElement | null)[]>([]);
-    const textRefs = useRef<(HTMLElement | null)[]>([]);
-
-    useEffect(() => {
-        setActiveIndex(urlActiveIndex);
-        setTextActiveIndex(urlActiveIndex);
-    }, [urlActiveIndex]);
-
-    const syncAllLineWidths = useCallback(() => {
-        tabs.forEach((_, index) => {
-            const text = textRefs.current[index];
-            const button = itemRefs.current[index];
-            if (text && button) {
-                setLineWidth(text, button);
-            }
-        });
-    }, [tabs]);
-
-    useLayoutEffect(() => {
-        syncAllLineWidths();
-    }, [syncAllLineWidths, tabs]);
+    const [stretchClass, setStretchClass] = useState('');
+    const prevIndexRef = useRef(urlActiveIndex);
 
     useEffect(() => {
-        const onResize = () => syncAllLineWidths();
-        window.addEventListener('resize', onResize);
-
-        return () => window.removeEventListener('resize', onResize);
-    }, [syncAllLineWidths]);
-
-    const handleTransition = (item: HTMLElement, index: number) => {
-        const onTransitionEnd = (event: TransitionEvent) => {
-            if (event.propertyName !== 'flex-grow' || !item.classList.contains('active')) {
-                return;
-            }
-
-            setTextActiveIndex(index);
-            item.removeEventListener('transitionend', onTransitionEnd);
-        };
-
-        item.addEventListener('transitionend', onTransitionEnd);
-    };
-
-    const activateTab = (index: number) => {
-        const button = itemRefs.current[index];
-        const text = textRefs.current[index];
-
-        if (!button || !text) {
+        const previous = prevIndexRef.current;
+        if (previous === urlActiveIndex) {
+            setActiveIndex(urlActiveIndex);
             return;
         }
 
+        const direction = urlActiveIndex - previous > 0 ? 'active-right' : 'active-left';
+        const magnitude = Math.min(4, Math.max(1, Math.abs(urlActiveIndex - previous)));
+        setStretchClass(`active--${magnitude} ${direction}`);
+        setActiveIndex(urlActiveIndex);
+        prevIndexRef.current = urlActiveIndex;
+
+        const timer = window.setTimeout(() => setStretchClass(''), 220);
+        return () => window.clearTimeout(timer);
+    }, [urlActiveIndex]);
+
+    const activateTab = (index: number) => {
         if (index === activeIndex) {
             return;
         }
 
-        setTextActiveIndex(null);
+        const direction = index - activeIndex > 0 ? 'active-right' : 'active-left';
+        const magnitude = Math.min(4, Math.max(1, Math.abs(index - activeIndex)));
+        setStretchClass(`active--${magnitude} ${direction}`);
         setActiveIndex(index);
-        handleTransition(button, index);
+        prevIndexRef.current = index;
+
+        window.setTimeout(() => setStretchClass(''), 220);
     };
 
     const onCourseCategoriesTab = (index: number) => {
@@ -93,16 +70,7 @@ export function SiteMobileTabBar() {
             return;
         }
 
-        const button = itemRefs.current[index];
-        if (!button) {
-            return;
-        }
-
-        if (index !== activeIndex) {
-            setTextActiveIndex(null);
-            setActiveIndex(index);
-            handleTransition(button, index);
-        }
+        activateTab(index);
 
         if (courseCategories.length === 0) {
             router.reload({ only: ['courseCategoryNav'] });
@@ -117,70 +85,92 @@ export function SiteMobileTabBar() {
 
     return (
         <>
-            <div className="virm90-tab-bar-host flex justify-center lg:hidden">
-                <menu className="menu">
-                    {tabs.map((tab, index) => {
-                        const Icon = resolveMobileTabBarIcon(tab.icon, index);
-                        const isActive = index === activeIndex || (tab.action === 'course-categories' && courseCategoriesOpen);
-                        const isTextActive = index === textActiveIndex;
+            <div
+                className="doksav-tab-bar-host lg:hidden"
+                data-create-active={
+                    tabs[activeIndex]?.action === 'create-post' || tabs[activeIndex]?.emphasized
+                        ? 'true'
+                        : 'false'
+                }
+                style={
+                    {
+                        '--tab-count': tabs.length,
+                        '--active-index': activeIndex,
+                    } as CSSProperties
+                }
+            >
+                <nav className="bottom-bar" aria-label="منوی پایین">
+                    <div className="bottom-bar__list">
+                        <div
+                            className={`bottom-bar__active-indicator ${stretchClass}`.trim()}
+                            aria-hidden
+                        />
 
-                        const label = (
-                            <>
-                                <div className="menu__icon">
-                                    <Icon />
-                                </div>
-                                <strong
-                                    ref={(el) => {
-                                        textRefs.current[index] = el;
-                                    }}
-                                    className={`menu__text${isTextActive ? ' active' : ''}`}
-                                >
-                                    {tab.label}
-                                </strong>
-                            </>
-                        );
+                        {tabs.map((tab, index) => {
+                            const Icon = resolveMobileTabBarIcon(tab.icon, index);
+                            const isActive =
+                                index === activeIndex
+                                || (tab.action === 'course-categories' && courseCategoriesOpen);
+                            const isCreate = tab.action === 'create-post' || tab.emphasized;
+                            const className = [
+                                'bottom-bar__link',
+                                isActive ? 'selected' : '',
+                                isCreate ? 'bottom-bar__link--create' : '',
+                            ]
+                                .filter(Boolean)
+                                .join(' ');
 
-                        if (tab.action === 'course-categories') {
-                            return (
-                                <button
-                                    key={tab.id}
-                                    ref={(el) => {
-                                        itemRefs.current[index] = el;
-                                    }}
-                                    type="button"
-                                    className={`menu__item${isActive ? ' active' : ''}`}
-                                    aria-expanded={courseCategoriesOpen}
-                                    aria-haspopup="dialog"
-                                    onClick={() => onCourseCategoriesTab(index)}
-                                >
-                                    {label}
-                                </button>
+                            const body = (
+                                <>
+                                    <span className="bottom-bar__icon">
+                                        {isCreate ? (
+                                            <span className="bottom-bar__icon-shell">
+                                                <Icon />
+                                            </span>
+                                        ) : (
+                                            <Icon />
+                                        )}
+                                    </span>
+                                    <span className="bottom-bar__label">{tab.label}</span>
+                                </>
                             );
-                        }
 
-                        const linkProps = tab.targetBlank
-                            ? { target: '_blank', rel: 'noopener noreferrer' }
-                            : {};
+                            if (tab.action === 'course-categories') {
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        type="button"
+                                        className={className}
+                                        aria-expanded={courseCategoriesOpen}
+                                        aria-haspopup="dialog"
+                                        onClick={() => onCourseCategoriesTab(index)}
+                                    >
+                                        {body}
+                                    </button>
+                                );
+                            }
 
-                        return (
-                            <Link
-                                key={tab.id}
-                                ref={(el) => {
-                                    itemRefs.current[index] = el;
-                                }}
-                                href={tab.href}
-                                {...linkProps}
-                                className={`menu__item${isActive ? ' active' : ''}`}
-                                onClick={() => {
-                                    setCourseCategoriesOpen(false);
-                                    activateTab(index);
-                                }}
-                            >
-                                {label}
-                            </Link>
-                        );
-                    })}
-                </menu>
+                            const linkProps = tab.targetBlank
+                                ? { target: '_blank', rel: 'noopener noreferrer' }
+                                : {};
+
+                            return (
+                                <Link
+                                    key={tab.id}
+                                    href={tab.href}
+                                    {...linkProps}
+                                    className={className}
+                                    onClick={() => {
+                                        setCourseCategoriesOpen(false);
+                                        activateTab(index);
+                                    }}
+                                >
+                                    {body}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </nav>
             </div>
 
             <SiteMobileCourseCategoriesSheet

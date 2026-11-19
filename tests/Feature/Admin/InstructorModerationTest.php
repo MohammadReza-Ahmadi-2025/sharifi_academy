@@ -94,7 +94,9 @@ class InstructorModerationTest extends TestCase
         $this->assertSame(ResumeModerationStatus::Pending, ResumeModeration::status($instructor->fresh()));
 
         $pendingUuid = InstructorPublicUuid::routeKey($instructor->fresh());
-        $this->get(route('instructors.show', ['instructor' => $pendingUuid]))->assertNotFound();
+        // Profile page is public; resume JSON stays gated until approved.
+        $this->get(route('instructors.show', ['instructor' => $pendingUuid]))->assertRedirect();
+        $this->getJson(route('instructors.resume', ['instructor' => $pendingUuid]))->assertNotFound();
         $this->get('/instructors/'.$instructor->id)->assertNotFound();
 
         $this->actingAs($admin)
@@ -104,7 +106,8 @@ class InstructorModerationTest extends TestCase
         $this->assertSame(ResumeModerationStatus::Approved, ResumeModeration::status($instructor->fresh()));
 
         $uuid = InstructorPublicUuid::routeKey($instructor->fresh());
-        $this->get(route('instructors.show', ['instructor' => $uuid]))->assertOk();
+        $this->get(route('instructors.show', ['instructor' => $uuid]))->assertRedirect();
+        $this->getJson(route('instructors.resume', ['instructor' => $uuid]))->assertOk();
         $this->get('/instructors/'.$instructor->id)->assertNotFound();
     }
 

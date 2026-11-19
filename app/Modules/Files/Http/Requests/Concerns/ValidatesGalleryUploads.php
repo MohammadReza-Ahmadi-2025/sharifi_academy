@@ -37,6 +37,23 @@ trait ValidatesGalleryUploads
         ];
     }
 
+    /**
+     * Optional featured/cover image (e.g. community posts).
+     *
+     * @return array<string, mixed>
+     */
+    protected function optionalSingleImageRules(string $key = 'image'): array
+    {
+        return [
+            $key => ['nullable', 'array', 'max:1'],
+            "{$key}.0.id" => ['nullable', 'integer', 'exists:files,id'],
+            "{$key}.0.alt" => ['nullable', 'string', 'max:255'],
+            "{$key}.0.title" => ['nullable', 'string', 'max:120'],
+            "{$key}.0.file" => ['nullable', 'file', 'image', 'mimes:jpeg,jpg,png,webp,gif', 'max:5120'],
+            'remove_'.$key => ['sometimes', 'boolean'],
+        ];
+    }
+
     protected function assertMinimumOneImage(Validator $validator, string $key = 'gallery'): void
     {
         $validator->after(function (Validator $validator) use ($key): void {

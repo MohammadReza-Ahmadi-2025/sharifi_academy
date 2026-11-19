@@ -88,10 +88,16 @@ export function ProfileExtendedFields({
 
     return (
         <div className="space-y-4">
-            <Field label="تیتر حرفه‌ای" htmlFor="headline" error={errors.headline} hint="مثال: مدرس لاراول / دانشجوی دوره آیلتس">
+            <Field
+                label="عنوان شغلی"
+                htmlFor="headline"
+                error={errors.headline}
+                hint="مثل لینکدین؛ مثال: مدرس لاراول · مهندس نرم‌افزار"
+            >
                 <Input
                     id="headline"
                     value={data.headline}
+                    placeholder="عنوان شغلی شما"
                     onChange={(e) => onChange('headline', e.target.value)}
                     disabled={processing}
                 />

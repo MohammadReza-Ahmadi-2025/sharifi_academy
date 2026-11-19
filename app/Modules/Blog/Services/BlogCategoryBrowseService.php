@@ -41,6 +41,7 @@ class BlogCategoryBrowseService
     public function paginatePostsInCategory(Category $category, array $filters): LengthAwarePaginator
     {
         $query = $category->posts()
+            ->articles()
             ->published()
             ->with(['featuredImage', 'categories']);
 
@@ -74,7 +75,7 @@ class BlogCategoryBrowseService
                 $query->where('type', Category::TYPE_BLOG)
                     ->with('image')
                     ->withCount([
-                        'posts as items_count' => fn ($postQuery) => $postQuery->published(),
+                        'posts as items_count' => fn ($postQuery) => $postQuery->articles()->published(),
                     ]);
             },
         ]);

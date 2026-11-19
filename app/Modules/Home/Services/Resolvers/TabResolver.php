@@ -159,6 +159,7 @@ class TabResolver
                 ->with('image'),
 
             'post' => Post::query()
+                ->articles()
                 ->published()
                 ->with('featuredImage'),
 

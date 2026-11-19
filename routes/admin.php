@@ -5,6 +5,8 @@ use App\Modules\Admin\Http\Controllers\DashboardController;
 use App\Modules\AdobeConnect\Http\Controllers\Admin\AdobeRecordingController;
 use App\Modules\AdobeConnect\Http\Controllers\Admin\AdobeRoomController;
 use App\Modules\AdobeConnect\Http\Controllers\Admin\AdobeSyncController;
+use App\Modules\Blog\Http\Controllers\Admin\BlogSeoSettingsController;
+use App\Modules\Blog\Http\Controllers\Admin\CommunityPostsSeoSettingsController;
 use App\Modules\Blog\Http\Controllers\Admin\PostController as BlogPostController;
 use App\Modules\Blog\Models\Post as BlogPost;
 use App\Modules\Catalog\Http\Controllers\Admin\BrandController;
@@ -381,6 +383,10 @@ Route::prefix('admin')
         });
 
         Route::middleware('permission:blog-posts-update')->group(function () {
+            Route::get('posts/settings', [BlogSeoSettingsController::class, 'edit'])->name('posts.settings.edit');
+            Route::put('posts/settings', [BlogSeoSettingsController::class, 'update'])->name('posts.settings.update');
+            Route::get('posts/feed-settings', [CommunityPostsSeoSettingsController::class, 'edit'])->name('posts.feed-settings.edit');
+            Route::put('posts/feed-settings', [CommunityPostsSeoSettingsController::class, 'update'])->name('posts.feed-settings.update');
             Route::get('posts/{post:id}/edit', [BlogPostController::class, 'edit'])->name('posts.edit');
             Route::put('posts/{post:id}', [BlogPostController::class, 'update'])->name('posts.update');
         });

@@ -27,6 +27,8 @@ type Props = {
     /** بدون CKEditor — برای پنل استاد/دانشجو */
     plainEditor?: boolean;
     showSeo?: boolean;
+    /** دسته‌ها برای پست کاربری اختیاری است */
+    categoriesRequired?: boolean;
     onChange: (key: keyof PostFormData, value: unknown) => void;
 };
 
@@ -38,6 +40,7 @@ export function PostFormFields({
     processing = false,
     plainEditor = false,
     showSeo = true,
+    categoriesRequired = true,
     onChange,
 }: Props) {
     const categorySelectOptions = mapToSelectOptions(categoryOptions);
@@ -72,7 +75,12 @@ export function PostFormFields({
                             onChange={(option) => onChange('status', option?.value ?? 'draft')}
                         />
                     </FormField>
-                    <FormField label="دسته‌ها" required error={errors.category_ids}>
+                    <FormField
+                        label="دسته‌ها"
+                        required={categoriesRequired}
+                        error={errors.category_ids}
+                        hint={categoriesRequired ? undefined : 'اختیاری'}
+                    >
                         <MultiSelect
                             isDisabled={processing}
                             options={categorySelectOptions}

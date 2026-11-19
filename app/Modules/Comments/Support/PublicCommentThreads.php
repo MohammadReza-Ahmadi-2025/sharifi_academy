@@ -5,6 +5,7 @@ namespace App\Modules\Comments\Support;
 use App\Modules\Comments\Enums\CommentStatus;
 use App\Modules\Comments\Models\Comment;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 final class PublicCommentThreads
 {
@@ -40,5 +41,52 @@ final class PublicCommentThreads
                     : null,
             ],
         ];
+    }
+
+    /**
+     * Recent approved root comments for feed cards (no nested replies).
+     *
+     * @param  list<int>  $commentableIds
+     * @return array<int, list<array<string, mixed>>>
+     */
+    public static function previewsFor(string $morphClass, array $commentableIds, int $perItem = 2): array
+    {
+        $commentableIds = array_values(array_unique(array_map('intval', $commentableIds)));
+        $result = [];
+
+        foreach ($commentableIds as $id) {
+            $result[$id] = [];
+        }
+
+        if ($commentableIds === []) {
+            return $result;
+        }
+
+        $comments = Comment::query()
+            ->where('commentable_type', $morphClass)
+            ->whereIn('commentable_id', $commentableIds)
+            ->where('status', CommentStatus::Approved)
+            ->roots()
+            ->with('user')
+            ->orderByDesc('created_at')
+            ->get()
+            ->groupBy(fn (Comment $comment) => (int) $comment->commentable_id);
+
+        foreach ($commentableIds as $id) {
+            /** @var Collection<int, Comment> $group */
+            $group = $comments->get($id, collect());
+            $result[$id] = $group
+                ->take($perItem)
+                ->map(fn (Comment $comment) => [
+                    'id' => $comment->id,
+                    'body' => $comment->body,
+                    'author_name' => $comment->author_name,
+                    'created_at' => $comment->created_at?->toIso8601String(),
+                ])
+                ->values()
+                ->all();
+        }
+
+        return $result;
     }
 }

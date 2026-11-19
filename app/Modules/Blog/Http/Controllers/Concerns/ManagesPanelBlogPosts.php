@@ -2,6 +2,7 @@
 
 namespace App\Modules\Blog\Http\Controllers\Concerns;
 
+use App\Modules\Blog\Enums\PostKind;
 use App\Modules\Blog\Enums\PostStatus;
 use App\Modules\Blog\Http\Requests\Panel\StorePanelPostRequest;
 use App\Modules\Blog\Http\Requests\Panel\UpdatePanelPostRequest;
@@ -36,6 +37,7 @@ trait ManagesPanelBlogPosts
 
         $posts = Post::query()
             ->where('author_id', $user->id)
+            ->community()
             ->with(['categories'])
             ->latest()
             ->paginate(20)
@@ -72,13 +74,14 @@ trait ManagesPanelBlogPosts
             'author_id' => $request->user()?->id,
             'title' => $data['title'],
             'slug' => $slug,
-            'excerpt' => $data['excerpt'] ?? null,
+            'excerpt' => $this->normalizePlainContent((string) ($data['excerpt'] ?? '')),
             'content' => $this->normalizePlainContent((string) $data['content']),
             'status' => $status,
+            'kind' => PostKind::Community,
             'published_at' => null,
         ]);
 
-        $post->categories()->sync($data['category_ids']);
+        $post->categories()->sync($data['category_ids'] ?? []);
         $this->syncFeaturedImageFromRequest($post, $request);
 
         return redirect()
@@ -91,6 +94,7 @@ trait ManagesPanelBlogPosts
     public function edit(Request $request, Post $post): Response
     {
         $this->authorize('update', $post);
+        abort_unless($post->kind === PostKind::Community, 404);
 
         $form = PostPresenter::forForm($post);
         $form['content'] = $this->plainTextFromStoredContent((string) ($form['content'] ?? ''));
@@ -107,6 +111,7 @@ trait ManagesPanelBlogPosts
     public function update(UpdatePanelPostRequest $request, Post $post): RedirectResponse
     {
         $this->authorize('update', $post);
+        abort_unless($post->kind === PostKind::Community, 404);
 
         $data = $request->validated();
         $slug = $this->uniquePanelPostSlug(
@@ -125,13 +130,14 @@ trait ManagesPanelBlogPosts
         $post->update([
             'title' => $data['title'],
             'slug' => $slug,
-            'excerpt' => $data['excerpt'] ?? null,
+            'excerpt' => $this->normalizePlainContent((string) ($data['excerpt'] ?? '')),
             'content' => $this->normalizePlainContent((string) $data['content']),
             'status' => $status,
+            'kind' => PostKind::Community,
             'published_at' => $status === PostStatus::Published ? $post->published_at : null,
         ]);
 
-        $post->categories()->sync($data['category_ids']);
+        $post->categories()->sync($data['category_ids'] ?? []);
         $this->syncFeaturedImageFromRequest($post, $request);
 
         return redirect()
@@ -142,6 +148,7 @@ trait ManagesPanelBlogPosts
     public function destroy(Request $request, Post $post): RedirectResponse
     {
         $this->authorize('delete', $post);
+        abort_unless($post->kind === PostKind::Community, 404);
 
         $post->categories()->detach();
         $post->delete();

@@ -3,11 +3,13 @@
 namespace App\Modules\Comments\Models;
 
 use App\Models\User;
+use App\Modules\Blog\Enums\PostKind;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Comments\Enums\CommenterType;
 use App\Modules\Comments\Enums\CommentStatus;
+use App\Support\Search\SiteSearchUrls;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -120,12 +122,23 @@ class Comment extends Model
 
     public function commentableTypeLabel(): string
     {
-        return match ($this->commentable_type) {
-            Product::class => 'محصول',
-            Post::class => 'مقاله',
-            Course::class => 'دوره',
-            default => class_basename($this->commentable_type) ?: '—',
-        };
+        if ($this->commentable_type === Product::class || $this->commentable instanceof Product) {
+            return 'محصول';
+        }
+
+        if ($this->commentable_type === Course::class || $this->commentable instanceof Course) {
+            return 'دوره';
+        }
+
+        if ($this->commentable_type === Post::class || $this->commentable instanceof Post) {
+            $post = $this->commentable instanceof Post ? $this->commentable : null;
+
+            return $post?->kind === PostKind::Community
+                ? 'پست کاربری'
+                : 'مقاله وبلاگ';
+        }
+
+        return class_basename((string) $this->commentable_type) ?: '—';
     }
 
     public function commentableTitle(): ?string
@@ -133,5 +146,24 @@ class Comment extends Model
         $commentable = $this->commentable;
 
         return $commentable?->title ?? null;
+    }
+
+    public function commentablePublicUrl(): ?string
+    {
+        $commentable = $this->commentable;
+
+        if ($commentable instanceof Course) {
+            return SiteSearchUrls::course($commentable);
+        }
+
+        if ($commentable instanceof Product) {
+            return SiteSearchUrls::product($commentable);
+        }
+
+        if ($commentable instanceof Post) {
+            return SiteSearchUrls::post($commentable);
+        }
+
+        return null;
     }
 }

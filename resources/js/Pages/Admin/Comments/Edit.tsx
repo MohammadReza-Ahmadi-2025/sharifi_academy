@@ -7,8 +7,9 @@ import { findSelectOption, mapToSelectOptions } from '@/Components/Admin/shared/
 import { Select } from '@/Components/Admin/shared/ui/select';
 import { Textarea } from '@/Components/Admin/shared/ui/textarea';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { AdminFormActions, AdminFormPage } from '@/Components/Admin/shared/layout/admin-form-page';
+import { ExternalLink } from 'lucide-react';
 
 type Props = {
     comment: {
@@ -18,6 +19,7 @@ type Props = {
         status: number;
         commentable_type_label: string;
         commentable_title: string | null;
+        commentable_url: string | null;
     };
     statusOptions: { value: number; label: string }[];
 };
@@ -37,9 +39,26 @@ export default function CommentsEdit({ comment, statusOptions }: Props) {
         <AdminLayout>
             <Head title="ویرایش نظر" />
             <PageHeader title="ویرایش نظر" backHref="/admin/comments" />
-            <p className="mt-4 text-sm text-slate-500">
-                {comment.commentable_type_label}
-                {comment.commentable_title ? ` — ${comment.commentable_title}` : ''}
+            <p className="mt-4 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                <span className="rounded-full border px-2 py-0.5 text-xs font-semibold">
+                    {comment.commentable_type_label}
+                </span>
+                {comment.commentable_title ? (
+                    comment.commentable_url ? (
+                        <Link
+                            href={comment.commentable_url}
+                            target="_blank"
+                            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                        >
+                            {comment.commentable_title}
+                            <ExternalLink className="size-3.5" aria-hidden />
+                        </Link>
+                    ) : (
+                        <span>{comment.commentable_title}</span>
+                    )
+                ) : (
+                    <span>منبع نامشخص</span>
+                )}
             </p>
             <AdminFormPage onSubmit={(e) => {
                     e.preventDefault();

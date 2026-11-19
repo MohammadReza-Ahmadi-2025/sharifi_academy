@@ -3,6 +3,7 @@
 namespace Tests\Feature\Blog;
 
 use App\Models\User;
+use App\Modules\Blog\Enums\PostKind;
 use App\Modules\Blog\Enums\PostStatus;
 use App\Modules\Blog\Models\Post;
 use Database\Seeders\DatabaseSeeder;
@@ -24,6 +25,53 @@ class PublicBlogTest extends TestCase
                 ->has('seo.canonical')
                 ->has('structuredData.breadcrumb')
                 ->has('structuredData.itemList')
+            );
+    }
+
+    public function test_community_posts_feed_shows_published_author_posts(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $author = User::where('mobile', '09120000003')->firstOrFail();
+
+        Post::query()->create([
+            'author_id' => $author->id,
+            'title' => 'پست تأییدشده کاربر',
+            'slug' => 'user-community-post',
+            'excerpt' => 'خلاصه پست کاربر',
+            'content' => 'متن پست کاربر',
+            'status' => PostStatus::Published,
+            'kind' => PostKind::Community,
+            'published_at' => now()->subHour(),
+        ]);
+
+        Post::query()->create([
+            'author_id' => $author->id,
+            'title' => 'مقاله وبلاگ نباید در فید باشد',
+            'slug' => 'blog-article-not-in-feed',
+            'excerpt' => 'مقاله',
+            'content' => 'متن مقاله',
+            'status' => PostStatus::Published,
+            'kind' => PostKind::Article,
+            'published_at' => now()->subMinutes(30),
+        ]);
+
+        $this->get('/posts')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Public/Posts/Index')
+                ->where('seo.canonical', url('/posts'))
+                ->has('posts.data', 1)
+                ->where('posts.data.0.title', 'پست تأییدشده کاربر')
+                ->where('posts.data.0.author_name', trim($author->name.' '.$author->family))
+            );
+
+        $this->get('/blog')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Public/Blog/Index')
+                ->has('posts.data', 1)
+                ->where('posts.data.0.title', 'مقاله وبلاگ نباید در فید باشد')
             );
     }
 

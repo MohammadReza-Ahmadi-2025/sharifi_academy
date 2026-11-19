@@ -7,6 +7,7 @@ import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { Badge } from '@/Components/Admin/shared/ui/badge';
 import { Card } from '@/Components/Admin/shared/ui/card';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
+import { AdminSeoSettingsButton } from '@/Components/Admin/shared/ui/admin-seo-settings-button';
 import { SimpleTablePagination } from '@/Components/Admin/shared/ui/simple-table-pagination';
 import {
     Table,
@@ -94,12 +95,15 @@ export default function CategoriesIndex({
                 title="دسته‌بندی‌ها"
                 description={`فیلتر فعال: ${categoryTypeLabel}`}
                 actions={
-                    abilities.create ? (
-                        <AdminButton href={`/admin/categories/create?type=${categoryType}`}>
-                            <Plus className="size-4" />
-                            دسته جدید
-                        </AdminButton>
-                    ) : null
+                    <div className="flex flex-wrap gap-2">
+                        <AdminSeoSettingsButton />
+                        {abilities.create ? (
+                            <AdminButton href={`/admin/categories/create?type=${categoryType}`}>
+                                <Plus className="size-4" />
+                                دسته جدید
+                            </AdminButton>
+                        ) : null}
+                    </div>
                 }
             />
             <AdminListFilters

@@ -15,6 +15,9 @@ class DatabaseSeeder extends Seeder
 
         DefaultRolePermissions::sync();
 
+        $this->call(SiteSettingsSeeder::class);
+        $this->call(MobileMenuSeeder::class);
+
         $admin = User::query()->firstOrCreate(
             ['mobile' => '09120000001'],
             [

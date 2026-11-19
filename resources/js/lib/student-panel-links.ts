@@ -62,10 +62,10 @@ export const studentPanelLinks: StudentPanelLink[] = [
         hint: 'سوابق و ارسال برای تایید',
     },
     {
-        href: '/student/posts',
-        label: 'وبلاگ من',
+        href: '/account/posts',
+        label: 'پست‌های من',
         icon: Newspaper,
-        hint: 'نوشته‌ها و انتشار',
+        hint: 'بعد از تکمیل پروفایل',
     },
     {
         href: '/profile',

@@ -131,7 +131,7 @@ class UpdateProfileRequest extends FormRequest
             'avatar' => 'تصویر آواتار',
             'avatar_alt' => 'متن جایگزین آواتار',
             'avatar_title' => 'عنوان آواتار',
-            'headline' => 'تیتر حرفه‌ای',
+            'headline' => 'عنوان شغلی',
             'bio' => 'بیوگرافی',
             'birth_date' => 'تاریخ تولد',
             'national_code' => 'کد ملی',

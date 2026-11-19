@@ -4,6 +4,7 @@ import { AdminButton } from '@/Components/Admin/shared/ui/button';
 import { Badge } from '@/Components/Admin/shared/ui/badge';
 import { Card } from '@/Components/Admin/shared/ui/card';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
+import { AdminSeoSettingsButton } from '@/Components/Admin/shared/ui/admin-seo-settings-button';
 import { SimpleTablePagination } from '@/Components/Admin/shared/ui/simple-table-pagination';
 import {
     Table,
@@ -81,12 +82,15 @@ export default function ProductsIndex({ products, filters, abilities }: Props) {
             <PageHeader
                 title="محصولات"
                 actions={
-                    abilities.create ? (
-                        <AdminButton href="/admin/catalog/products/create">
-                            <Plus className="size-4" />
-                            محصول جدید
-                        </AdminButton>
-                    ) : null
+                    <div className="flex flex-wrap gap-2">
+                        <AdminSeoSettingsButton />
+                        {abilities.create ? (
+                            <AdminButton href="/admin/catalog/products/create">
+                                <Plus className="size-4" />
+                                محصول جدید
+                            </AdminButton>
+                        ) : null}
+                    </div>
                 }
             />
             <AdminListFilters

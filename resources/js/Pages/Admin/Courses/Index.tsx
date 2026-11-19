@@ -16,6 +16,7 @@ import {
 } from '@/Components/Admin/shared/ui/table';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
+import { AdminSeoSettingsButton } from '@/Components/Admin/shared/ui/admin-seo-settings-button';
 import { BookOpen, Eye, Pencil, Plus, Trash2, Check, X } from 'lucide-react';
 import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent, useState } from 'react';
@@ -116,12 +117,15 @@ export default function CoursesIndex({ courses, filters, statusOptions, abilitie
                 title="دوره‌ها"
                 description="مدیریت دوره‌ها، کلاس‌ها و جلسات آموزشی"
                 actions={
-                    abilities.create ? (
-                        <AdminButton href="/admin/courses/create">
-                            <Plus className="ml-1 h-4 w-4" />
-                            دوره جدید
-                        </AdminButton>
-                    ) : null
+                    <div className="flex flex-wrap gap-2">
+                        <AdminSeoSettingsButton />
+                        {abilities.create ? (
+                            <AdminButton href="/admin/courses/create">
+                                <Plus className="ml-1 h-4 w-4" />
+                                دوره جدید
+                            </AdminButton>
+                        ) : null}
+                    </div>
                 }
             />
 

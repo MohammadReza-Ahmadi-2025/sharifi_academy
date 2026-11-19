@@ -164,17 +164,20 @@ class HomeInstructorsSectionTest extends TestCase
         $this->getJson('/instructors/'.$instructor->id.'/resume')->assertNotFound();
     }
 
-    public function test_public_resume_is_hidden_for_non_instructors(): void
+    public function test_public_resume_json_is_hidden_for_non_instructors(): void
     {
-        $user = User::factory()->create(['status' => 1]);
+        $user = User::factory()->create(['status' => 1, 'name' => 'علی', 'family' => 'کاربر']);
         $uuid = InstructorPublicUuid::routeKey($user);
 
         $this->getJson(route('instructors.resume', ['instructor' => $uuid]))->assertNotFound();
-        $this->get(route('instructors.show', ['instructor' => $uuid]))->assertNotFound();
         $this->get('/instructors/'.$user->id)->assertNotFound();
+
+        // Generic public profile is available for all active public users.
+        $this->get(route('instructors.show', ['instructor' => $uuid]))
+            ->assertRedirect();
     }
 
-    public function test_public_resume_page_renders_for_instructor(): void
+    public function test_public_profile_page_renders_for_instructor(): void
     {
         Role::findOrCreate('instructor');
 
@@ -193,11 +196,16 @@ class HomeInstructorsSectionTest extends TestCase
         $uuid = InstructorPublicUuid::routeKey($instructor);
 
         $this->get(route('instructors.show', ['instructor' => $uuid]))
+            ->assertRedirect();
+
+        $this->followingRedirects()
+            ->get(route('instructors.show', ['instructor' => $uuid]))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->component('Public/InstructorResume/Show')
+                ->component('Public/Users/Show')
                 ->where('profile.fullName', 'رضا مدرس')
                 ->where('profile.uuid', $uuid)
+                ->where('profile.show_resume', true)
                 ->where('profile.sections.0.label', 'تحصیلات')
                 ->where('structuredData.person.@type', 'Person')
                 ->where('structuredData.person.name', 'رضا مدرس')

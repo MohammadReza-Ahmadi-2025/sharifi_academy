@@ -3,6 +3,7 @@
 namespace App\Modules\Blog\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Blog\Enums\PostKind;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Blog\Support\PostPublicPresenter;
 use App\Modules\Blog\Support\PostSeo;
@@ -23,6 +24,7 @@ class PostController extends Controller
         $appName = (string) ($settings->get('site_name') ?: config('app.name'));
 
         $posts = Post::query()
+            ->articles()
             ->published()
             ->with(['featuredImage', 'categories'])
             ->orderByDesc('published_at')
@@ -49,6 +51,10 @@ class PostController extends Controller
     {
         PostPublicPresenter::ensurePublished($post);
 
+        if ($post->kind === PostKind::Community) {
+            return redirect()->to(url(SiteSearchUrls::post($post)), 301);
+        }
+
         $redirect = CanonicalIdSlugRedirect::awayIfSlugMismatched(
             $request,
             $post,
@@ -65,7 +71,7 @@ class PostController extends Controller
 
         $settings = app(SiteSettingsService::class);
         $appName = (string) ($settings->get('site_name') ?: config('app.name'));
-        $payload = PostPublicPresenter::forPage($post, $settings, $appName);
+        $payload = PostPublicPresenter::forPage($post, $settings, $appName, $request->user());
 
         $blogListLabel = filled($settings->get('blogs_header_title'))
             ? (string) $settings->get('blogs_header_title')

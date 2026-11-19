@@ -13,6 +13,7 @@ use App\Modules\Comments\Http\Requests\Admin\UpdateCommentRequest;
 use App\Modules\Comments\Models\Comment;
 use App\Modules\Comments\Support\AdminCommentEnumOptions;
 use App\Modules\Comments\Support\CommentPresenter;
+use App\Modules\Courses\Models\Course;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,20 +33,19 @@ class CommentController extends Controller
             ? (int) $request->query('per_page', 25)
             : 25;
 
+        $constrainCommentable = fn (MorphTo $morphTo) => $morphTo->constrain([
+            Product::class => fn ($query) => $query->select('id', 'title', 'slug'),
+            Post::class => fn ($query) => $query->select('id', 'title', 'slug', 'kind'),
+            Course::class => fn ($query) => $query->select('id', 'title', 'slug'),
+        ]);
+
         $query = Comment::query()
             ->with([
                 'user',
                 'moderator',
-                'commentable' => fn (MorphTo $morphTo) => $morphTo->constrain([
-                    Product::class => fn ($query) => $query->select('id', 'title', 'slug'),
-                    Post::class => fn ($query) => $query->select('id', 'title', 'slug'),
-                ]),
+                'commentable' => $constrainCommentable,
                 'childrenRecursive.user',
                 'childrenRecursive.moderator',
-                'childrenRecursive.commentable' => fn (MorphTo $morphTo) => $morphTo->constrain([
-                    Product::class => fn ($query) => $query->select('id', 'title', 'slug'),
-                    Post::class => fn ($query) => $query->select('id', 'title', 'slug'),
-                ]),
             ])
             ->roots()
             ->latest();

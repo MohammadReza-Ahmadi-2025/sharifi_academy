@@ -157,6 +157,11 @@ class MobileOtpService
             'mobile_verified_at' => now(),
         ]);
 
+        $role = config('otp.new_user_role');
+        if (is_string($role) && $role !== '' && ! $user->hasRole($role)) {
+            $user->assignRole($role);
+        }
+
         return $user;
     }
 

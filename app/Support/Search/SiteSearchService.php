@@ -201,7 +201,7 @@ class SiteSearchService
 
         if (($limits['post'] ?? 0) > 0) {
             foreach (
-                Post::query()->published()->where(function ($builder) use ($queries): void {
+                Post::query()->articles()->published()->where(function ($builder) use ($queries): void {
                     foreach ($queries as $query) {
                         $builder->orWhere('title', 'like', "%{$query}%");
                     }

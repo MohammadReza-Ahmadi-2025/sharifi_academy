@@ -80,7 +80,7 @@ Route::prefix('instructor')
             Route::delete('resume/{resume}', [ResumeController::class, 'destroy'])->name('resume.destroy');
         });
 
-        Route::middleware('permission:panel-blog-posts-manage')->group(function () {
+        Route::middleware(['permission:panel-blog-posts-manage', 'profile.complete'])->group(function () {
             Route::get('posts', [InstructorPostController::class, 'index'])->name('posts.index');
             Route::get('posts/create', [InstructorPostController::class, 'create'])->name('posts.create');
             Route::post('posts', [InstructorPostController::class, 'store'])->name('posts.store');

@@ -58,7 +58,7 @@ export function ResumeProfileEditor({ profile, locations }: Props) {
                 <div>
                     <h2 className="text-base font-semibold text-slate-900">پروفایل من</h2>
                     <p className="mt-1 text-sm text-slate-500">
-                        نام، آواتار، تیتر و بیو که در رزومه نمایش داده می‌شود.
+                        نام، آواتار، عنوان شغلی و بیو که در پروفایل عمومی نمایش داده می‌شود.
                     </p>
                 </div>
                 <button
@@ -90,7 +90,7 @@ export function ResumeProfileEditor({ profile, locations }: Props) {
                         {profile.extended.headline ? (
                             <p className="mt-0.5 text-slate-600">{profile.extended.headline}</p>
                         ) : (
-                            <p className="mt-0.5 text-slate-400">تیتر حرفه‌ای ثبت نشده</p>
+                            <p className="mt-0.5 text-slate-400">عنوان شغلی ثبت نشده</p>
                         )}
                         {profile.extended.bio ? (
                             <SiteRichHtml

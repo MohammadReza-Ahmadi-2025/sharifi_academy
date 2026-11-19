@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureCompleteProfile;
 use App\Http\Middleware\EnsureSiteNotInMaintenance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\Admin\Http\Middleware\EnsureAdminPanelAccess;
@@ -56,6 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.panel' => EnsureAdminPanelAccess::class,
             'instructor.panel' => EnsureInstructorPanelAccess::class,
             'student.panel' => EnsureStudentPanelAccess::class,
+            'profile.complete' => EnsureCompleteProfile::class,
             'permission' => PermissionMiddleware::class,
             'role' => RoleMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,

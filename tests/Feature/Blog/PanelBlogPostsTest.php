@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Blog\Enums\PostStatus;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Catalog\Models\Category;
+use App\Modules\Locations\Models\ProvinceCity;
 use App\Modules\Roles\Support\DefaultRolePermissions;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,9 +25,23 @@ class PanelBlogPostsTest extends TestCase
         DefaultRolePermissions::sync();
     }
 
+    private function completeProfile(User $user): void
+    {
+        $city = ProvinceCity::query()->firstOrFail();
+        $user->forceFill([
+            'name' => $user->name ?: 'کاربر',
+            'family' => $user->family ?: 'تست',
+        ])->save();
+        $user->profile()->updateOrCreate([], [
+            'province_city_id' => $city->id,
+            'is_public' => true,
+        ]);
+    }
+
     public function test_student_can_create_pending_post_without_publishing(): void
     {
         $student = User::where('mobile', '09120000003')->firstOrFail();
+        $this->completeProfile($student);
         $category = Category::query()->create([
             'type' => Category::TYPE_BLOG,
             'title' => 'دانشجویی',
@@ -72,13 +87,18 @@ class PanelBlogPostsTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame(PostStatus::Published, $post->fresh()->status);
-        $this->get('/blog/'.$post->id.'/'.$post->slug)->assertOk();
+        $this->get('/blog/'.$post->id.'/'.$post->slug)->assertRedirect('/posts/'.$post->id.'/'.$post->slug);
+        $this->get('/posts/'.$post->id.'/'.$post->slug)
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Public/Posts/Show'));
     }
 
     public function test_instructor_can_manage_own_posts_only(): void
     {
         $instructor = User::where('mobile', '09120000002')->firstOrFail();
+        $this->completeProfile($instructor);
         $other = User::where('mobile', '09120000003')->firstOrFail();
+        $this->completeProfile($other);
         $category = Category::query()->create([
             'type' => Category::TYPE_BLOG,
             'title' => 'استادی',
@@ -120,6 +140,7 @@ class PanelBlogPostsTest extends TestCase
     public function test_panel_author_cannot_set_published_status(): void
     {
         $student = User::where('mobile', '09120000003')->firstOrFail();
+        $this->completeProfile($student);
         $category = Category::query()->create([
             'type' => Category::TYPE_BLOG,
             'title' => 'محدود',
@@ -138,5 +159,36 @@ class PanelBlogPostsTest extends TestCase
                 ],
             ])
             ->assertSessionHasErrors('status');
+    }
+
+    public function test_panel_plain_text_escapes_manual_html_and_scripts(): void
+    {
+        $student = User::where('mobile', '09120000003')->firstOrFail();
+        $this->completeProfile($student);
+
+        $response = $this->actingAs($student)
+            ->post('/student/posts', [
+                'title' => 'XSS تست',
+                'excerpt' => '<script>alert(1)</script><img src=x onerror=alert(2)>',
+                'content' => "خط امن\n\n<a href=\"javascript:alert(3)\">لینک</a><script>evil()</script>",
+                'status' => PostStatus::Draft->value,
+            ]);
+
+        $response->assertSessionHasNoErrors()->assertRedirect();
+
+        $post = Post::query()->where('title', 'XSS تست')->firstOrFail();
+
+        $excerpt = (string) $post->excerpt;
+        $content = (string) $post->content;
+
+        // Manual HTML/script is escaped to text entities, not kept as executable markup.
+        $this->assertDoesNotMatchRegularExpression('/<script\b/i', $excerpt);
+        $this->assertDoesNotMatchRegularExpression('/<script\b/i', $content);
+        $this->assertDoesNotMatchRegularExpression('/<img\b/i', $excerpt);
+        $this->assertDoesNotMatchRegularExpression('/<a\b/i', $content);
+        $this->assertStringContainsString('&lt;script&gt;', $excerpt);
+        $this->assertStringContainsString('&lt;script&gt;', $content);
+        $this->assertStringContainsString('&lt;a href=', $content);
+        $this->assertStringContainsString('onerror=', $excerpt);
     }
 }

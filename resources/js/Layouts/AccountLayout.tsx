@@ -12,6 +12,8 @@ type NavLink = {
 type Props = PropsWithChildren<{
     title: string;
     description?: string;
+    /** سازگاری با Layout پنل استاد/دانشجو — نادیده گرفته می‌شود */
+    contentVariant?: 'panel' | 'plain';
 }>;
 
 export default function AccountLayout({ title, description, children }: Props) {
@@ -26,6 +28,11 @@ export default function AccountLayout({ title, description, children }: Props) {
 
     const links: NavLink[] = [
         { href: '/profile', label: 'پروفایل من', match: (p) => p.startsWith('/profile') },
+        {
+            href: '/account/posts',
+            label: 'پست‌های من',
+            match: (p) => p.startsWith('/account/posts'),
+        },
         ...panels.map((panel) => ({
             href: panel.url,
             label: panel.label.replace(/^ورود به\s+/, ''),

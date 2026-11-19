@@ -26,6 +26,7 @@ class CommentPresenter
             'commentable_type' => $comment->commentable_type,
             'commentable_type_label' => $comment->commentableTypeLabel(),
             'commentable_title' => $comment->commentableTitle(),
+            'commentable_url' => $comment->commentablePublicUrl(),
             'created_at' => $comment->created_at?->toIso8601String(),
             'children' => $comment->childrenRecursive
                 ->map(fn (Comment $child) => self::forChild($child))
@@ -106,6 +107,7 @@ class CommentPresenter
             'status' => $comment->status instanceof CommentStatus ? $comment->status->value : (int) $comment->status,
             'commentable_type_label' => $comment->commentableTypeLabel(),
             'commentable_title' => $comment->commentableTitle(),
+            'commentable_url' => $comment->commentablePublicUrl(),
         ];
     }
 }

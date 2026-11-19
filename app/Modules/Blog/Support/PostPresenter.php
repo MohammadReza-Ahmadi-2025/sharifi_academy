@@ -6,6 +6,8 @@ use App\Modules\Blog\Enums\PostStatus;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Catalog\Support\ProductPresenter;
 use App\Modules\Files\Support\FilePresenter;
+use App\Support\PersianDate;
+use App\Support\Search\SiteSearchUrls;
 
 class PostPresenter
 {
@@ -14,17 +16,30 @@ class PostPresenter
      */
     public static function forList(Post $post): array
     {
-        $post->loadMissing(['author', 'categories']);
+        $post->loadMissing(['author', 'categories', 'featuredImage']);
+
+        $author = $post->author;
+        $authorName = $author
+            ? trim(($author->name ?? '').' '.($author->family ?? ''))
+            : null;
 
         return [
             'id' => $post->id,
             'title' => $post->title,
-            'slug' => $post->slug,
+            'slug' => $post->publicSlug(),
             'status' => $post->status instanceof PostStatus ? $post->status->value : $post->status,
-            'status_label' => $post->status instanceof PostStatus ? $post->status->label() : $post->status,
-            'author_name' => $post->author?->name,
-            'category_titles' => $post->categories->pluck('title')->all(),
+            'status_label' => $post->status instanceof PostStatus ? $post->status->label() : (string) $post->status,
+            'author_name' => $authorName !== '' && $authorName !== null ? $authorName : null,
+            'author_mobile' => $author?->mobile,
+            'category_titles' => $post->categories->pluck('title')->values()->all(),
             'published_at' => $post->published_at?->toIso8601String(),
+            'published_at_label' => PersianDate::formatDateTime($post->published_at),
+            'created_at_label' => PersianDate::formatDateTime($post->created_at),
+            'views' => (int) ($post->views ?? 0),
+            'image_url' => $post->featuredImage?->publicUrl() ?: null,
+            'public_url' => $post->status === PostStatus::Published
+                ? SiteSearchUrls::post($post)
+                : null,
         ];
     }
 

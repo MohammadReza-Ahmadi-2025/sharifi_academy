@@ -262,6 +262,10 @@ export function getAdminBreadcrumbs(urlOrPath: string): BreadcrumbItem[] {
         pushCrumb(items, 'پست‌ها', '/admin/posts');
         if (second === 'create') {
             pushCrumb(items, 'ایجاد پست');
+        } else if (second === 'settings') {
+            pushCrumb(items, 'سئوی وبلاگ');
+        } else if (second === 'feed-settings') {
+            pushCrumb(items, 'سئوی پست‌ها');
         } else if (second && third === 'edit') {
             pushCrumb(items, 'ویرایش پست');
         }

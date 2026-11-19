@@ -54,7 +54,7 @@ class MobileOtpTest extends TestCase
         $this->assertDatabaseHas('users', ['mobile' => '09121111111']);
         $user = User::where('mobile', '09121111111')->first();
         $this->assertNotNull($user);
-        $this->assertFalse($user->hasRole('student'));
+        $this->assertTrue($user->hasRole('student'));
     }
 
     public function test_verify_existing_user_logs_in_without_duplicate(): void

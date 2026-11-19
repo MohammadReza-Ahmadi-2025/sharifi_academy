@@ -8,8 +8,11 @@ use App\Http\Controllers\Public\SiteSearchController;
 use App\Modules\Assessments\Http\Controllers\Public\CertificateVerifyController;
 use App\Modules\Auth\Http\Controllers\OtpRequestController;
 use App\Modules\Auth\Http\Controllers\OtpVerifyController;
+use App\Modules\Blog\Http\Controllers\Account\PostController as AccountPostController;
 use App\Modules\Blog\Http\Controllers\Site\BlogCategoryController;
+use App\Modules\Blog\Http\Controllers\Site\CommunityFeedController;
 use App\Modules\Blog\Http\Controllers\Site\PostController as BlogPostController;
+use App\Modules\Blog\Http\Controllers\Site\PostReactionController;
 use App\Modules\Catalog\Http\Controllers\Site\BrandController;
 use App\Modules\Catalog\Http\Controllers\Site\CategoryController;
 use App\Modules\Catalog\Http\Controllers\Site\ProductController;
@@ -21,6 +24,9 @@ use App\Modules\Courses\Http\Controllers\Site\CourseEnrollmentController;
 use App\Modules\Pages\Http\Controllers\Site\PageController as SitePageController;
 use App\Modules\Profile\Http\Controllers\AccountProfileController;
 use App\Modules\Profile\Http\Controllers\Site\InstructorResumeController;
+use App\Modules\Profile\Http\Controllers\Site\PublicUserProfileController;
+use App\Modules\Profile\Support\InstructorPublicUuid;
+use App\Modules\Profile\Support\UserPublicSlug;
 use App\Modules\Stories\Http\Controllers\Site\StoryController;
 use Illuminate\Support\Facades\Route;
 
@@ -47,6 +53,11 @@ Route::get('/courses/{slug}', [CourseController::class, 'redirectLegacySlug'])
 Route::get('/books/{product:slug}', [ProductController::class, 'show'])->name('books.show');
 Route::get('/brands/{brand}', [BrandController::class, 'show'])->name('brands.show');
 
+Route::get('/posts', [CommunityFeedController::class, 'index'])->name('posts.feed');
+Route::get('/posts/{post}/{slug}', [CommunityFeedController::class, 'show'])
+    ->whereNumber('post')
+    ->name('posts.show');
+
 Route::get('/blog', [BlogPostController::class, 'index'])->name('blog.index');
 Route::get('/blog/categories/{category:slug}', [BlogCategoryController::class, 'show'])
     ->name('blog.categories.show');
@@ -61,9 +72,20 @@ Route::get('/pages/{page:slug}', [SitePageController::class, 'show'])->name('pag
 
 Route::get('/stories/feed', [StoryController::class, 'feed'])->name('stories.feed');
 
-Route::get('/instructors/{instructor}', [InstructorResumeController::class, 'showPage'])
-    ->whereUuid('instructor')
-    ->name('instructors.show');
+Route::get('/u/{uuid}/{slug?}', [PublicUserProfileController::class, 'show'])
+    ->whereUuid('uuid')
+    ->name('users.show');
+
+Route::get('/instructors/{instructor}', function (string $instructor) {
+    $user = InstructorPublicUuid::findUserByPublicUuid($instructor);
+    abort_unless(
+        $user !== null && PublicUserProfileController::isPubliclyViewable($user),
+        404,
+    );
+
+    return redirect()->to(UserPublicSlug::profileUrl($user, $instructor), 301);
+})->whereUuid('instructor')->name('instructors.show');
+
 Route::get('/instructors/{instructor}/resume', [InstructorResumeController::class, 'show'])
     ->whereUuid('instructor')
     ->name('instructors.resume');
@@ -78,9 +100,24 @@ Route::middleware('auth')->group(function () {
     Route::post('/blog/{post}/{slug}/comments', [PostCommentController::class, 'store'])
         ->whereNumber('post')
         ->name('blog.comments.store');
+    Route::post('/posts/{post}/{slug}/comments', [PostCommentController::class, 'store'])
+        ->whereNumber('post')
+        ->name('posts.comments.store');
+    Route::post('/posts/{post}/{slug}/reactions', [PostReactionController::class, 'store'])
+        ->whereNumber('post')
+        ->name('posts.reactions.store');
     Route::post('/stories/{story}/views', [StoryController::class, 'recordView'])->name('stories.views');
     Route::get('/profile', [AccountProfileController::class, 'edit'])->name('site.profile.edit');
     Route::put('/profile', [AccountProfileController::class, 'update'])->name('site.profile.update');
+
+    Route::middleware('profile.complete')->prefix('account/posts')->name('account.posts.')->group(function () {
+        Route::get('/', [AccountPostController::class, 'index'])->name('index');
+        Route::get('/create', [AccountPostController::class, 'create'])->name('create');
+        Route::post('/', [AccountPostController::class, 'store'])->name('store');
+        Route::get('/{post:id}/edit', [AccountPostController::class, 'edit'])->name('edit');
+        Route::put('/{post:id}', [AccountPostController::class, 'update'])->name('update');
+        Route::delete('/{post:id}', [AccountPostController::class, 'destroy'])->name('destroy');
+    });
 
     Route::post('/account/notifications/read-all', [NotificationController::class, 'markAllRead'])
         ->name('account.notifications.read-all');

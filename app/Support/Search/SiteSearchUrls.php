@@ -2,6 +2,7 @@
 
 namespace App\Support\Search;
 
+use App\Modules\Blog\Enums\PostKind;
 use App\Modules\Blog\Models\Post;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
@@ -23,7 +24,9 @@ final class SiteSearchUrls
 
     public static function post(Post $post): string
     {
-        return '/blog/'.$post->getKey().'/'.$post->publicSlug();
+        $prefix = $post->kind === PostKind::Community ? '/posts/' : '/blog/';
+
+        return $prefix.$post->getKey().'/'.$post->publicSlug();
     }
 
     public static function brand(Brand $brand): string

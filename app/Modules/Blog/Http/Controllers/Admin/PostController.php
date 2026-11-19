@@ -3,6 +3,7 @@
 namespace App\Modules\Blog\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Blog\Enums\PostKind;
 use App\Modules\Blog\Enums\PostStatus;
 use App\Modules\Blog\Http\Requests\Admin\StorePostRequest;
 use App\Modules\Blog\Http\Requests\Admin\UpdatePostRequest;
@@ -26,22 +27,33 @@ class PostController extends Controller
         abort_unless($request->user()?->can('blog-posts-index'), 403);
 
         $search = trim((string) $request->query('search', ''));
-        $status = $request->query('status');
+        // Default: all statuses so pending community submissions are not hidden.
+        $status = $request->query('status', 'all');
+        if ($status === 'all') {
+            $status = null;
+        }
         $categoryId = $request->query('category_id');
         $perPage = in_array((int) $request->query('per_page', 25), [25, 50, 100], true)
             ? (int) $request->query('per_page', 25)
             : 25;
 
         $query = Post::query()
-            ->with(['categories', 'author'])
-            ->latest();
+            ->with(['categories', 'author', 'featuredImage'])
+            ->latest('published_at')
+            ->latest('id');
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
                 $builder
                     ->where('title', 'like', "%{$search}%")
                     ->orWhere('slug', 'like', "%{$search}%")
-                    ->orWhere('excerpt', 'like', "%{$search}%");
+                    ->orWhere('excerpt', 'like', "%{$search}%")
+                    ->orWhereHas('author', function ($authorQuery) use ($search) {
+                        $authorQuery
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('family', 'like', "%{$search}%")
+                            ->orWhere('mobile', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -62,12 +74,21 @@ class PostController extends Controller
             'posts' => $posts,
             'filters' => [
                 'search' => $search,
-                'status' => $status,
+                'status' => $status ?? 'all',
                 'category_id' => $categoryId ? (int) $categoryId : null,
                 'per_page' => $perPage,
             ],
             'categoryOptions' => $this->categoryOptions(),
-            'statusOptions' => AdminBlogEnumOptions::postStatusOptions(),
+            'statusOptions' => [
+                ['value' => 'all', 'label' => 'همه وضعیت‌ها'],
+                ...AdminBlogEnumOptions::postStatusOptions(),
+            ],
+            'statusCounts' => [
+                'all' => Post::query()->count(),
+                'published' => Post::query()->where('status', PostStatus::Published)->count(),
+                'pending_review' => Post::query()->where('status', PostStatus::PendingReview)->count(),
+                'draft' => Post::query()->where('status', PostStatus::Draft)->count(),
+            ],
             'abilities' => [
                 'create' => $actor?->can('blog-posts-create') ?? false,
                 'update' => $actor?->can('blog-posts-update') ?? false,
@@ -99,6 +120,7 @@ class PostController extends Controller
             'excerpt' => $data['excerpt'] ?? null,
             'content' => $data['content'],
             'status' => $status,
+            'kind' => PostKind::Article,
             'published_at' => $status === PostStatus::Published ? now() : null,
             'meta_title' => $data['meta_title'] ?? null,
             'meta_description' => $data['meta_description'] ?? null,

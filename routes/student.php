@@ -41,7 +41,7 @@ Route::prefix('student')
             Route::delete('resume/{resume}', [ResumeController::class, 'destroy'])->name('resume.destroy');
         });
 
-        Route::middleware('permission:panel-blog-posts-manage')->group(function () {
+        Route::middleware(['permission:panel-blog-posts-manage', 'profile.complete'])->group(function () {
             Route::get('posts', [StudentPostController::class, 'index'])->name('posts.index');
             Route::get('posts/create', [StudentPostController::class, 'create'])->name('posts.create');
             Route::post('posts', [StudentPostController::class, 'store'])->name('posts.store');

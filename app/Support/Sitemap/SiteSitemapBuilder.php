@@ -49,6 +49,7 @@ final class SiteSitemapBuilder
         return [
             new SitemapUrl(route('home'), now(), 'daily', '1.0'),
             new SitemapUrl(route('blog.index'), now(), 'daily', '0.8'),
+            new SitemapUrl(route('posts.feed'), now(), 'daily', '0.7'),
         ];
     }
 
@@ -127,15 +128,25 @@ final class SiteSitemapBuilder
      */
     private function blogUrls(): Collection
     {
-        return Post::query()
+        $articles = Post::query()
+            ->articles()
             ->published()
             ->orderBy('id')
-            ->get(['id', 'slug', 'updated_at', 'published_at'])
+            ->get(['id', 'slug', 'kind', 'updated_at', 'published_at']);
+
+        $community = Post::query()
+            ->community()
+            ->published()
+            ->orderBy('id')
+            ->get(['id', 'slug', 'kind', 'updated_at', 'published_at']);
+
+        return $articles
+            ->concat($community)
             ->map(fn (Post $post) => new SitemapUrl(
                 url(SiteSearchUrls::post($post)),
                 $post->updated_at ?? $post->published_at,
                 'weekly',
-                '0.8',
+                $post->kind?->value === 'community' ? '0.6' : '0.8',
             ));
     }
 

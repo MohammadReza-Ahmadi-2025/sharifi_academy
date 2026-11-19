@@ -28,10 +28,10 @@ export const instructorPanelLinks: InstructorPanelLink[] = [
         hint: 'پروفایل حرفه‌ای',
     },
     {
-        href: '/instructor/posts',
-        label: 'وبلاگ من',
+        href: '/account/posts',
+        label: 'پست‌های من',
         icon: Newspaper,
-        hint: 'نوشته‌ها و انتشار',
+        hint: 'بعد از تکمیل پروفایل',
     },
     {
         href: '/instructor/session-attendances',

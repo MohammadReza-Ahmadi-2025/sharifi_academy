@@ -4,6 +4,7 @@ namespace App\Modules\Blog\Models;
 
 use App\Casts\PurifiedHtml;
 use App\Models\User;
+use App\Modules\Blog\Enums\PostKind;
 use App\Modules\Blog\Enums\PostStatus;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Comments\Models\Comment;
@@ -30,6 +31,7 @@ use Laravel\Scout\Searchable;
     'content',
     'published_at',
     'status',
+    'kind',
     'meta_title',
     'meta_description',
     'meta_keywords',
@@ -60,6 +62,7 @@ class Post extends Model
             'excerpt' => strip_tags((string) $this->excerpt),
             'content' => strip_tags((string) $this->content),
             'status' => $this->status?->value,
+            'kind' => $this->kind?->value,
             'published_at' => $this->published_at?->toIso8601String(),
         ];
     }
@@ -67,6 +70,7 @@ class Post extends Model
     public function shouldBeSearchable(): bool
     {
         return $this->status === PostStatus::Published
+            && $this->kind === PostKind::Article
             && $this->published_at !== null
             && $this->published_at->lte(now());
     }
@@ -80,6 +84,7 @@ class Post extends Model
             'meta_keywords' => 'array',
             'views' => 'integer',
             'status' => PostStatus::class,
+            'kind' => PostKind::class,
         ];
     }
 
@@ -127,6 +132,14 @@ class Post extends Model
     }
 
     /**
+     * @return MorphMany<Reaction, $this>
+     */
+    public function reactions(): MorphMany
+    {
+        return $this->morphMany(Reaction::class, 'reactable');
+    }
+
+    /**
      * @param  Builder<Post>  $query
      * @return Builder<Post>
      */
@@ -136,5 +149,23 @@ class Post extends Model
             ->where('status', PostStatus::Published->value)
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now());
+    }
+
+    /**
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
+    public function scopeArticles(Builder $query): Builder
+    {
+        return $query->where('kind', PostKind::Article->value);
+    }
+
+    /**
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
+    public function scopeCommunity(Builder $query): Builder
+    {
+        return $query->where('kind', PostKind::Community->value);
     }
 }

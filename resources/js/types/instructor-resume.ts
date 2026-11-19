@@ -34,6 +34,7 @@ export type InstructorResumeProfile = {
     fullName: string;
     headline?: string | null;
     bio?: string | null;
+    location?: string | null;
     avatar?: { url: string; alt?: string | null; title?: string | null } | null;
     profile_url?: string;
     sections: ResumeSection[];

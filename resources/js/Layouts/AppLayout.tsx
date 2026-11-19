@@ -42,7 +42,7 @@ export default function AppLayout({ children, fullWidth = false, mainClassName }
                 {children}
             </main>
 
-            <footer className="mt-auto border-t border-secondary bg-primary text-on-primary pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
+            <footer className="mt-auto border-t border-secondary bg-primary text-on-primary pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
                 <div className="mx-auto max-w-7xl px-4 py-10 lg:pb-10">
                     <div className="flex flex-col gap-10 pb-10 lg:flex-row lg:items-end lg:justify-between">
                         {hasFooterMenus ? (

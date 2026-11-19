@@ -24,7 +24,7 @@ return [
         ],
     ],
 
-    /** OTP signup does not assign a role; student role is granted on confirmed enrollment. */
-    'new_user_role' => null,
+    /** Role assigned when a new user is created via OTP signup. */
+    'new_user_role' => env('OTP_NEW_USER_ROLE', 'student'),
 
 ];

@@ -6,11 +6,12 @@ import { Card } from '@/Components/Admin/shared/ui/card';
 import { PageHeader } from '@/Components/Admin/shared/ui/page-header';
 import { SimpleTablePagination } from '@/Components/Admin/shared/ui/simple-table-pagination';
 import { FormField } from '@/Components/Admin/shared/ui/form-field';
+import { AdminInput } from '@/Components/Admin/shared/ui/input';
 import { Textarea } from '@/Components/Admin/shared/ui/textarea';
 import { formatPersianDateTime } from '@/Components/Admin/shared/lib/format-persian-datetime';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, router, useForm } from '@inertiajs/react';
-import { MessageSquarePlus, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { ExternalLink, MessageSquarePlus, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent, useState } from 'react';
 
@@ -33,6 +34,7 @@ type Row = {
     rating: number | null;
     commentable_type_label: string;
     commentable_title: string | null;
+    commentable_url: string | null;
     created_at: string | null;
     children: ChildComment[];
 };
@@ -50,21 +52,35 @@ type Props = {
     abilities: { create: boolean; update: boolean; delete: boolean };
 };
 
-function CommentReplies({ items, depth = 0 }: { items: ChildComment[]; depth?: number }) {
-    if (items.length === 0) {
-        return null;
-    }
-
+function CommentTarget({
+    typeLabel,
+    title,
+    url,
+}: {
+    typeLabel: string;
+    title: string | null;
+    url: string | null;
+}) {
     return (
-        <ul className={`mt-2 space-y-2 ${depth > 0 ? 'mr-4 border-r pr-3' : ''}`}>
-            {items.map((child) => (
-                <li key={child.id} className="text-sm">
-                    <div className="font-medium text-slate-800 dark:text-slate-200">{child.author_name}</div>
-                    <p className="text-slate-600 dark:text-slate-400">{child.body}</p>
-                    <CommentReplies items={child.children} depth={depth + 1} />
-                </li>
-            ))}
-        </ul>
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+            <Badge variant="info">{typeLabel}</Badge>
+            {title ? (
+                url ? (
+                    <Link
+                        href={url}
+                        target="_blank"
+                        className="inline-flex max-w-full items-center gap-1 font-medium text-primary hover:underline"
+                    >
+                        <span className="truncate">{title}</span>
+                        <ExternalLink className="size-3.5 shrink-0" aria-hidden />
+                    </Link>
+                ) : (
+                    <span className="font-medium text-slate-700 dark:text-slate-300">{title}</span>
+                )
+            ) : (
+                <span className="text-slate-400">منبع نامشخص</span>
+            )}
+        </div>
     );
 }
 
@@ -83,7 +99,7 @@ function ReplyForm({ commentId }: { commentId: number }) {
 
     return (
         <form
-            className="mt-2 space-y-2 rounded-md border p-3"
+            className="mt-2 space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/40"
             onSubmit={(e) => {
                 e.preventDefault();
                 form.post(`/admin/comments/${commentId}/reply`, {
@@ -99,6 +115,7 @@ function ReplyForm({ commentId }: { commentId: number }) {
                 <AdminInput
                     value={form.data.display_name}
                     disabled={form.processing}
+                    placeholder="خالی = پاسخ با نام ادمین"
                     onChange={(e) => form.setData('display_name', e.target.value)}
                 />
             </FormField>
@@ -108,16 +125,56 @@ function ReplyForm({ commentId }: { commentId: number }) {
                     rows={3}
                     value={form.data.body}
                     disabled={form.processing}
+                    placeholder="متن پاسخ ادمین..."
                     onChange={(e) => form.setData('body', e.target.value)}
                 />
             </FormField>
             <div className="flex gap-2">
-                <AdminButton type="submit" size="sm" disabled={form.processing}>ارسال</AdminButton>
+                <AdminButton type="submit" size="sm" disabled={form.processing || form.data.body.trim() === ''}>
+                    ارسال پاسخ
+                </AdminButton>
                 <AdminButton type="button" variant="secondary" size="sm" onClick={() => setOpen(false)}>
                     انصراف
                 </AdminButton>
             </div>
         </form>
+    );
+}
+
+function CommentReplies({
+    items,
+    canReply,
+    depth = 0,
+}: {
+    items: ChildComment[];
+    canReply: boolean;
+    depth?: number;
+}) {
+    if (items.length === 0) {
+        return null;
+    }
+
+    return (
+        <ul className={`mt-3 space-y-3 ${depth > 0 ? 'mr-3 border-r border-slate-200 pr-3 dark:border-slate-700' : ''}`}>
+            {items.map((child) => (
+                <li key={child.id} className="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/30">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-medium text-slate-800 dark:text-slate-200">{child.author_name}</div>
+                        <Badge variant={child.status === 1 ? 'default' : child.status === 2 ? 'destructive' : 'secondary'}>
+                            {child.status_label}
+                        </Badge>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{child.body}</p>
+                    {child.created_at ? (
+                        <p className="mt-1 text-[11px] text-slate-400">
+                            {formatPersianDateTime(child.created_at, 'table')}
+                        </p>
+                    ) : null}
+                    {canReply ? <ReplyForm commentId={child.id} /> : null}
+                    <CommentReplies items={child.children} canReply={canReply} depth={depth + 1} />
+                </li>
+            ))}
+        </ul>
     );
 }
 
@@ -150,9 +207,9 @@ export default function CommentsIndex({ comments, filters, statusOptions, abilit
         applyFilters({ page: 1 });
     };
 
-    const statusVariant = (status: number) => {
-        if (status === 1) return 'default';
-        if (status === 2) return 'destructive';
+    const statusVariant = (value: number) => {
+        if (value === 1) return 'default';
+        if (value === 2) return 'destructive';
         return 'secondary';
     };
 
@@ -161,6 +218,7 @@ export default function CommentsIndex({ comments, filters, statusOptions, abilit
             <Head title="نظرات" />
             <PageHeader
                 title="نظرات"
+                description="نظرات دوره‌ها، مقالات وبلاگ و پست‌های کاربری را ببینید و پاسخ دهید."
                 actions={
                     abilities.create ? (
                         <AdminButton href="/admin/comments/create">
@@ -195,59 +253,66 @@ export default function CommentsIndex({ comments, filters, statusOptions, abilit
                     comments.data.map((row) => (
                         <Card key={row.id} className="p-4">
                             <div className="flex flex-wrap items-start justify-between gap-2">
-                                <div>
+                                <div className="min-w-0 flex-1">
                                     <div className="font-semibold">{row.author_name}</div>
-                                    <div className="text-xs text-slate-500">
-                                        {row.commentable_type_label}
-                                        {row.commentable_title ? ` — ${row.commentable_title}` : ''}
-                                        {row.created_at ? (
-                                            <span className="mt-0.5 block">
-                                                {formatPersianDateTime(row.created_at, 'table')}
-                                            </span>
-                                        ) : null}
-                                    </div>
+                                    <CommentTarget
+                                        typeLabel={row.commentable_type_label}
+                                        title={row.commentable_title}
+                                        url={row.commentable_url}
+                                    />
+                                    {row.created_at ? (
+                                        <span className="mt-1 block text-xs text-slate-500">
+                                            {formatPersianDateTime(row.created_at, 'table')}
+                                        </span>
+                                    ) : null}
                                 </div>
                                 <Badge variant={statusVariant(row.status)}>{row.status_label}</Badge>
                             </div>
-                            <p className="mt-3 text-slate-700 dark:text-slate-300">{row.body}</p>
-                            <CommentReplies items={row.children} />
-                            {abilities.update && <ReplyForm commentId={row.id} />}
+                            <p className="mt-3 whitespace-pre-wrap text-slate-700 dark:text-slate-300">{row.body}</p>
+                            <CommentReplies items={row.children} canReply={abilities.update} />
+                            {abilities.update ? <ReplyForm commentId={row.id} /> : null}
                             <div className="mt-4 flex flex-wrap gap-2">
-                                {abilities.update && row.status !== 1 && (
+                                {abilities.update && row.status !== 1 ? (
                                     <AdminButton
                                         size="sm"
                                         variant="secondary"
-                                        onClick={() => router.post(`/admin/comments/${row.id}/approve`, {}, { preserveScroll: true })}
+                                        onClick={() =>
+                                            router.post(`/admin/comments/${row.id}/approve`, {}, { preserveScroll: true })
+                                        }
                                     >
                                         تأیید
                                     </AdminButton>
-                                )}
-                                {abilities.update && row.status !== 2 && (
+                                ) : null}
+                                {abilities.update && row.status !== 2 ? (
                                     <AdminButton
                                         size="sm"
                                         variant="secondary"
-                                        onClick={() => router.post(`/admin/comments/${row.id}/reject`, {}, { preserveScroll: true })}
+                                        onClick={() =>
+                                            router.post(`/admin/comments/${row.id}/reject`, {}, { preserveScroll: true })
+                                        }
                                     >
                                         رد
                                     </AdminButton>
-                                )}
-                                {abilities.update && (
+                                ) : null}
+                                {abilities.update ? (
                                     <AdminButton variant="ghost" size="sm" href={`/admin/comments/${row.id}/edit`}>
                                         <Pencil className="size-4" />
                                         ویرایش
                                     </AdminButton>
-                                )}
-                                {abilities.delete && (
+                                ) : null}
+                                {abilities.delete ? (
                                     <AdminButton
                                         variant="ghost"
                                         size="sm"
                                         onClick={() =>
-                                            confirmToast('نظر و پاسخ‌ها حذف شوند؟', () => router.delete(`/admin/comments/${row.id}`))
-                                    }>
-                                    
+                                            confirmToast('نظر و پاسخ‌ها حذف شوند؟', () =>
+                                                router.delete(`/admin/comments/${row.id}`),
+                                            )
+                                        }
+                                    >
                                         <Trash2 className="size-4 text-red-600" />
                                     </AdminButton>
-                                )}
+                                ) : null}
                             </div>
                         </Card>
                     ))
@@ -267,4 +332,4 @@ export default function CommentsIndex({ comments, filters, statusOptions, abilit
             />
         </AdminLayout>
     );
-    }
+}

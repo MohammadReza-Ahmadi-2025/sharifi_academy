@@ -12,13 +12,14 @@ import {
 } from '@/Components/Admin/shared/ui/table';
 import { withGalleryPayload } from '@/Components/shared/gallery-form-payload';
 import type { ExistingFilePayload } from '@/Components/shared/file-upload';
+import AccountLayout from '@/Layouts/AccountLayout';
 import InstructorLayout from '@/Layouts/InstructorLayout';
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import type { ComponentType, FormEvent, ReactNode } from 'react';
 
-type PanelMeta = { base_path: string; panel: 'instructor' | 'student' };
+type PanelMeta = { base_path: string; panel: 'instructor' | 'student' | 'account' };
 
 type LayoutProps = {
     title: string;
@@ -42,6 +43,10 @@ type PaginatedPosts = {
 };
 
 function usePanelLayout(panel: PanelMeta): ComponentType<LayoutProps> {
+    if (panel.panel === 'account') {
+        return AccountLayout;
+    }
+
     return panel.panel === 'student' ? StudentLayout : InstructorLayout;
 }
 
@@ -58,8 +63,8 @@ export function PanelBlogIndex({
     const { flash } = usePage().props as { flash?: { success?: string } };
 
     return (
-        <Layout title="وبلاگ من" description="نوشته‌های شما برای انتشار در سایت" contentVariant="plain">
-            <Head title="وبلاگ من" />
+        <Layout title="پست‌های من" description="پست‌های کاربری شما (جدا از مقالات وبلاگ سایت)" contentVariant="plain">
+            <Head title="پست‌های من" />
 
             {flash?.success ? (
                 <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
@@ -68,7 +73,9 @@ export function PanelBlogIndex({
             ) : null}
 
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-slate-600">برای انتشار عمومی، وضعیت «در انتظار تایید» را انتخاب کنید تا ادمین بررسی کند.</p>
+                <p className="text-sm text-slate-600">
+                    برای نمایش در فید پست‌ها، وضعیت «در انتظار تایید» را بزنید تا ادمین بررسی کند. مقالات وبلاگ فقط از پنل ادمین ساخته می‌شوند.
+                </p>
                 {abilities.create ? (
                     <Link
                         href={`${panel.base_path}/create`}
@@ -187,8 +194,8 @@ export function PanelBlogCreate({ panel, categoryOptions, statusOptions }: FormP
             <Head title="پست جدید" />
             <form onSubmit={submit} className="space-y-6">
                 <GalleryImagesField
-                    title="تصویر شاخص"
-                    description="حداقل یک تصویر الزامی است."
+                    title="تصویر (اختیاری)"
+                    description="برای پست کاربری الزامی نیست."
                     items={featured}
                     onItemsChange={setFeatured}
                     multiple={false}
@@ -204,6 +211,7 @@ export function PanelBlogCreate({ panel, categoryOptions, statusOptions }: FormP
                     processing={form.processing}
                     plainEditor
                     showSeo={false}
+                    categoriesRequired={false}
                     onChange={(k, v) => form.setData(k, v as never)}
                 />
                 <div className="flex gap-2">
@@ -255,7 +263,8 @@ export function PanelBlogEdit({ panel, categoryOptions, statusOptions, post }: F
             ) : null}
             <form onSubmit={submit} className="space-y-6">
                 <GalleryImagesField
-                    title="تصویر شاخص"
+                    title="تصویر (اختیاری)"
+                    description="برای پست کاربری الزامی نیست."
                     items={featured}
                     onItemsChange={setFeatured}
                     multiple={false}
@@ -271,6 +280,7 @@ export function PanelBlogEdit({ panel, categoryOptions, statusOptions, post }: F
                     processing={form.processing}
                     plainEditor
                     showSeo={false}
+                    categoriesRequired={false}
                     onChange={(k, v) => form.setData(k, v as never)}
                 />
                 <div className="flex gap-2">

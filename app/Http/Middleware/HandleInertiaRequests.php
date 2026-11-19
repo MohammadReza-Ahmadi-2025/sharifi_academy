@@ -10,6 +10,7 @@ use App\Modules\Settings\Services\SiteSettingsService;
 use App\Modules\Settings\Support\SiteSettingsInertiaPayload;
 use App\Modules\Social\Services\SiteSocialService;
 use App\Modules\Users\Support\UserAvatarMedia;
+use App\Support\MobileTabBar;
 use App\Support\Notifications\UserNotificationsPresenter;
 use App\Support\SafeCallable;
 use App\Support\SiteAccountMenu;
@@ -129,6 +130,11 @@ class HandleInertiaRequests extends Middleware
                 'share.courseCategoryNav',
                 fn () => app(SiteCourseCategoryNavService::class)->tree(),
                 [],
+            ),
+            'mobileTabBar' => fn () => SafeCallable::run(
+                'share.mobileTabBar',
+                fn () => MobileTabBar::forUser($user),
+                ['can_create_post' => false, 'create_post_url' => null, 'needs_profile' => false],
             ),
             'siteSocials' => fn () => SafeCallable::run(
                 'share.siteSocials',

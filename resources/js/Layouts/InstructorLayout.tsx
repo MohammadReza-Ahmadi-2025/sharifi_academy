@@ -1,8 +1,10 @@
+import { PanelPageHeader } from '@/Components/Panel/PanelPageHeader';
+import { usePanelMobileNav } from '@/Components/Panel/use-panel-mobile-nav';
 import { instructorPanelLinks, type InstructorPanelLink } from '@/lib/instructor-panel-links';
 import { cn } from '@/lib/utils';
 import { PageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { ArrowUpLeft, GraduationCap, Home } from 'lucide-react';
+import { GraduationCap, Home, X } from 'lucide-react';
 import { PropsWithChildren } from 'react';
 
 type Props = PropsWithChildren<{
@@ -30,6 +32,7 @@ export default function InstructorLayout({
     children,
 }: Props) {
     const { app, auth, url } = usePage<PageProps>().props;
+    const { open: mobileNavOpen, closeNav, toggleNav } = usePanelMobileNav();
     const displayName = auth.account?.display_name ?? auth.user?.name ?? 'استاد';
     const currentPath = url.split('?')[0];
     const otherPanels = (auth.account?.panels ?? []).filter((panel) => {
@@ -50,12 +53,27 @@ export default function InstructorLayout({
     return (
         <div className="instructor-shell">
             <div className="mx-auto grid min-h-screen max-w-[1440px] lg:grid-cols-[272px_1fr]">
-                <aside className="instructor-shell__sidebar relative flex flex-col lg:min-h-screen">
+                {mobileNavOpen ? (
+                    <button
+                        type="button"
+                        className="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-[2px] lg:hidden"
+                        aria-label="بستن منو"
+                        onClick={closeNav}
+                    />
+                ) : null}
+
+                <aside
+                    id="instructor-panel-nav"
+                    className={cn(
+                        'instructor-shell__sidebar fixed inset-y-0 right-0 z-50 flex w-[min(100%,18rem)] flex-col overflow-y-auto transition-transform duration-300 lg:static lg:z-auto lg:min-h-screen lg:w-auto lg:translate-x-0',
+                        mobileNavOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0',
+                    )}
+                >
                     <div className="flex items-center gap-3 border-b border-white/10 px-5 py-5">
                         <div className="instructor-shell__brand-mark flex size-11 items-center justify-center rounded-2xl">
                             <GraduationCap className="size-6 text-sky-100" aria-hidden />
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                             <p className="truncate text-[11px] font-medium tracking-[0.14em] text-sky-200/80 uppercase">
                                 Instructor Studio
                             </p>
@@ -63,6 +81,14 @@ export default function InstructorLayout({
                                 {app.name}
                             </Link>
                         </div>
+                        <button
+                            type="button"
+                            className="inline-flex size-9 items-center justify-center rounded-xl border border-white/15 text-sky-100 lg:hidden"
+                            aria-label="بستن منو"
+                            onClick={closeNav}
+                        >
+                            <X className="size-4" aria-hidden />
+                        </button>
                     </div>
 
                     <div className="px-4 py-4">
@@ -81,6 +107,7 @@ export default function InstructorLayout({
                                 <Link
                                     key={link.href}
                                     href={link.href}
+                                    onClick={closeNav}
                                     className={cn(
                                         'instructor-shell__nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium',
                                         active && 'is-active',
@@ -118,6 +145,7 @@ export default function InstructorLayout({
                                     <Link
                                         key={panel.url}
                                         href={panel.url}
+                                        onClick={closeNav}
                                         className="instructor-shell__nav-link block rounded-xl px-3 py-2 text-sm"
                                     >
                                         {panel.label}
@@ -127,6 +155,7 @@ export default function InstructorLayout({
                         ) : null}
                         <Link
                             href="/"
+                            onClick={closeNav}
                             className="instructor-shell__nav-link inline-flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium"
                         >
                             <Home className="size-4" aria-hidden />
@@ -136,34 +165,17 @@ export default function InstructorLayout({
                 </aside>
 
                 <div className="flex min-w-0 flex-col">
-                    <header className="border-b border-slate-200/80 bg-white/80 px-4 py-4 backdrop-blur md:px-8">
-                        <div className="flex flex-wrap items-end justify-between gap-3">
-                            <div>
-                                <p className="text-[11px] font-semibold tracking-[0.16em] text-primary/80 uppercase">
-                                    فضای تدریس
-                                </p>
-                                <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900 md:text-2xl">
-                                    {title}
-                                </h1>
-                                {description ? (
-                                    <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600">
-                                        {description}
-                                    </p>
-                                ) : null}
-                            </div>
-                            {!isNavActive('/instructor', url) ? (
-                                <Link
-                                    href="/instructor"
-                                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
-                                >
-                                    <ArrowUpLeft className="size-3.5" aria-hidden />
-                                    داشبورد
-                                </Link>
-                            ) : null}
-                        </div>
-                    </header>
+                    <PanelPageHeader
+                        eyebrow="فضای تدریس"
+                        title={title}
+                        description={description}
+                        navId="instructor-panel-nav"
+                        mobileNavOpen={mobileNavOpen}
+                        onToggleNav={toggleNav}
+                        dashboardHref={isNavActive('/instructor', url) ? null : '/instructor'}
+                    />
 
-                    <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
+                    <main className="flex-1 px-4 py-5 md:px-8 md:py-8">
                         <div
                             className={cn(
                                 'min-w-0',

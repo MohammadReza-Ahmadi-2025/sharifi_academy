@@ -4,15 +4,17 @@ import {
     Home,
     LayoutGrid,
     LucideIcon,
+    Newspaper,
+    Plus,
     ShoppingBag,
     UserRound,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
-const TAB_ICON_CLASS = 'size-[2.35em] shrink-0 stroke-[1.75]';
+const TAB_ICON_CLASS = 'size-6 shrink-0 stroke-[1.75]';
 
-function TabIcon({ icon: Icon }: { icon: LucideIcon }) {
-    return <Icon className={TAB_ICON_CLASS} stroke="currentColor" aria-hidden />;
+function TabIcon({ icon: Icon, className }: { icon: LucideIcon; className?: string }) {
+    return <Icon className={className ?? TAB_ICON_CLASS} stroke="currentColor" aria-hidden />;
 }
 
 export function TabBarIconHome() {
@@ -23,8 +25,12 @@ export function TabBarIconCategory() {
     return <TabIcon icon={LayoutGrid} />;
 }
 
-export function TabBarIconCourse() {
-    return <TabIcon icon={GraduationCap} />;
+export function TabBarIconCreatePost() {
+    return <TabIcon icon={Plus} className="size-7 shrink-0 stroke-[2.25]" />;
+}
+
+export function TabBarIconPosts() {
+    return <TabIcon icon={Newspaper} />;
 }
 
 export function TabBarIconProfile() {
@@ -35,7 +41,8 @@ export function TabBarIconProfile() {
 export const DEFAULT_MOBILE_TAB_ICONS = [
     TabBarIconHome,
     TabBarIconCategory,
-    TabBarIconCourse,
+    TabBarIconCreatePost,
+    TabBarIconPosts,
     TabBarIconProfile,
 ] as const;
 
@@ -45,6 +52,12 @@ const MOBILE_TAB_ICON_MAP: Record<string, LucideIcon> = {
     grid: LayoutGrid,
     category: LayoutGrid,
     categories: LayoutGrid,
+    plus: Plus,
+    add: Plus,
+    'plus-circle': Plus,
+    newspaper: Newspaper,
+    posts: Newspaper,
+    blog: Newspaper,
     'graduation-cap': GraduationCap,
     course: GraduationCap,
     courses: GraduationCap,
@@ -71,7 +84,14 @@ export function resolveMobileTabBarIcon(
         return fallback;
     }
 
+    const emphasized = key === 'plus' || key === 'add' || key === 'plus-circle';
+
     return function MobileTabBarLucideIcon() {
-        return <TabIcon icon={Icon} />;
+        return (
+            <TabIcon
+                icon={Icon}
+                className={emphasized ? 'size-7 shrink-0 stroke-[2.25]' : TAB_ICON_CLASS}
+            />
+        );
     };
 }

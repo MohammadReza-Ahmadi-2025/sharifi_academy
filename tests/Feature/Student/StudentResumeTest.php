@@ -72,9 +72,10 @@ class StudentResumeTest extends TestCase
 
         $this->assertSame(ResumeModerationStatus::Approved, ResumeModeration::status($student->fresh()));
 
-        // Student resumes stay off the public instructor pages.
+        // Student public profile is available; instructor-only resume JSON stays gated by role.
         $uuid = InstructorPublicUuid::routeKey($student->fresh());
-        $this->get(route('instructors.show', ['instructor' => $uuid]))->assertNotFound();
+        $this->get(route('instructors.show', ['instructor' => $uuid]))->assertRedirect();
+        $this->getJson(route('instructors.resume', ['instructor' => $uuid]))->assertNotFound();
         $this->get('/instructors/'.$student->id)->assertNotFound();
     }
 
