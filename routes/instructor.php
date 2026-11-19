@@ -10,6 +10,7 @@ use App\Modules\Courses\Http\Controllers\Instructor\CourseController;
 use App\Modules\Courses\Http\Controllers\Instructor\CourseRosterController;
 use App\Modules\Courses\Http\Controllers\Instructor\DashboardController;
 use App\Modules\Courses\Http\Controllers\Instructor\SessionAttendanceController as InstructorSessionAttendanceController;
+use App\Modules\Courses\Http\Controllers\Instructor\ClassJoinController as InstructorClassJoinController;
 use App\Modules\Courses\Http\Controllers\Instructor\SessionJoinController as InstructorSessionJoinController;
 use App\Modules\Blog\Http\Controllers\Instructor\PostController as InstructorPostController;
 use App\Modules\Profile\Http\Controllers\Instructor\ResumeController;
@@ -173,6 +174,9 @@ Route::prefix('instructor')
             Route::post('session-attendances/{classSession}/sync-adobe', [InstructorSessionAttendanceController::class, 'syncAdobe'])
                 ->name('session-attendances.sync-adobe');
         });
+
+        Route::get('classes/{courseClass}/join', InstructorClassJoinController::class)
+            ->name('classes.join');
 
         Route::get('classes/{courseClass}/sessions/{classSession}/join', InstructorSessionJoinController::class)
             ->name('sessions.join');

@@ -6,6 +6,7 @@ use App\Modules\Courses\Http\Controllers\Student\AttendanceController;
 use App\Modules\Courses\Http\Controllers\Student\CourseEnrollmentController;
 use App\Modules\Courses\Http\Controllers\Student\DashboardController;
 use App\Modules\Courses\Http\Controllers\Student\SessionController;
+use App\Modules\Courses\Http\Controllers\Student\ClassJoinController;
 use App\Modules\Courses\Http\Controllers\Student\SessionJoinController;
 use App\Modules\Blog\Http\Controllers\Student\PostController as StudentPostController;
 use App\Modules\Profile\Http\Controllers\Student\ResumeController;
@@ -49,6 +50,9 @@ Route::prefix('student')
             Route::put('posts/{post:id}', [StudentPostController::class, 'update'])->name('posts.update');
             Route::delete('posts/{post:id}', [StudentPostController::class, 'destroy'])->name('posts.destroy');
         });
+
+        Route::get('classes/{courseClass}/join', ClassJoinController::class)
+            ->name('classes.join');
 
         Route::get('classes/{courseClass}/sessions/{classSession}/join', SessionJoinController::class)
             ->name('sessions.join');

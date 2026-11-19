@@ -132,11 +132,21 @@ class CourseClassController extends Controller
                 ])
             : collect();
 
+        $prefix = $this->nestedCourseRoutePrefix($request);
+        $classJoinUrl = null;
+        if ($prefix === 'instructor' && $actor?->can('joinClass', $courseClass)) {
+            $hasActiveRoom = $courseClass->classLevelAdobeRooms()->active()->exists();
+            if ($hasActiveRoom && ! $courseClass->usesVideoLink()) {
+                $classJoinUrl = route('instructor.classes.join', ['courseClass' => $courseClass->id], absolute: false);
+            }
+        }
+
         return Inertia::render('Admin/Courses/Classes/Edit', [
             'course' => CoursePresenter::forShow($course),
             'courseClass' => CourseClassPresenter::forForm($courseClass),
             'enrollments' => $enrollments,
             'adobeRooms' => $classAdobeRooms,
+            'class_join_url' => $classJoinUrl,
             ...$this->formOptions(),
             'enrollmentStatusOptions' => AdminEnumOptions::fromEnum(EnrollmentStatus::class),
             'userOptions' => $this->userOptions(),

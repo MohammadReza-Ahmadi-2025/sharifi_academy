@@ -20,10 +20,20 @@ type Props = {
         join_label: string | null;
         join_url?: string | null;
     }[];
+    class_join_url?: string | null;
+    class_join_label?: string | null;
     abilities: { create: boolean; update: boolean; delete: boolean };
 };
 
-export default function SessionsIndex({ routePrefix, course, courseClass, sessions, abilities }: Props) {
+export default function SessionsIndex({
+    routePrefix,
+    course,
+    courseClass,
+    sessions,
+    class_join_url = null,
+    class_join_label = null,
+    abilities,
+}: Props) {
     const confirmToast = useConfirmToast();
     const base = `${routePrefix}/courses/${course.id}/classes/${courseClass.id}/sessions`;
     return (
@@ -38,13 +48,31 @@ export default function SessionsIndex({ routePrefix, course, courseClass, sessio
                 }
                 backHref={`${routePrefix}/courses/${course.id}/classes/${courseClass.id}/edit`}
                 actions={
-                    abilities.create ? (
-                        <AdminButton href={`${base}/create`}>
-                            <Plus className="ml-1 h-4 w-4" /> جلسه جدید
-                        </AdminButton>
-                    ) : null
+                    <div className="flex flex-wrap gap-2">
+                        {class_join_url ? (
+                            <a
+                                href={class_join_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white hover:bg-emerald-700"
+                            >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                {class_join_label ?? 'ورود به اتاق کلاس'}
+                            </a>
+                        ) : null}
+                        {abilities.create ? (
+                            <AdminButton href={`${base}/create`}>
+                                <Plus className="ml-1 h-4 w-4" /> جلسه جدید
+                            </AdminButton>
+                        ) : null}
+                    </div>
                 }
             />
+            {sessions.length === 0 && class_join_url ? (
+                <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                    اتاق Adobe برای این کلاس آماده است، ولی هنوز جلسه‌ای تعریف نشده. می‌توانید مستقیم وارد اتاق شوید یا یک جلسه بسازید.
+                </div>
+            ) : null}
             <Table className="mt-6">
                 <TableHeader>
                     <TableRow>

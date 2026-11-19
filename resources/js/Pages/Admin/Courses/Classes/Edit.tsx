@@ -13,6 +13,7 @@ type Props = {
     courseClass: Record<string, unknown>;
     enrollments: { id: number; user_label: string; status: string; status_label: string; price_amount: number }[];
     adobeRooms: { id: number; sco_id: string; url_path: string; meeting_url?: string | null; status_label: string }[];
+    class_join_url?: string | null;
     statusOptions: { value: string; label: string }[];
     deliveryTypeOptions: { value: string; label: string }[];
     onlinePlatformOptions: { value: string; label: string }[];
@@ -128,6 +129,7 @@ export default function CourseClassesEdit(props: Props) {
                     canCreate={abilities.adobeCreate}
                     canUpdate={abilities.adobeUpdate}
                     canDelete={abilities.adobeDelete}
+                    classJoinUrl={typeof props.class_join_url === 'string' ? props.class_join_url : null}
                 />
             )}
         </CourseManageLayout>

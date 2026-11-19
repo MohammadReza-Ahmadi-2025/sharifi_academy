@@ -12,6 +12,7 @@ use App\Modules\Courses\Http\Requests\Admin\UpdateClassSessionRequest;
 use App\Modules\Courses\Models\ClassSession;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
+use App\Modules\AdobeConnect\Support\AdobeConnectJoinUrl;
 use App\Modules\Courses\Support\AdminEnumOptions;
 use App\Modules\Courses\Support\ClassSessionPresenter;
 use App\Modules\Courses\Support\CourseClassPresenter;
@@ -35,6 +36,8 @@ class ClassSessionController extends Controller
         $prefix = $this->nestedCourseRoutePrefix($request);
         $includeInstructorJoin = $prefix === 'instructor';
 
+        $courseClass->loadMissing(['classLevelAdobeRooms']);
+
         $sessions = $courseClass->classSessions()
             ->with(['adobeRooms'])
             ->get()
@@ -51,12 +54,20 @@ class ClassSessionController extends Controller
             });
 
         $actor = $request->user();
+        $classJoinConfigured = AdobeConnectJoinUrl::forClass($courseClass) !== null
+            && ! $courseClass->usesVideoLink();
 
         return Inertia::render('Admin/Courses/Classes/Sessions/Index', [
             'course' => CoursePresenter::forShow($course),
             'courseClass' => CourseClassPresenter::forList($courseClass),
             'sessions' => $sessions,
             'routePrefix' => '/'.$prefix,
+            'class_join_url' => $includeInstructorJoin && $classJoinConfigured
+                ? route('instructor.classes.join', ['courseClass' => $courseClass->id], absolute: false)
+                : ($classJoinConfigured
+                    ? AdobeConnectJoinUrl::forClass($courseClass)
+                    : null),
+            'class_join_label' => $classJoinConfigured ? 'ورود به اتاق Adobe کلاس' : null,
             'abilities' => [
                 'create' => $actor?->can('class-sessions-create') ?? false,
                 'update' => $actor?->can('class-sessions-update') ?? false,

@@ -15,7 +15,7 @@ import {
     TableRow,
 } from '@/Components/Admin/shared/ui/table';
 import { router, useForm } from '@inertiajs/react';
-import { Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { ExternalLink, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useConfirmToast } from '@/Components/shared/hooks/use-confirm-toast';
 import { FormEvent } from 'react';
 
@@ -37,6 +37,7 @@ type Props = {
     canCreate: boolean;
     canUpdate: boolean;
     canDelete: boolean;
+    classJoinUrl?: string | null;
 };
 
 export function ClassAdobeRoomPanel({
@@ -49,6 +50,7 @@ export function ClassAdobeRoomPanel({
     canCreate,
     canUpdate,
     canDelete,
+    classJoinUrl = null,
 }: Props) {
     const confirmToast = useConfirmToast();
     if (!canCreate && rooms.length === 0) {
@@ -84,11 +86,24 @@ export function ClassAdobeRoomPanel({
 
     return (
         <Card className="mt-8 space-y-6 p-6">
-            <div>
-                <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">اتاق ادوبی (سطح کلاس)</h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    برای کلاس‌های Adobe Connect، با ذخیره کلاس اتاق معمولاً خودکار ساخته می‌شود. در صورت نیاز دستی SCO ID وارد کنید.
-                </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">اتاق ادوبی (سطح کلاس)</h2>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        برای کلاس‌های Adobe Connect، با ذخیره کلاس اتاق معمولاً خودکار ساخته می‌شود. در صورت نیاز دستی SCO ID وارد کنید.
+                    </p>
+                </div>
+                {classJoinUrl || rooms.some((room) => room.meeting_url) ? (
+                    <a
+                        href={classJoinUrl || rooms.find((room) => room.meeting_url)?.meeting_url || '#'}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                    >
+                        <ExternalLink className="size-3.5" />
+                        ورود به اتاق کلاس
+                    </a>
+                ) : null}
             </div>
 
             {canCreate ? (

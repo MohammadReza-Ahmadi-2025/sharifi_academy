@@ -5,6 +5,7 @@ namespace App\Modules\Courses\Policies;
 use App\Models\User;
 use App\Modules\Courses\Enums\EnrollmentStatus;
 use App\Modules\Courses\Models\CourseClass;
+use App\Modules\Courses\Models\Enrollment;
 use App\Modules\Courses\Support\CourseOwnership;
 use App\Modules\Profile\Support\UserProfileCompleteness;
 
@@ -15,6 +16,32 @@ class CourseClassPolicy
         return $user->can('adobe-rooms-create')
             && $courseClass->course !== null
             && CourseOwnership::canManage($user, $courseClass->course);
+    }
+
+    /**
+     * ورود مستقیم به اتاق Adobe سطح کلاس (حتی بدون جلسه).
+     */
+    public function joinClass(User $user, CourseClass $courseClass): bool
+    {
+        if ($user->hasRole('super-admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('instructor')
+            && $user->can('instructor-panel-access')
+            && $courseClass->isTaughtBy($user)) {
+            return true;
+        }
+
+        if (! $user->hasRole('student') || ! $user->can('student-panel-access')) {
+            return false;
+        }
+
+        return Enrollment::query()
+            ->confirmed()
+            ->where('user_id', $user->id)
+            ->where('course_class_id', $courseClass->id)
+            ->exists();
     }
 
     /**

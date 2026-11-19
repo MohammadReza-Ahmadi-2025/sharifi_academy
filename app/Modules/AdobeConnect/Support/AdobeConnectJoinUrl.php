@@ -67,6 +67,11 @@ final class AdobeConnectJoinUrl
             return self::normalizeUrlPath($sessionRoom->url_path);
         }
 
+        return self::urlPathForClass($courseClass);
+    }
+
+    public static function urlPathForClass(CourseClass $courseClass): ?string
+    {
         $classRoom = $courseClass->relationLoaded('classLevelAdobeRooms')
             ? $courseClass->classLevelAdobeRooms->first(fn (AdobeRoom $room) => $room->status === AdobeRoomStatus::Active)
             : $courseClass->classLevelAdobeRooms()->active()->first();
@@ -76,6 +81,16 @@ final class AdobeConnectJoinUrl
         }
 
         return null;
+    }
+
+    public static function forClass(CourseClass $courseClass): ?string
+    {
+        $courseClass->loadMissing(['classLevelAdobeRooms']);
+
+        $classRoom = $courseClass->classLevelAdobeRooms
+            ->first(fn (AdobeRoom $room) => $room->status === AdobeRoomStatus::Active);
+
+        return $classRoom instanceof AdobeRoom ? self::forRoom($classRoom) : null;
     }
 
     private static function normalizeUrlPath(?string $path): ?string
