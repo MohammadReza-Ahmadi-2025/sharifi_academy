@@ -9,6 +9,7 @@ use App\Modules\Auth\Models\MobileOtp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class MobileOtpTest extends TestCase
@@ -55,6 +56,8 @@ class MobileOtpTest extends TestCase
         $user = User::where('mobile', '09121111111')->first();
         $this->assertNotNull($user);
         $this->assertTrue($user->hasRole('student'));
+        $this->assertNotNull($user->profile?->uuid);
+        $this->assertTrue(Str::isUuid((string) $user->profile->uuid));
     }
 
     public function test_verify_existing_user_logs_in_without_duplicate(): void

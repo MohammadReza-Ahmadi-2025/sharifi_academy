@@ -8,6 +8,7 @@ use App\Modules\Auth\Contracts\OtpSender;
 use App\Modules\Auth\Enums\OtpStatus;
 use App\Modules\Auth\Models\MobileOtp;
 use App\Modules\Auth\Support\MobileNormalizer;
+use App\Modules\Profile\Support\InstructorPublicUuid;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -147,6 +148,8 @@ class MobileOtpService
         $existing = User::query()->where('mobile', $mobile)->first();
 
         if ($existing) {
+            InstructorPublicUuid::ensureFor($existing);
+
             return $existing;
         }
 
@@ -161,6 +164,9 @@ class MobileOtpService
         if (is_string($role) && $role !== '' && ! $user->hasRole($role)) {
             $user->assignRole($role);
         }
+
+        // UUID is also assigned in User::created; keep explicit for registration clarity.
+        InstructorPublicUuid::ensureFor($user);
 
         return $user;
     }

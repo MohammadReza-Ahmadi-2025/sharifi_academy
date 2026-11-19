@@ -15,6 +15,7 @@ use App\Modules\Courses\Models\SessionAttendance;
 use App\Modules\Profile\Models\Resume;
 use App\Modules\Profile\Models\Skill;
 use App\Modules\Profile\Models\UserProfile;
+use App\Modules\Profile\Support\InstructorPublicUuid;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -48,6 +49,13 @@ class User extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasMediaFiles, HasRoles, Notifiable, SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::created(function (User $user): void {
+            InstructorPublicUuid::ensureFor($user);
+        });
+    }
 
     public function registerMediaCollections(): void
     {
