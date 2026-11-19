@@ -98,6 +98,78 @@ XML);
         Http::assertSent(fn ($request) => str_contains($request->url(), 'permission-id=host'));
     }
 
+    public function test_admin_class_update_grants_host_on_existing_room_for_manager(): void
+    {
+        Http::fake(function ($request) {
+            $url = $request->url();
+            if (($auth = $this->adobeAuthResponse($url)) !== null) {
+                return $auth;
+            }
+
+            if (str_contains($url, 'action=principal-list')) {
+                return Http::response(<<<'XML'
+<?xml version="1.0"?><results><status code="ok"/>
+  <principal-list><principal principal-id="5151"><login>09120000001</login></principal></principal-list>
+</results>
+XML);
+            }
+
+            if (str_contains($url, 'action=principal-update')) {
+                return Http::response('<?xml version="1.0"?><results><status code="ok"/></results>');
+            }
+
+            if (str_contains($url, 'action=permissions-update')) {
+                return Http::response('<?xml version="1.0"?><results><status code="ok"/></results>');
+            }
+
+            return Http::response('<?xml version="1.0"?><results><status code="ok"/></results>');
+        });
+
+        $admin = User::where('mobile', '09120000001')->firstOrFail();
+
+        $course = Course::query()->create([
+            'title' => 'Admin Host Sync',
+            'slug' => 'admin-host-sync',
+            'status' => CourseStatus::Published,
+        ]);
+
+        $class = CourseClass::query()->create([
+            'course_id' => $course->id,
+            'name' => 'کلاس ۱۲',
+            'code' => '008',
+            'status' => CourseClassStatus::Upcoming,
+            'delivery_type' => CourseClassDeliveryType::Online,
+            'online_platform' => CourseClassOnlinePlatform::AdobeConnect,
+            'price' => 0,
+        ]);
+
+        AdobeRoom::query()->create([
+            'course_class_id' => $class->id,
+            'sco_id' => '642935',
+            'url_path' => '/academy-class-12-008/',
+            'meeting_url' => 'https://meet.example.com/academy-class-12-008/',
+            'access_type' => AdobeRoomAccessType::Protected,
+            'status' => AdobeRoomStatus::Active,
+        ]);
+
+        $this->actingAs($admin)
+            ->put("/admin/courses/{$course->id}/classes/{$class->id}", [
+                'name' => 'کلاس ۱۲',
+                'code' => '008',
+                'status' => CourseClassStatus::Upcoming->value,
+                'delivery_type' => CourseClassDeliveryType::Online->value,
+                'online_platform' => CourseClassOnlinePlatform::AdobeConnect->value,
+                'price' => 0,
+                'capacity' => null,
+                'is_public' => true,
+                'instructors' => [],
+            ])
+            ->assertRedirect();
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'permission-id=host')
+            && str_contains($request->url(), 'acl-id=642935'));
+    }
+
     public function test_admin_class_edit_exposes_authenticated_join_url(): void
     {
         $admin = User::where('mobile', '09120000001')->firstOrFail();

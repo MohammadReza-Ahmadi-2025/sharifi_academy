@@ -7,6 +7,7 @@ use App\Modules\AdobeConnect\Http\Requests\Admin\DestroyAdobeRoomRequest;
 use App\Modules\AdobeConnect\Http\Requests\Admin\StoreAdobeRoomRequest;
 use App\Modules\AdobeConnect\Models\AdobeRoom;
 use App\Modules\AdobeConnect\Services\AdobeRoomPayloadFactory;
+use App\Modules\AdobeConnect\Services\SyncAdobeConnectClassInstructorsService;
 use App\Modules\Courses\Models\ClassSession;
 use App\Modules\Courses\Models\Course;
 use App\Modules\Courses\Models\CourseClass;
@@ -22,6 +23,7 @@ class AdobeRoomController extends Controller
         Course $course,
         CourseClass $courseClass,
         AdobeRoomPayloadFactory $payloadFactory,
+        SyncAdobeConnectClassInstructorsService $instructorAdobeSync,
     ): RedirectResponse {
         $courseClass = $this->courseClassOrFail($course, $courseClass->id);
         $this->authorize('createAdobeRoom', $courseClass);
@@ -32,9 +34,18 @@ class AdobeRoomController extends Controller
             'class_session_id' => null,
         ]);
 
+        $message = 'اتاق ادوبی کلاس ثبت شد.';
+        $actor = $request->user();
+        if ($actor !== null) {
+            $outcome = $instructorAdobeSync->syncUser($courseClass->fresh() ?? $courseClass, $actor);
+            if (in_array($outcome['status'], ['linked', 'created'], true)) {
+                $message .= ' دسترسی Host برای شما روی اتاق ست شد.';
+            }
+        }
+
         return redirect()
             ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.edit', [$course, $courseClass])
-            ->with('success', 'اتاق ادوبی کلاس ثبت شد.');
+            ->with('success', $message);
     }
 
     public function storeForSession(

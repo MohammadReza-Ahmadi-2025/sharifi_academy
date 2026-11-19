@@ -3,6 +3,7 @@
 namespace App\Modules\Courses\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Modules\AdobeConnect\Models\AdobeRoom;
 use App\Modules\AdobeConnect\Services\ProvisionCourseClassAdobeMeetingService;
 use App\Modules\AdobeConnect\Services\SyncAdobeConnectClassInstructorsService;
@@ -20,6 +21,7 @@ use App\Modules\Courses\Models\CourseClass;
 use App\Modules\Courses\Models\Enrollment;
 use App\Modules\Courses\Support\AdminEnumOptions;
 use App\Modules\Courses\Support\CourseClassPresenter;
+use App\Modules\Courses\Support\CourseOwnership;
 use App\Modules\Courses\Support\CoursePresenter;
 use App\Modules\Courses\Support\EnrollableUserOptions;
 use App\Modules\Courses\Support\InstructorUserOptions;
@@ -88,7 +90,7 @@ class CourseClassController extends Controller
 
         return redirect()
             ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.edit', [$course, $courseClass])
-            ->with('success', $this->storeSuccessMessage($courseClass, $adobeMeetings));
+            ->with('success', $this->storeSuccessMessage($courseClass, $adobeMeetings, $request->user()));
     }
 
     public function edit(Request $request, Course $course, CourseClass $courseClass): Response
@@ -185,7 +187,7 @@ class CourseClassController extends Controller
 
         return redirect()
             ->route($this->nestedCourseRoutePrefix($request).'.courses.classes.edit', [$course, $courseClass])
-            ->with('success', $this->updateSuccessMessage($courseClass, $adobeMeetings));
+            ->with('success', $this->updateSuccessMessage($courseClass, $adobeMeetings, $request->user()));
     }
 
     public function destroy(Request $request, Course $course, CourseClass $courseClass): RedirectResponse
@@ -271,25 +273,28 @@ class CourseClassController extends Controller
     private function storeSuccessMessage(
         CourseClass $courseClass,
         ProvisionCourseClassAdobeMeetingService $adobeMeetings,
+        ?User $actor = null,
     ): string {
         $message = 'کلاس ایجاد شد.';
 
-        return $this->appendAdobeProvisionMessage($courseClass, $adobeMeetings, $message);
+        return $this->appendAdobeProvisionMessage($courseClass, $adobeMeetings, $message, $actor);
     }
 
     private function updateSuccessMessage(
         CourseClass $courseClass,
         ProvisionCourseClassAdobeMeetingService $adobeMeetings,
+        ?User $actor = null,
     ): string {
         $message = 'کلاس به‌روزرسانی شد.';
 
-        return $this->appendAdobeProvisionMessage($courseClass, $adobeMeetings, $message);
+        return $this->appendAdobeProvisionMessage($courseClass, $adobeMeetings, $message, $actor);
     }
 
     private function appendAdobeProvisionMessage(
         CourseClass $courseClass,
         ProvisionCourseClassAdobeMeetingService $adobeMeetings,
         string $message,
+        ?User $actor = null,
     ): string {
         $fresh = $courseClass->fresh() ?? $courseClass;
 
@@ -304,8 +309,11 @@ class CourseClassController extends Controller
             return $message.' ساخت خودکار اتاق Adobe انجام نشد؛ از بخش «اتاق ادوبی» دستی تنظیم کنید.';
         }
 
+        $instructorSync = app(SyncAdobeConnectClassInstructorsService::class);
+        $fresh = $fresh->fresh() ?? $fresh;
+
         try {
-            $instructorStats = app(SyncAdobeConnectClassInstructorsService::class)->sync($fresh->fresh() ?? $fresh);
+            $instructorStats = $instructorSync->sync($fresh);
             $instructorTouched = $instructorStats['linked'] + $instructorStats['created'];
             if ($instructorTouched > 0) {
                 $message .= " {$instructorTouched} استاد به عنوان host اتاق Adobe وصل شد.";
@@ -320,6 +328,20 @@ class CourseClassController extends Controller
         } catch (\Throwable $exception) {
             report($exception);
             $message .= ' همگام‌سازی host اساتید با Adobe انجام نشد.';
+        }
+
+        // Room is owned by the API account; My Meetings only lists SCOs where this user has Host.
+        $fresh->loadMissing('course');
+        if ($actor !== null
+            && $fresh->course !== null
+            && CourseOwnership::canManage($actor, $fresh->course)
+            && ! $fresh->isTaughtBy($actor)) {
+            $managerOutcome = $instructorSync->syncUser($fresh, $actor);
+            if (in_array($managerOutcome['status'], ['linked', 'created'], true)) {
+                $message .= ' دسترسی Host برای مدیر پنل روی اتاق Adobe ست شد.';
+            } elseif ($managerOutcome['status'] === 'failed' && filled($managerOutcome['error'])) {
+                $message .= ' Host مدیر پنل ست نشد: '.$managerOutcome['error'];
+            }
         }
 
         return $message;
