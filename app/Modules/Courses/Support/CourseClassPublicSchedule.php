@@ -3,6 +3,7 @@
 namespace App\Modules\Courses\Support;
 
 use App\Modules\Courses\Models\CourseClass;
+use App\Support\PersianDate;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 
@@ -129,6 +130,6 @@ class CourseClassPublicSchedule
 
     private static function formatDateTime(CarbonInterface $date): string
     {
-        return $date->copy()->locale('fa')->translatedFormat('j F Y — H:i');
+        return PersianDate::formatDateTime($date) ?? '';
     }
 }

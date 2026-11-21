@@ -1,5 +1,6 @@
 import { PostReactionsBar, type PostReactionsPayload } from '@/Components/Posts/PostReactionsBar';
 import { SiteRichHtml } from '@/Components/Site/SiteRichHtml';
+import { formatPersianDateTime } from '@/lib/format-persian-datetime';
 import { communityPostPath } from '@/lib/public-entity-urls';
 import type { PageProps } from '@/types';
 import { Link, useForm, usePage } from '@inertiajs/react';
@@ -51,10 +52,9 @@ function formatCommentDate(iso: string | null) {
         return '';
     }
 
-    return new Date(iso).toLocaleDateString('fa-IR', {
-        month: 'short',
-        day: 'numeric',
-    });
+    const label = formatPersianDateTime(iso, 'short');
+
+    return label === '—' ? '' : label;
 }
 
 function FeedCommentComposer({

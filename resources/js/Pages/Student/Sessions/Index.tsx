@@ -1,5 +1,6 @@
 import { SessionActions } from '@/Components/Student/SessionActions';
 import StudentLayout from '@/Layouts/StudentLayout';
+import { formatPersianDateTime } from '@/lib/format-persian-datetime';
 import { Head, Link } from '@inertiajs/react';
 import { CalendarDays } from 'lucide-react';
 
@@ -82,7 +83,7 @@ function SessionGroup({
                                     {session.course_title}
                                     {session.class_name ? ` · ${session.class_name}` : ''}
                                     {session.starts_at
-                                        ? ` · ${new Date(session.starts_at).toLocaleString('fa-IR')}`
+                                        ? ` · ${formatPersianDateTime(session.starts_at)}`
                                         : ''}
                                 </p>
                                 <Link

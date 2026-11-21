@@ -1,4 +1,5 @@
 import { Textarea } from '@/Components/Admin/shared/ui/textarea';
+import { formatPersianDateTime } from '@/lib/format-persian-datetime';
 import type { PageProps } from '@/types';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { MessageSquare, Star } from 'lucide-react';
@@ -29,11 +30,9 @@ function formatDate(iso: string | null) {
         return '';
     }
 
-    return new Date(iso).toLocaleDateString('fa-IR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
+    const label = formatPersianDateTime(iso, 'table');
+
+    return label === '—' ? '' : label;
 }
 
 function RatingStars({ value, size = 'sm' }: { value: number; size?: 'sm' | 'lg' }) {

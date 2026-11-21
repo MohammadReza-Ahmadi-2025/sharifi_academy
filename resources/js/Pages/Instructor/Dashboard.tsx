@@ -1,4 +1,5 @@
 import { SessionActions } from '@/Components/Student/SessionActions';
+import { formatPersianDateTime } from '@/lib/format-persian-datetime';
 import { cn } from '@/lib/utils';
 import InstructorLayout from '@/Layouts/InstructorLayout';
 import { PageProps } from '@/types';
@@ -221,7 +222,7 @@ export default function InstructorDashboard({
                                         <p className="mt-1 text-xs text-slate-500">
                                             {[session.course_title, session.class_name].filter(Boolean).join(' · ')}
                                             {session.starts_at
-                                                ? ` · ${new Date(session.starts_at).toLocaleString('fa-IR')}`
+                                                ? ` · ${formatPersianDateTime(session.starts_at)}`
                                                 : ''}
                                         </p>
                                     </div>

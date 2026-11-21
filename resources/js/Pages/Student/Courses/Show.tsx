@@ -1,5 +1,6 @@
 import { enrollmentStatusClass, SessionActions } from '@/Components/Student/SessionActions';
 import StudentLayout from '@/Layouts/StudentLayout';
+import { formatPersianDateTime } from '@/lib/format-persian-datetime';
 import { cn } from '@/lib/utils';
 import { Head, Link } from '@inertiajs/react';
 
@@ -91,7 +92,7 @@ export default function StudentCourseShow({ enrollment }: Props) {
                                 </p>
                                 {session.starts_at ? (
                                     <p className="mt-1 text-xs text-slate-500">
-                                        {new Date(session.starts_at).toLocaleString('fa-IR')}
+                                        {formatPersianDateTime(session.starts_at)}
                                     </p>
                                 ) : null}
                             </div>

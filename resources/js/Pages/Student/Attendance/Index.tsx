@@ -1,5 +1,6 @@
 import { attendanceStatusClass } from '@/Components/Student/SessionActions';
 import StudentLayout from '@/Layouts/StudentLayout';
+import { formatPersianDateTime } from '@/lib/format-persian-datetime';
 import { cn } from '@/lib/utils';
 import { Head } from '@inertiajs/react';
 import { ClipboardCheck } from 'lucide-react';
@@ -88,7 +89,7 @@ export default function StudentAttendanceIndex({ summary, attendances }: Props) 
                                             {row.course_title}
                                             {row.class_name ? ` · ${row.class_name}` : ''}
                                             {row.starts_at
-                                                ? ` · ${new Date(row.starts_at).toLocaleString('fa-IR')}`
+                                                ? ` · ${formatPersianDateTime(row.starts_at)}`
                                                 : ''}
                                         </div>
                                     </td>

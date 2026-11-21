@@ -1,3 +1,5 @@
+import { formatPersianDateTime } from '@/lib/format-persian-datetime';
+
 type Props = {
     title: string;
     studentName: string;
@@ -17,7 +19,7 @@ export function CertificateDocument({
     verifyUrl,
     appName = 'Sharifi Academy',
 }: Props) {
-    const issuedLabel = issuedAt ? new Date(issuedAt).toLocaleDateString('fa-IR') : null;
+    const issuedLabel = issuedAt ? formatPersianDateTime(issuedAt, 'short') : null;
 
     return (
         <article className="certificate-sheet relative mx-auto max-w-4xl rounded-[28px] px-8 py-12 text-center md:px-16 md:py-16">

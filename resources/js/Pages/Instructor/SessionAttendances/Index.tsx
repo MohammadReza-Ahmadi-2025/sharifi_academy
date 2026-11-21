@@ -1,4 +1,5 @@
 import InstructorLayout from '@/Layouts/InstructorLayout';
+import { formatPersianDateTime } from '@/lib/format-persian-datetime';
 import { Head, Link } from '@inertiajs/react';
 import { AlertTriangle, ClipboardCheck } from 'lucide-react';
 
@@ -132,7 +133,7 @@ export default function InstructorSessionAttendancesIndex({ summary, sessions }:
                                     {session.course_title}
                                     {session.class_title ? ` · ${session.class_title}` : ''}
                                     {session.starts_at
-                                        ? ` · ${new Date(session.starts_at).toLocaleString('fa-IR')}`
+                                        ? ` · ${formatPersianDateTime(session.starts_at)}`
                                         : ''}
                                 </p>
                                 <p className="mt-1 text-xs text-slate-600">
