@@ -65,7 +65,9 @@ export function HomeTestimonialsSwiper({ items }: Props) {
                 dir="rtl"
                 grabCursor
                 watchOverflow
-                loop={canAutoplay}
+                /* loop با slidesOffset فاصله لبه را خراب می‌کند؛ rewind جایگزین */
+                loop={false}
+                rewind={canAutoplay}
                 autoplay={
                     canAutoplay
                         ? {
@@ -76,11 +78,28 @@ export function HomeTestimonialsSwiper({ items }: Props) {
                         : false
                 }
                 spaceBetween={16}
-                slidesPerView={1.08}
+                slidesPerView={1.2}
+                slidesOffsetBefore={6}
+                slidesOffsetAfter={6}
                 breakpoints={{
-                    640: { slidesPerView: 1.35, spaceBetween: 18 },
-                    1024: { slidesPerView: 2.15, spaceBetween: 20 },
-                    1280: { slidesPerView: 2.65, spaceBetween: 22 },
+                    768: {
+                        slidesPerView: 1.5,
+                        spaceBetween: 18,
+                        slidesOffsetBefore: 0,
+                        slidesOffsetAfter: 0,
+                    },
+                    1024: {
+                        slidesPerView: 2.15,
+                        spaceBetween: 20,
+                        slidesOffsetBefore: 0,
+                        slidesOffsetAfter: 0,
+                    },
+                    1280: {
+                        slidesPerView: 2.65,
+                        spaceBetween: 22,
+                        slidesOffsetBefore: 0,
+                        slidesOffsetAfter: 0,
+                    },
                 }}
                 pagination={{
                     clickable: true,

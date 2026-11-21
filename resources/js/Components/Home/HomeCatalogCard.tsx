@@ -64,11 +64,18 @@ export function HomeCatalogCard({ item, hrefPrefix, showPrice, contentType, clas
                         className="site-rich-html--card-preview text-neutral-black/70"
                     />
                 </div>
-                {showPrice && typeof item.price === 'number' ? (
-                    <p className="mx-2 mb-2 mt-auto flex items-baseline gap-1 border-t border-dashed border-secondary/50 pt-3 text-sm font-bold text-primary">
-                        {item.price.toLocaleString('fa-IR')}
-                        <span className="text-xs font-medium text-neutral-black/45">ریال</span>
-                    </p>
+                {showPrice && typeof item.price === 'number' && item.price > 0 ? (
+                    <div className="mx-2 mb-2 mt-auto flex flex-wrap items-baseline gap-x-2 gap-y-0.5 border-t border-dashed border-secondary/50 pt-3">
+                        <p className="flex items-baseline gap-1 text-sm font-bold text-primary">
+                            {item.price.toLocaleString('fa-IR')}
+                            <span className="text-xs font-medium text-neutral-black/45">ریال</span>
+                        </p>
+                        {typeof item.compare_price === 'number' && item.compare_price > item.price ? (
+                            <p className="text-xs font-medium text-neutral-black/40 line-through">
+                                {item.compare_price.toLocaleString('fa-IR')} ریال
+                            </p>
+                        ) : null}
+                    </div>
                 ) : null}
             </article>
         );
@@ -86,11 +93,18 @@ export function HomeCatalogCard({ item, hrefPrefix, showPrice, contentType, clas
                         {item.description}
                     </p>
                 ) : null}
-                {showPrice && typeof item.price === 'number' ? (
-                    <p className="mt-auto flex items-baseline gap-1 border-t border-dashed border-secondary/50 pt-3 text-sm font-bold text-primary">
-                        {item.price.toLocaleString('fa-IR')}
-                        <span className="text-xs font-medium text-neutral-black/45">ریال</span>
-                    </p>
+                {showPrice && typeof item.price === 'number' && item.price > 0 ? (
+                    <div className="mt-auto flex flex-wrap items-baseline gap-x-2 gap-y-0.5 border-t border-dashed border-secondary/50 pt-3">
+                        <p className="flex items-baseline gap-1 text-sm font-bold text-primary">
+                            {item.price.toLocaleString('fa-IR')}
+                            <span className="text-xs font-medium text-neutral-black/45">ریال</span>
+                        </p>
+                        {typeof item.compare_price === 'number' && item.compare_price > item.price ? (
+                            <p className="text-xs font-medium text-neutral-black/40 line-through">
+                                {item.compare_price.toLocaleString('fa-IR')} ریال
+                            </p>
+                        ) : null}
+                    </div>
                 ) : null}
             </div>
         </Link>

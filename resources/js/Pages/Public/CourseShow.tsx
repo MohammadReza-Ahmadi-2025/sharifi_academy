@@ -35,6 +35,7 @@ type CourseClassRow = {
     discount_percent?: number;
     price: number | null;
     location: string | null;
+    registration_open?: boolean;
     schedule_status: 'unscheduled' | 'upcoming' | 'ongoing' | 'finished';
     schedule_status_label: string;
     schedule_range_label: string | null;
@@ -246,7 +247,7 @@ export default function CourseShow({ course, structuredData }: Props) {
                 </div>
             </section>
 
-            <div className="mx-auto w-[88rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+            <div className="mx-auto max-w-[88rem] overflow-x-clip px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
                 <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-12">
                     <div className="min-w-0 space-y-12">
                         {bodyHtml && (
@@ -292,10 +293,14 @@ export default function CourseShow({ course, structuredData }: Props) {
                                     {course.classes.map((row, index) => (
                                         <article
                                             key={row.id}
-                                            className="relative overflow-hidden rounded-2xl border border-secondary bg-neutral-white p-5 shadow-sm transition hover:border-primary/30 hover:shadow-md sm:p-6"
+                                            className={`relative min-w-0 overflow-hidden rounded-2xl border bg-neutral-white p-4 shadow-sm transition hover:border-primary/30 hover:shadow-md sm:p-6 ${
+                                                row.registration_open === false || row.schedule_status === 'finished'
+                                                    ? 'border-secondary/70 opacity-80'
+                                                    : 'border-secondary'
+                                            }`}
                                         >
                                             <span className="absolute inset-y-0 right-0 w-1 bg-primary" aria-hidden />
-                                            <div className="flex flex-wrap items-start justify-between gap-4 pr-3">
+                                            <div className="flex min-w-0 flex-col gap-3 pr-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex flex-wrap items-center gap-2">
                                                         <p className="text-xs font-bold text-primary/80">
@@ -306,8 +311,13 @@ export default function CourseShow({ course, structuredData }: Props) {
                                                         >
                                                             {row.schedule_status_label}
                                                         </span>
+                                                        {row.registration_open === false ? (
+                                                            <span className="rounded-full bg-neutral-black/8 px-2.5 py-0.5 text-[11px] font-bold text-neutral-black/55">
+                                                                ثبت‌نام بسته
+                                                            </span>
+                                                        ) : null}
                                                     </div>
-                                                    <h3 className="mt-1 text-lg font-extrabold text-neutral-black">
+                                                    <h3 className="mt-1 break-words text-base font-extrabold text-neutral-black sm:text-lg">
                                                         {row.name}
                                                     </h3>
                                                     <p className="mt-1 text-sm text-neutral-black/65">
@@ -319,16 +329,16 @@ export default function CourseShow({ course, structuredData }: Props) {
                                                     {row.description?.trim() ? (
                                                         <SiteRichHtml
                                                             html={row.description}
-                                                            className="mt-2 text-sm text-neutral-black/75"
+                                                            className="mt-2 break-words text-sm text-neutral-black/75"
                                                         />
                                                     ) : null}
                                                 </div>
                                                 {row.price !== null && row.price > 0 && (
-                                                    <div className="shrink-0 rounded-xl bg-primary/8 px-3 py-2 text-end">
+                                                    <div className="w-full shrink-0 rounded-xl bg-primary/8 px-3 py-2 text-start sm:w-auto sm:max-w-[11rem] sm:text-end">
                                                         {(row.discount_percent ?? 0) > 0 &&
                                                         row.list_price &&
                                                         row.list_price > row.price ? (
-                                                            <div className="mb-0.5 flex items-center justify-end gap-2">
+                                                            <div className="mb-0.5 flex flex-wrap items-center gap-2 sm:justify-end">
                                                                 <span className="text-xs text-neutral-black/45 line-through">
                                                                     {formatPrice(row.list_price)}
                                                                 </span>
@@ -343,23 +353,23 @@ export default function CourseShow({ course, structuredData }: Props) {
                                                     </div>
                                                 )}
                                             </div>
-                                            <ul className="mt-4 space-y-2.5 pr-3 text-sm text-neutral-black/75">
+                                            <ul className="mt-4 space-y-2.5 break-words pr-3 text-sm text-neutral-black/75">
                                                 {row.meeting_summary_label && (
                                                     <li className="flex items-start gap-2">
                                                         <Clock className="mt-0.5 size-4 shrink-0 text-primary" />
-                                                        <span>{row.meeting_summary_label}</span>
+                                                        <span className="min-w-0">{row.meeting_summary_label}</span>
                                                     </li>
                                                 )}
                                                 {row.schedule_range_label && (
                                                     <li className="flex items-start gap-2">
                                                         <CalendarDays className="mt-0.5 size-4 shrink-0 text-primary" />
-                                                        <span>بازه دوره: {row.schedule_range_label}</span>
+                                                        <span className="min-w-0">بازه دوره: {row.schedule_range_label}</span>
                                                     </li>
                                                 )}
                                                 {row.location && (
                                                     <li className="flex items-start gap-2">
                                                         <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
-                                                        <span>{row.location}</span>
+                                                        <span className="min-w-0">{row.location}</span>
                                                     </li>
                                                 )}
                                             </ul>

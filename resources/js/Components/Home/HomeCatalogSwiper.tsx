@@ -71,11 +71,17 @@ export function HomeCatalogSwiper({
 
     const breakpoints = useMemo(
         () => ({
-            480: { slidesPerView: 1.65, spaceBetween: 16 },
-            768: { slidesPerView: Math.min(2.35, slidesPerViewDesktop), spaceBetween: 18 },
+            768: {
+                slidesPerView: Math.min(2.35, slidesPerViewDesktop),
+                spaceBetween: 18,
+                slidesOffsetBefore: 0,
+                slidesOffsetAfter: 0,
+            },
             1024: {
                 slidesPerView: slidesPerViewDesktop,
                 spaceBetween: 18,
+                slidesOffsetBefore: 0,
+                slidesOffsetAfter: 0,
             },
         }),
         [slidesPerViewDesktop],
@@ -128,7 +134,9 @@ export function HomeCatalogSwiper({
                 grabCursor
                 watchOverflow
                 spaceBetween={16}
-                slidesPerView={1.08}
+                slidesPerView={1.2}
+                slidesOffsetBefore={6}
+                slidesOffsetAfter={6}
                 breakpoints={breakpoints}
                 pagination={{
                     clickable: true,

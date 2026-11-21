@@ -25,11 +25,10 @@ class CoursePublicPresenter
             'categories',
             'courseClasses' => fn ($query) => $query
                 ->public()
-                ->orderBy('starts_at')
                 ->with(['instructors']),
         ]);
 
-        $publicClasses = $course->courseClasses;
+        $publicClasses = CourseClassPublicSorter::sort($course->courseClasses);
         $prices = $publicClasses
             ->map(fn (CourseClass $class) => CourseClassPricing::effectivePrice($class))
             ->filter(fn (int $price) => $price > 0);
@@ -95,6 +94,7 @@ class CoursePublicPresenter
                         ? CourseClassPricing::effectivePrice($class)
                         : null,
                     'location' => $class->location,
+                    'registration_open' => $class->isOpenForRegistration(),
                     'schedule_status' => $schedule['status'],
                     'schedule_status_label' => $schedule['status_label'],
                     'schedule_range_label' => $schedule['range_label'],

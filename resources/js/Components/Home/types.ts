@@ -6,6 +6,7 @@ export type HomeCatalogItem = {
     description_format?: 'plain' | 'html';
     subtitle?: string | null;
     price?: number;
+    compare_price?: number | null;
     image_url?: string | null;
     is_featured?: boolean;
     published_at?: string | null;

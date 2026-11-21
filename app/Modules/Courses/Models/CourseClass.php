@@ -280,4 +280,22 @@ class CourseClass extends Model
                     ->orWhere('registration_ends_at', '>=', now());
             });
     }
+
+    public function isOpenForRegistration(): bool
+    {
+        $status = $this->status;
+        if (! in_array($status, [CourseClassStatus::Upcoming, CourseClassStatus::Ongoing], true)) {
+            return false;
+        }
+
+        if ($this->registration_starts_at !== null && $this->registration_starts_at->isFuture()) {
+            return false;
+        }
+
+        if ($this->registration_ends_at !== null && $this->registration_ends_at->isPast()) {
+            return false;
+        }
+
+        return true;
+    }
 }

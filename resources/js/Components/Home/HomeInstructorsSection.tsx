@@ -33,34 +33,48 @@ function initials(name: string): string {
 function InstructorCard({ item }: { item: HomeCatalogItem }) {
     const href = item.profile_url ?? item.resume_url ?? '#';
     const shellClass = cn(
-        'group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-secondary/50 bg-neutral-white p-3 text-right shadow-[0_2px_12px_-4px_rgba(0,72,158,0.08)] transition duration-300',
-        'hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-[0_12px_28px_-10px_rgba(0,72,158,0.2)]',
+        'group flex h-full w-full flex-col items-center rounded-3xl border border-secondary/40 bg-neutral-white/90 px-4 pb-5 pt-6 text-center',
+        'shadow-[0_4px_20px_-8px_rgba(0,72,158,0.12)] backdrop-blur-sm transition duration-300',
+        'hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_16px_36px_-14px_rgba(0,72,158,0.28)]',
     );
 
     const inner = (
         <>
-            <div className="relative mx-auto aspect-square w-full max-w-[9.5rem] overflow-hidden rounded-2xl bg-secondary/25">
-                {item.image_url ? (
-                    <img
-                        src={item.image_url}
-                        alt={item.title}
-                        className="size-full object-cover transition duration-500 group-hover:scale-[1.04]"
-                    />
-                ) : (
-                    <span
-                        className="flex size-full items-center justify-center text-2xl font-bold text-primary/80"
-                        aria-hidden
-                    >
-                        {initials(item.title)}
-                    </span>
-                )}
+            <div className="relative">
+                <div
+                    className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/35 via-secondary/40 to-primary/10 opacity-80 transition duration-500 group-hover:opacity-100 group-hover:blur-[1px]"
+                    aria-hidden
+                />
+                <div className="relative size-[7.25rem] overflow-hidden rounded-full bg-secondary/30 ring-4 ring-neutral-white sm:size-[8rem]">
+                    {item.image_url ? (
+                        <img
+                            src={item.image_url}
+                            alt={item.title}
+                            className="size-full object-cover transition duration-500 group-hover:scale-[1.06]"
+                        />
+                    ) : (
+                        <span
+                            className="flex size-full items-center justify-center bg-primary/8 text-2xl font-extrabold tracking-tight text-primary"
+                            aria-hidden
+                        >
+                            {initials(item.title)}
+                        </span>
+                    )}
+                </div>
             </div>
-            <div className="mt-3 flex flex-1 flex-col items-center px-1 pb-1 text-center">
-                <p className="font-bold text-neutral-black transition group-hover:text-primary">{item.title}</p>
+
+            <div className="mt-5 flex min-w-0 flex-1 flex-col items-center">
+                <p className="line-clamp-2 text-[0.95rem] font-extrabold leading-snug text-neutral-black transition group-hover:text-primary sm:text-base">
+                    {item.title}
+                </p>
                 {item.subtitle ? (
-                    <p className="mt-1 line-clamp-2 text-xs text-neutral-black/55">{item.subtitle}</p>
+                    <p className="mt-1.5 line-clamp-2 max-w-[14rem] text-xs leading-relaxed text-neutral-black/55 sm:text-[0.8rem]">
+                        {item.subtitle}
+                    </p>
                 ) : null}
-                <span className="mt-3 text-[0.7rem] font-semibold text-primary/80">مشاهده رزومه</span>
+                <span className="mt-4 inline-flex items-center gap-1 rounded-full bg-primary/8 px-3 py-1 text-[0.7rem] font-bold text-primary transition group-hover:bg-primary group-hover:text-on-primary">
+                    مشاهده پروفایل
+                </span>
             </div>
         </>
     );
@@ -92,9 +106,18 @@ export function HomeInstructorsSection({ section, sectionId }: Props) {
 
     const breakpoints = useMemo(
         () => ({
-            480: { slidesPerView: 1.65, spaceBetween: 16 },
-            768: { slidesPerView: Math.min(2.35, slidesPerView), spaceBetween: 18 },
-            1024: { slidesPerView: slidesPerView, spaceBetween: 18 },
+            768: {
+                slidesPerView: Math.min(2.35, slidesPerView),
+                spaceBetween: 18,
+                slidesOffsetBefore: 0,
+                slidesOffsetAfter: 0,
+            },
+            1024: {
+                slidesPerView: slidesPerView,
+                spaceBetween: 18,
+                slidesOffsetBefore: 0,
+                slidesOffsetAfter: 0,
+            },
         }),
         [slidesPerView],
     );
@@ -113,10 +136,12 @@ export function HomeInstructorsSection({ section, sectionId }: Props) {
                         grabCursor
                         watchOverflow
                         spaceBetween={16}
-                        slidesPerView={1.08}
+                        slidesPerView={1.2}
+                        slidesOffsetBefore={6}
+                        slidesOffsetAfter={6}
                         breakpoints={breakpoints}
                         pagination={{ clickable: true, dynamicBullets: items.length > 5 }}
-                        className="w-full pb-10"
+                        className="home-instructors-swiper__root w-full pb-10"
                     >
                         {items.map((item) => (
                             <SwiperSlide key={item.id} className="!h-auto">

@@ -41,24 +41,38 @@ class HomeItemPresenter
     public static function presentOne(mixed $item, string $contentType): ?array
     {
         if ($item instanceof Product) {
+            $price = (int) ($item->min_effective_price ?? 0);
+            $compare = (int) ($item->card_compare_price ?? 0);
+
             return [
                 'id' => $item->id,
                 'title' => $item->title,
                 'slug' => $item->slug,
                 'description' => $item->short_description,
                 'description_format' => 'html',
-                'price' => (int) ($item->min_effective_price ?? 0),
+                'price' => $price,
+                'compare_price' => $compare > $price ? $compare : null,
                 'image_url' => self::imageUrl($item->mainImage?->publicUrl()),
             ];
         }
 
         if ($item instanceof Course) {
             $minPrice = null;
+            $comparePrice = null;
             if ($item->relationLoaded('courseClasses')) {
-                $effective = $item->courseClasses
-                    ->map(fn ($class) => CourseClassPricing::effectivePrice($class))
-                    ->filter(fn (int $price) => $price > 0);
-                $minPrice = $effective->isNotEmpty() ? $effective->min() : null;
+                $cheapest = $item->courseClasses
+                    ->sortBy(fn ($class) => CourseClassPricing::effectivePrice($class) ?: PHP_INT_MAX)
+                    ->first();
+                if ($cheapest !== null) {
+                    $effective = CourseClassPricing::effectivePrice($cheapest);
+                    $list = CourseClassPricing::listPrice($cheapest);
+                    if ($effective > 0) {
+                        $minPrice = $effective;
+                    }
+                    if ($effective > 0 && $list > $effective) {
+                        $comparePrice = $list;
+                    }
+                }
             }
 
             return [
@@ -67,6 +81,7 @@ class HomeItemPresenter
                 'slug' => $item->slug,
                 'description' => $item->short_description,
                 'price' => is_numeric($minPrice) ? (int) $minPrice : 0,
+                'compare_price' => $comparePrice,
                 'image_url' => self::imageUrl($item->mainImage?->publicUrl()),
                 'is_featured' => (bool) $item->is_featured,
             ];

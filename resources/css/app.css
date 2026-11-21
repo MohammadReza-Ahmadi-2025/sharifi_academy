@@ -770,6 +770,19 @@ body {
     padding: 0.5rem 0.75rem;
 }
 
+/*
+ * سکشن‌های سوییپر خانه — موبایل تمام‌عرض (خنثی‌کردن px-4).
+ * فاصله ۶px لبه اسلاید با slidesOffsetBefore/After در JS ست می‌شود.
+ */
+@media (max-width: 767px) {
+    .home-catalog-swiper,
+    .home-testimonials-swiper,
+    .home-instructors-swiper {
+        margin-inline: -1rem;
+        width: calc(100% + 2rem);
+    }
+}
+
 /* سکشن لیست کارت — Swiper (RTL) */
 .home-catalog-swiper {
     overflow: visible;
@@ -797,7 +810,7 @@ body {
 .home-catalog-swiper .swiper-wrapper {
     display: flex;
     align-items: stretch;
-    box-sizing: content-box;
+    box-sizing: border-box;
 }
 
 .home-catalog-swiper .home-catalog-swiper__slide {
@@ -852,6 +865,30 @@ body {
 }
 
 .home-testimonials-swiper .swiper-pagination-bullet-active {
+    background: var(--color-primary);
+}
+
+/* سکشن اساتید — Swiper */
+.home-instructors-swiper {
+    overflow: visible;
+}
+
+.home-instructors-swiper .home-instructors-swiper__root {
+    overflow-x: clip;
+    overflow-y: visible;
+}
+
+.home-instructors-swiper .swiper-pagination {
+    position: relative;
+    margin-top: 0.75rem;
+}
+
+.home-instructors-swiper .swiper-pagination-bullet {
+    background: rgb(var(--color-primary-rgb) / 0.35);
+    opacity: 1;
+}
+
+.home-instructors-swiper .swiper-pagination-bullet-active {
     background: var(--color-primary);
 }
 

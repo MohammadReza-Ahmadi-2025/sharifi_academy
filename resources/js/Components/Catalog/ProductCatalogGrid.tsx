@@ -83,13 +83,22 @@ export function ProductCatalogGrid({ products, variant = 'default' }: Props) {
                             />
                         )}
                         {typeof product.price === 'number' && product.price > 0 && (
-                            <p
-                                className={`mt-auto pt-3 font-extrabold text-primary ${
+                            <div
+                                className={`mt-auto flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pt-3 ${
                                     variant === 'category' ? 'text-base' : 'text-sm'
                                 }`}
                             >
-                                {product.price.toLocaleString('fa-IR')} ریال
-                            </p>
+                                <p className="font-extrabold text-primary">
+                                    {product.price.toLocaleString('fa-IR')}{' '}
+                                    <span className="text-xs font-medium text-neutral-black/45">ریال</span>
+                                </p>
+                                {typeof product.compare_price === 'number' &&
+                                product.compare_price > product.price ? (
+                                    <p className="text-xs font-medium text-neutral-black/40 line-through sm:text-sm">
+                                        {product.compare_price.toLocaleString('fa-IR')} ریال
+                                    </p>
+                                ) : null}
+                            </div>
                         )}
                     </div>
                 </Link>

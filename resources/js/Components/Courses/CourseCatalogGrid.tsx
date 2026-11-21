@@ -8,6 +8,7 @@ export type CourseCatalogCard = {
     description?: string | null;
     level_label?: string | null;
     price_from?: number | null;
+    compare_price?: number | null;
     image_url?: string | null;
     is_featured?: boolean;
 };
@@ -95,13 +96,22 @@ export function CourseCatalogGrid({ courses, variant = 'default' }: Props) {
                             </p>
                         )}
                         {typeof course.price_from === 'number' && course.price_from > 0 && (
-                            <p
-                                className={`mt-auto pt-3 font-extrabold text-primary ${
+                            <div
+                                className={`mt-auto flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pt-3 ${
                                     variant === 'category' ? 'text-base' : 'text-sm'
                                 }`}
                             >
-                                از {course.price_from.toLocaleString('fa-IR')} ریال
-                            </p>
+                                <p className="font-extrabold text-primary">
+                                    از {course.price_from.toLocaleString('fa-IR')}{' '}
+                                    <span className="text-xs font-medium text-neutral-black/45">ریال</span>
+                                </p>
+                                {typeof course.compare_price === 'number' &&
+                                course.compare_price > course.price_from ? (
+                                    <p className="text-xs font-medium text-neutral-black/40 line-through sm:text-sm">
+                                        {course.compare_price.toLocaleString('fa-IR')} ریال
+                                    </p>
+                                ) : null}
+                            </div>
                         )}
                     </div>
                 </Link>
