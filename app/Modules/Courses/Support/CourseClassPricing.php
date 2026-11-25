@@ -3,6 +3,7 @@
 namespace App\Modules\Courses\Support;
 
 use App\Modules\Courses\Models\CourseClass;
+use Illuminate\Support\Facades\DB;
 
 final class CourseClassPricing
 {
@@ -46,12 +47,18 @@ final class CourseClassPricing
     }
 
     /**
-     * SQL expression for effective price of alias (integer ceil, DB-portable).
+     * SQL expression for effective price of alias (integer ceil).
+     * MySQL/MariaDB: CAST AS SIGNED — SQLite: CAST AS INTEGER.
      */
     public static function sqlEffectiveExpression(string $alias = 'cc'): string
     {
+        $castType = match (DB::connection()->getDriverName()) {
+            'mysql', 'mariadb' => 'SIGNED',
+            default => 'INTEGER',
+        };
+
         return "CASE WHEN COALESCE({$alias}.discount_percent, 0) > 0"
-            ." THEN CAST((({$alias}.price * (100 - {$alias}.discount_percent)) + 99) / 100 AS INTEGER)"
+            ." THEN CAST((({$alias}.price * (100 - {$alias}.discount_percent)) + 99) / 100 AS {$castType})"
             ." ELSE {$alias}.price END";
     }
 

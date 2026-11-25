@@ -33,4 +33,17 @@ class CourseClassPricingTest extends TestCase
             'zero price' => [0, 10, 0],
         ];
     }
+
+    public function test_sql_effective_expression_uses_driver_cast_type(): void
+    {
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        $expr = CourseClassPricing::sqlEffectiveExpression('cc');
+
+        if (in_array($driver, ['mysql', 'mariadb'], true)) {
+            $this->assertStringContainsString('AS SIGNED', $expr);
+            $this->assertStringNotContainsString('AS INTEGER', $expr);
+        } else {
+            $this->assertStringContainsString('AS INTEGER', $expr);
+        }
+    }
 }
